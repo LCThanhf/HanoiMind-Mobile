@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
+
+// Heart Icon Component
+const HeartIcon = ({ filled, size = 24 }: { filled: boolean; size?: number }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            stroke={filled ? '#EF4444' : '#D1D5DB'}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill={filled ? '#EF4444' : 'none'}
+        />
+    </Svg>
+);
 
 // Data mocks
 const categories = [
@@ -63,7 +78,48 @@ const suggestedHotels = [
     },
 ];
 
+const highlyRatedPlaces = [
+    {
+        id: '1',
+        title: 'Mount Bromo',
+        subtitle: 'Volcano in East Java',
+        rating: '4.9',
+        distance: '1.5km',
+        colorBox: '#D4A574',
+    },
+    {
+        id: '2',
+        title: 'Raja Ampat',
+        subtitle: 'Paradise in West Papua',
+        rating: '4.9',
+        distance: '2.1km',
+        colorBox: '#5FA3D0',
+    },
+    {
+        id: '3',
+        title: 'Borobudur Temple',
+        subtitle: 'Ancient temple in Central Java',
+        rating: '4.8',
+        distance: '5.2km',
+        colorBox: '#8B7355',
+    },
+];
+
 export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+    const toggleFavorite = (id: string) => {
+        setFavorites(prev => {
+            const newFavorites = new Set(prev);
+            if (newFavorites.has(id)) {
+                newFavorites.delete(id);
+            } else {
+                newFavorites.add(id);
+            }
+            return newFavorites;
+        });
+    };
+
     return (
         <View className="flex-1 bg-[#F3F4F6]">
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} bounces={false}>
@@ -156,7 +212,7 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
                                 />
                                 <View className="p-3">
                                     <Text className="font-bold text-sm text-[#2A4D3B] mb-0.5" numberOfLines={1}>{item.title}</Text>
-                                    <Text className="text-[10px] text-gray-500 mb-2" numberOfLines={1}>{item.subtitle}</Text>
+                                    <Text className="text-[8px] text-gray-500 mb-2" numberOfLines={1}>{item.subtitle}</Text>
 
                                     <View className="flex-row items-center mb-3">
                                         <Text className="text-yellow-400 text-xs mr-1">★</Text>
@@ -165,7 +221,7 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
 
                                     <View className="flex-row justify-between items-end">
                                         <View>
-                                            <Text className="text-[10px] text-gray-400">Cách bạn</Text>
+                                            <Text className="text-[8px] text-gray-400">Cách bạn</Text>
                                             <Text className="text-xs font-semibold text-gray-700">{item.distance}</Text>
                                         </View>
                                         <TouchableOpacity className="bg-[#3A7659] px-3 py-1.5 rounded-full">
@@ -196,12 +252,16 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
                             <View className="flex-1">
                                 <View className="flex-row justify-between items-start">
                                     <Text className="font-bold text-sm text-[#2A4D3B] mb-1 flex-1 pr-2" numberOfLines={2}>{hotel.title}</Text>
-                                    <TouchableOpacity>
-                                        <Text className="text-orange-400 text-lg">❤️</Text>
+                                    <TouchableOpacity 
+                                        onPress={() => toggleFavorite(hotel.id)}
+                                        className="w-8 h-8 items-center justify-center"
+                                        activeOpacity={0.6}
+                                    >
+                                        <HeartIcon filled={favorites.has(hotel.id)} size={22} />
                                     </TouchableOpacity>
                                 </View>
 
-                                <Text className="text-[10px] text-gray-500 mb-2 mt-1" numberOfLines={1}>{hotel.subtitle}</Text>
+                                <Text className="text-[8px] text-gray-500 mb-2 mt-1" numberOfLines={1}>{hotel.subtitle}</Text>
 
                                 <View className="flex-row items-center mb-2">
                                     <Text className="text-yellow-400 text-xs mr-1">★</Text>
@@ -216,6 +276,50 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
                             </View>
                         </View>
                     ))}
+                </View>
+
+                {/* Highly Rated Places Section */}
+                <View className="mb-10">
+                    <View className="flex-row justify-between items-center px-5 mb-4">
+                        <Text className="text-lg font-bold text-gray-800">Những địa điểm được đánh giá cao</Text>
+                        <TouchableOpacity>
+                            <Text className="text-[#0F7376] font-medium">See all</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerClassName="px-5"
+                    >
+                        {highlyRatedPlaces.map((item) => (
+                            <View key={item.id} className="w-[160px] bg-white rounded-2xl mr-4 shadow-sm pb-3 overflow-hidden">
+                                <View
+                                    className="w-full h-[120px]"
+                                    style={{ backgroundColor: item.colorBox }}
+                                />
+                                <View className="p-3">
+                                    <Text className="font-bold text-sm text-[#2A4D3B] mb-0.5" numberOfLines={1}>{item.title}</Text>
+                                    <Text className="text-[8px] text-gray-500 mb-2" numberOfLines={1}>{item.subtitle}</Text>
+
+                                    <View className="flex-row items-center mb-3">
+                                        <Text className="text-yellow-400 text-xs mr-1">★</Text>
+                                        <Text className="text-xs text-gray-600">{item.rating}</Text>
+                                    </View>
+
+                                    <View className="flex-row justify-between items-end">
+                                        <View>
+                                            <Text className="text-[8px] text-gray-400">Cách bạn</Text>
+                                            <Text className="text-xs font-semibold text-gray-700">{item.distance}</Text>
+                                        </View>
+                                        <TouchableOpacity className="bg-[#3A7659] px-3 py-1.5 rounded-full">
+                                            <Text className="text-white text-xs font-medium">Chi tiết</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </ScrollView>
                 </View>
 
             </ScrollView>

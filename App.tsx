@@ -25,6 +25,10 @@ export default function App() {
               setIsSignIn(true);
               setAppState('auth');
             }}
+            onSignUpPress={() => {
+              setIsSignIn(false);
+              setAppState('auth');
+            }}
           />
         );
       case 'home':

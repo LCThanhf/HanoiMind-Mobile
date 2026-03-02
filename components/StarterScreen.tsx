@@ -3,11 +3,12 @@ import { View, Text, ImageBackground, TouchableOpacity, SafeAreaView, Dimensions
 
 interface StarterScreenProps {
     onLoginPress: () => void;
+    onSignUpPress: () => void;
 }
 
 const { height } = Dimensions.get('window');
 
-export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress }) => {
+export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSignUpPress }) => {
     return (
         <View className="flex-1 bg-black">
             {/* Immersive Background Image */}
@@ -26,7 +27,7 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress }) =>
                         </View>
                         <Text className="text-white text-[44px] font-bold tracking-tight shadow-md">Mind</Text>
                     </View>
-                    <Text className="text-white/90 italic mt-2 text-sm drop-shadow-md">Oachxalach vo cung</Text>
+                    <Text className="text-white/90 italic mt-2 text-sm drop-shadow-md" numberOfLines={1} allowFontScaling={false}>Oachxalach vo cung</Text>
                 </SafeAreaView>
 
                 {/* Bottom Section: White Card Overlay */}
@@ -50,7 +51,7 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress }) =>
                         <Text className="text-gray-600 text-[14px]">Chưa có tài khoản?</Text>
                         <TouchableOpacity
                             activeOpacity={0.6}
-                            onPress={onLoginPress}
+                            onPress={onSignUpPress}
                         >
                             <Text className="text-[#0F7376] font-semibold text-[14px]"> Đăng ký ngay</Text>
                         </TouchableOpacity>

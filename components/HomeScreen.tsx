@@ -63,7 +63,7 @@ const suggestedHotels = [
     },
 ];
 
-export const HomeScreen = () => {
+export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
     return (
         <View className="flex-1 bg-[#F3F4F6]">
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} bounces={false}>
@@ -73,8 +73,10 @@ export const HomeScreen = () => {
 
                     <View className="flex-row justify-between items-center mb-6">
                         <View className="flex-row items-center">
-                            {/* Profile Avatar Placeholder */}
-                            <View className="w-12 h-12 rounded-full bg-orange-200 border-2 border-white mr-3 overflow-hidden" />
+                            {/* Profile Avatar Placeholder - Clickable for logout */}
+                            <TouchableOpacity onPress={onLogout}>
+                                <View className="w-12 h-12 rounded-full bg-orange-200 border-2 border-white mr-3 overflow-hidden" />
+                            </TouchableOpacity>
                             <Text className="text-white text-2xl font-bold">Hi, Username</Text>
                         </View>
 

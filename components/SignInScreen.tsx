@@ -3,9 +3,10 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 interface SignInScreenProps {
     onNavigateToSignUp: () => void;
+    onLogin?: () => void;
 }
 
-export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp }) => {
+export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -37,7 +38,11 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp }
                     <Text className="text-gray-500 text-sm underline">Forgot password?</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity className="bg-[#0F7376] rounded-[24px] py-4 items-center mb-6" activeOpacity={0.8}>
+                <TouchableOpacity
+                    className="bg-[#0F7376] rounded-[24px] py-4 items-center mb-6"
+                    activeOpacity={0.8}
+                    onPress={onLogin}
+                >
                     <Text className="text-white text-base font-semibold">Sign In</Text>
                 </TouchableOpacity>
 

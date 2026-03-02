@@ -21,8 +21,10 @@ export default function App() {
       case 'starter':
         return (
           <StarterScreen
-            onLoginPress={() => setAppState('auth')}
-            onSkipPress={() => setAppState('home')}
+            onLoginPress={() => {
+              setIsSignIn(true);
+              setAppState('auth');
+            }}
           />
         );
       case 'home':

@@ -3,12 +3,11 @@ import { View, Text, ImageBackground, TouchableOpacity, SafeAreaView, Dimensions
 
 interface StarterScreenProps {
     onLoginPress: () => void;
-    onSkipPress: () => void;
 }
 
 const { height } = Dimensions.get('window');
 
-export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSkipPress }) => {
+export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress }) => {
     return (
         <View className="flex-1 bg-black">
             {/* Immersive Background Image */}
@@ -40,20 +39,22 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSk
                     </Text>
 
                     <TouchableOpacity
-                        className="w-full bg-[#0F7376] rounded-full py-4 flex-row justify-center items-center mb-6"
+                        className="w-full bg-[#0F7376] rounded-full py-[14px] items-center justify-center mb-6 px-4"
                         activeOpacity={0.8}
                         onPress={onLoginPress}
                     >
-                        <Text className="text-white text-base font-semibold text-center">Đăng nhập ngay </Text>
+                        <Text className="text-white text-[16px] font-semibold text-center w-full" allowFontScaling={false}>Đăng nhập ngay</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        className="pb-2 border-b border-gray-400"
-                        activeOpacity={0.6}
-                        onPress={onSkipPress}
-                    >
-                        <Text className="text-gray-600 text-sm">Chưa có tài khoản?</Text>
-                    </TouchableOpacity>
+                    <View className="flex-row items-center space-x-1">
+                        <Text className="text-gray-600 text-[14px]">Chưa có tài khoản?</Text>
+                        <TouchableOpacity
+                            activeOpacity={0.6}
+                            onPress={onLoginPress}
+                        >
+                            <Text className="text-[#0F7376] font-semibold text-[14px]"> Đăng ký ngay</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </ImageBackground>
         </View>

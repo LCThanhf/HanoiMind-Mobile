@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
@@ -53,14 +52,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       {renderContent()}
-      {appState === 'home' && (
-        <TouchableOpacity
-          className="absolute bottom-10 right-5 bg-black/70 px-4 py-2 rounded-full z-50 shadow-md"
-          onPress={() => setAppState('starter')}
-        >
-          <Text className="text-white text-xs font-bold">🛠 Debug: Starter</Text>
-        </TouchableOpacity>
-      )}
       <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
     </SafeAreaProvider>
   );

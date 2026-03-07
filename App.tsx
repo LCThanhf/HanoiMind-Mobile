@@ -5,7 +5,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 
 import { StarterScreen } from './components/StarterScreen';
-import { AuthLayout } from './components/AuthLayout';
 import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
@@ -35,20 +34,18 @@ export default function App() {
         return <HomeScreen onLogout={() => setAppState('starter')} />;
       case 'auth':
       default:
-        return (
-          <AuthLayout>
-            {isSignIn ? (
-              <SignInScreen
-                onNavigateToSignUp={() => setIsSignIn(false)}
-                onLogin={() => setAppState('home')}
-              />
-            ) : (
-              <SignUpScreen
-                onNavigateToSignIn={() => setIsSignIn(true)}
-                onLogin={() => setAppState('home')}
-              />
-            )}
-          </AuthLayout>
+        return isSignIn ? (
+          <SignInScreen
+            onNavigateToSignUp={() => setIsSignIn(false)}
+            onBack={() => setAppState('starter')}
+            onLogin={() => setAppState('home')}
+          />
+        ) : (
+          <SignUpScreen
+            onNavigateToSignIn={() => setIsSignIn(true)}
+            onBack={() => setAppState('starter')}
+            onSignUp={() => setAppState('home')}
+          />
         );
     }
   };
@@ -56,7 +53,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       {renderContent()}
-      {appState !== 'starter' && (
+      {appState === 'home' && (
         <TouchableOpacity
           className="absolute bottom-10 right-5 bg-black/70 px-4 py-2 rounded-full z-50 shadow-md"
           onPress={() => setAppState('starter')}
@@ -64,7 +61,7 @@ export default function App() {
           <Text className="text-white text-xs font-bold">🛠 Debug: Starter</Text>
         </TouchableOpacity>
       )}
-      <StatusBar style="light" />
+      <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
     </SafeAreaProvider>
   );
 }

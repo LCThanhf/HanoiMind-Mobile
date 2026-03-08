@@ -7,8 +7,9 @@ import { StarterScreen } from './components/StarterScreen';
 import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
+import { CreateTripScreen } from './components/CreateTripScreen';
 
-type AppState = 'starter' | 'auth' | 'home';
+type AppState = 'starter' | 'auth' | 'home' | 'createTrip';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -30,7 +31,14 @@ export default function App() {
           />
         );
       case 'home':
-        return <HomeScreen onLogout={() => setAppState('starter')} />;
+        return (
+          <HomeScreen
+            onLogout={() => setAppState('starter')}
+            onCreateTrip={() => setAppState('createTrip')}
+          />
+        );
+      case 'createTrip':
+        return <CreateTripScreen onClose={() => setAppState('home')} />;
       case 'auth':
       default:
         return isSignIn ? (

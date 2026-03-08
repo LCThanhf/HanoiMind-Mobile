@@ -26,7 +26,7 @@ const myTrips = [
     },
 ];
 
-export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
+export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; onCreateTrip?: () => void }) => {
     const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal');
     const [tabWidth, setTabWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -270,6 +270,7 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
                     <TouchableOpacity
                         className="bg-[#EBF5FF] rounded-2xl p-4 flex-row items-center"
                         activeOpacity={0.8}
+                        onPress={onCreateTrip}
                         style={{ shadowColor: '#2B8EF0', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}
                     >
                         {/* + Button */}
@@ -332,6 +333,7 @@ export const HomeScreen = ({ onLogout }: { onLogout?: () => void }) => {
                     shadowOffset: { width: 0, height: 4 },
                     elevation: 8,
                 }}
+                onPress={onCreateTrip}
                 activeOpacity={0.85}
             >
                 <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">

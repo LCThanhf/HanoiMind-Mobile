@@ -629,7 +629,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
             {/* Bottom Action Button */}
             <View className="absolute bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white">
                 <TouchableOpacity
-                    className="flex-row items-center justify-center py-4 rounded-2xl"
+                    className="flex-row items-center justify-center py-5 rounded-2xl"
                     style={{
                         backgroundColor: '#2B8EF0',
                         shadowColor: '#2B8EF0',

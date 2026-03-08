@@ -28,6 +28,7 @@ const myTrips = [
 
 export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; onCreateTrip?: () => void }) => {
     const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal');
+    const [activeNavTab, setActiveNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('trips');
     const [tabWidth, setTabWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
@@ -315,36 +316,139 @@ export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; 
                     </TouchableOpacity>
                 </View>
 
-                {/* Bottom padding for FAB */}
+                {/* Bottom padding for navigation bar */}
                 <View className="h-20" />
             </ScrollView>
 
-            {/* Floating Action Button */}
-            <TouchableOpacity
-                className="absolute bottom-8 right-5 items-center justify-center"
+            {/* Bottom Navigation Bar */}
+            <View 
+                className="absolute bottom-0 left-0 right-0 bg-white flex-row items-center justify-around"
                 style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: '#2B8EF0',
-                    shadowColor: '#2B8EF0',
-                    shadowOpacity: 0.4,
-                    shadowRadius: 10,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 8,
+                    height: 70,
+                    borderTopWidth: 1,
+                    borderTopColor: '#F3F4F6',
+                    paddingBottom: 8,
                 }}
-                onPress={onCreateTrip}
-                activeOpacity={0.85}
             >
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path
-                        d="M12 5v14M5 12h14"
-                        stroke="white"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                    />
-                </Svg>
-            </TouchableOpacity>
+                {/* Trang chủ */}
+                <TouchableOpacity 
+                    className="flex-1 items-center justify-center"
+                    activeOpacity={0.7}
+                    onPress={() => setActiveNavTab('home')}
+                >
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Circle 
+                            cx="12" 
+                            cy="12" 
+                            r="4" 
+                            stroke={activeNavTab === 'home' ? '#2B8EF0' : '#9CA3AF'} 
+                            strokeWidth="2"
+                        />
+                        <Path
+                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+                            stroke={activeNavTab === 'home' ? '#2B8EF0' : '#9CA3AF'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </Svg>
+                    <Text 
+                        className="text-[11px] mt-1" 
+                        style={{ 
+                            fontWeight: activeNavTab === 'home' ? '600' : '500',
+                            color: activeNavTab === 'home' ? '#2B8EF0' : '#6B7280'
+                        }}
+                    >
+                        Trang chủ
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Chuyến đi */}
+                <TouchableOpacity 
+                    className="flex-1 items-center justify-center"
+                    activeOpacity={0.7}
+                    onPress={() => setActiveNavTab('trips')}
+                >
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Path
+                            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                            stroke={activeNavTab === 'trips' ? '#2B8EF0' : '#9CA3AF'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <Circle cx="12" cy="10" r="3" stroke={activeNavTab === 'trips' ? '#2B8EF0' : '#9CA3AF'} strokeWidth="2" />
+                    </Svg>
+                    <Text 
+                        className="text-[11px] mt-1" 
+                        style={{ 
+                            fontWeight: activeNavTab === 'trips' ? '600' : '500',
+                            color: activeNavTab === 'trips' ? '#2B8EF0' : '#6B7280'
+                        }}
+                    >
+                        Chuyến đi
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Khám phá */}
+                <TouchableOpacity 
+                    className="flex-1 items-center justify-center"
+                    activeOpacity={0.7}
+                    onPress={() => setActiveNavTab('explore')}
+                >
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                            stroke={activeNavTab === 'explore' ? '#2B8EF0' : '#9CA3AF'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </Svg>
+                    <Text 
+                        className="text-[11px] mt-1" 
+                        style={{ 
+                            fontWeight: activeNavTab === 'explore' ? '600' : '500',
+                            color: activeNavTab === 'explore' ? '#2B8EF0' : '#6B7280'
+                        }}
+                    >
+                        Khám phá
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Cá nhân */}
+                <TouchableOpacity 
+                    className="flex-1 items-center justify-center"
+                    activeOpacity={0.7}
+                    onPress={() => setActiveNavTab('profile')}
+                >
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Path
+                            d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                            stroke={activeNavTab === 'profile' ? '#2B8EF0' : '#9CA3AF'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <Circle 
+                            cx="12" 
+                            cy="7" 
+                            r="4" 
+                            stroke={activeNavTab === 'profile' ? '#2B8EF0' : '#9CA3AF'} 
+                            strokeWidth="2"
+                        />
+                    </Svg>
+                    <Text 
+                        className="text-[11px] mt-1" 
+                        style={{ 
+                            fontWeight: activeNavTab === 'profile' ? '600' : '500',
+                            color: activeNavTab === 'profile' ? '#2B8EF0' : '#6B7280'
+                        }}
+                    >
+                        Cá nhân
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 };

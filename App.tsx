@@ -8,12 +8,14 @@ import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
+import { TripDetailScreen } from './components/TripDetailScreen';
 
-type AppState = 'starter' | 'auth' | 'home' | 'createTrip';
+type AppState = 'starter' | 'auth' | 'home' | 'createTrip' | 'tripDetail';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
   const [isSignIn, setIsSignIn] = useState(true);
+  const [selectedTripId, setSelectedTripId] = useState<string>('');
 
   const renderContent = () => {
     switch (appState) {
@@ -35,10 +37,16 @@ export default function App() {
           <HomeScreen
             onLogout={() => setAppState('starter')}
             onCreateTrip={() => setAppState('createTrip')}
+            onTripClick={(tripId) => {
+              setSelectedTripId(tripId);
+              setAppState('tripDetail');
+            }}
           />
         );
       case 'createTrip':
         return <CreateTripScreen onClose={() => setAppState('home')} />;
+      case 'tripDetail':
+        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('home')} />;
       case 'auth':
       default:
         return isSignIn ? (

@@ -229,6 +229,9 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
                 <View style={{ width: 24 }} />
             </View>
 
+            {/* Divider */}
+            <View className="h-px bg-gray-200" />
+
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <Pressable onPress={() => showDaysDropdown && setShowDaysDropdown(false)}>
                 {/* Step Indicator */}

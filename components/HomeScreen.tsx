@@ -26,9 +26,9 @@ const myTrips = [
     },
 ];
 
-export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; onCreateTrip?: () => void }) => {
+export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?: () => void; onCreateTrip?: () => void; onTripClick?: (tripId: string) => void }) => {
     const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal');
-    const [activeNavTab, setActiveNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('trips');
+    const [activeNavTab, setActiveNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('home');
     const [tabWidth, setTabWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
@@ -168,10 +168,12 @@ export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; 
                     </View>
 
                     {myTrips.map((trip) => (
-                        <View
+                        <TouchableOpacity
                             key={trip.id}
                             className="bg-white rounded-2xl mb-3 overflow-hidden"
                             style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}
+                            onPress={() => onTripClick?.(trip.id)}
+                            activeOpacity={0.8}
                         >
                             <View className="flex-row">
                                 {/* Thumbnail */}
@@ -257,7 +259,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip }: { onLogout?: () => void; 
                                     </View>
                                 </View>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
 

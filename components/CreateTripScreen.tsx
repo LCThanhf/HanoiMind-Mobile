@@ -558,8 +558,8 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
                                         className="items-center py-5 rounded-2xl relative"
                                         style={{
                                             backgroundColor: mood.bgColor,
-                                            borderWidth: isSelected ? 2 : 1,
-                                            borderColor: isSelected ? '#2B8EF0' : '#E5E7EB',
+                                            borderWidth: 2,
+                                            borderColor: isSelected ? '#2B8EF0' : 'transparent',
                                         }}
                                     >
                                         {/* Checkmark for selected */}

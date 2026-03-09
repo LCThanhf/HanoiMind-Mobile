@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
 
 interface TripDetailScreenProps {
@@ -24,6 +24,24 @@ const TimelineDot = () => (
 export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [activeNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('trips');
+    const [tabWidth, setTabWidth] = useState(0);
+    const slideAnim = useRef(new Animated.Value(0)).current;
+    const colorAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const targetValue = activeSubTab === 'itinerary' ? 0 : activeSubTab === 'members' ? 1 : 2;
+        Animated.timing(slideAnim, {
+            toValue: targetValue,
+            duration: 250,
+            useNativeDriver: true,
+        }).start();
+
+        Animated.timing(colorAnim, {
+            toValue: targetValue,
+            duration: 200,
+            useNativeDriver: false,
+        }).start();
+    }, [activeSubTab]);
 
     // Trip data based on tripId
     const tripData = tripId === '1' ? {
@@ -245,61 +263,93 @@ export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
                 </View>
 
                 {/* Sub Navigation Tabs */}
-                <View className="px-5 mb-4 flex-row">
-                    <TouchableOpacity
-                        className="mr-6"
-                        onPress={() => setActiveSubTab('itinerary')}
-                        activeOpacity={0.7}
+                <View className="px-5 mb-5">
+                    <View 
+                        className="rounded-xl p-1" 
+                        style={{ backgroundColor: '#E5E7EB' }}
                     >
-                        <Text
-                            className="text-[15px] pb-2"
-                            style={{
-                                fontWeight: activeSubTab === 'itinerary' ? '600' : '500',
-                                color: activeSubTab === 'itinerary' ? '#111827' : '#6B7280',
-                                borderBottomWidth: activeSubTab === 'itinerary' ? 2 : 0,
-                                borderBottomColor: '#2B8EF0',
-                            }}
+                        <View 
+                            className="flex-row relative" 
+                            style={{ height: 40 }}
+                            onLayout={(e) => setTabWidth(e.nativeEvent.layout.width / 3)}
                         >
-                            Lịch trình
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="mr-6"
-                        onPress={() => setActiveSubTab('members')}
-                        activeOpacity={0.7}
-                    >
-                        <Text
-                            className="text-[15px] pb-2"
-                            style={{
-                                fontWeight: activeSubTab === 'members' ? '600' : '500',
-                                color: activeSubTab === 'members' ? '#111827' : '#6B7280',
-                                borderBottomWidth: activeSubTab === 'members' ? 2 : 0,
-                                borderBottomColor: '#2B8EF0',
-                            }}
-                        >
-                            Thành viên
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setActiveSubTab('mood')}
-                        activeOpacity={0.7}
-                    >
-                        <Text
-                            className="text-[15px] pb-2"
-                            style={{
-                                fontWeight: activeSubTab === 'mood' ? '600' : '500',
-                                color: activeSubTab === 'mood' ? '#111827' : '#6B7280',
-                                borderBottomWidth: activeSubTab === 'mood' ? 2 : 0,
-                                borderBottomColor: '#2B8EF0',
-                            }}
-                        >
-                            Mood Vote
-                        </Text>
-                    </TouchableOpacity>
+                            {/* Animated White Background */}
+                            <Animated.View
+                                className="absolute rounded-lg"
+                                style={{
+                                    width: tabWidth || '33.33%',
+                                    height: '100%',
+                                    backgroundColor: 'white',
+                                    left: 0,
+                                    transform: [
+                                        {
+                                            translateX: slideAnim.interpolate({
+                                                inputRange: [0, 1, 2],
+                                                outputRange: [0, tabWidth || 0, (tabWidth || 0) * 2],
+                                            }),
+                                        },
+                                    ],
+                                }}
+                            />
+                            
+                            {/* Tab Buttons */}
+                            <TouchableOpacity
+                                className="flex-1 items-center justify-center"
+                                onPress={() => setActiveSubTab('itinerary')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    className="text-[13px]"
+                                    style={{ 
+                                        color: colorAnim.interpolate({
+                                            inputRange: [0, 1, 2],
+                                            outputRange: ['#2B8EF0', '#6B7280', '#6B7280'],
+                                        }),
+                                        fontWeight: activeSubTab === 'itinerary' ? '600' : '500'
+                                    }}
+                                >
+                                    Lịch trình
+                                </Animated.Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="flex-1 items-center justify-center"
+                                onPress={() => setActiveSubTab('members')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    className="text-[13px]"
+                                    style={{ 
+                                        color: colorAnim.interpolate({
+                                            inputRange: [0, 1, 2],
+                                            outputRange: ['#6B7280', '#2B8EF0', '#6B7280'],
+                                        }),
+                                        fontWeight: activeSubTab === 'members' ? '600' : '500'
+                                    }}
+                                >
+                                    Thành viên
+                                </Animated.Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="flex-1 items-center justify-center"
+                                onPress={() => setActiveSubTab('mood')}
+                                activeOpacity={0.8}
+                            >
+                                <Animated.Text
+                                    className="text-[13px]"
+                                    style={{ 
+                                        color: colorAnim.interpolate({
+                                            inputRange: [0, 1, 2],
+                                            outputRange: ['#6B7280', '#6B7280', '#2B8EF0'],
+                                        }),
+                                        fontWeight: activeSubTab === 'mood' ? '600' : '500'
+                                    }}
+                                >
+                                    Mood Vote
+                                </Animated.Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-
-                {/* Divider */}
-                <View className="h-px bg-gray-200 mb-5" />
 
                 {/* Itinerary Timeline */}
                 {activeSubTab === 'itinerary' && tripData.itinerary.map((dayData, dayIndex) => (
@@ -353,32 +403,6 @@ export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
                 {/* Bottom padding */}
                 <View className="h-24" />
             </ScrollView>
-
-            {/* Floating Action Button */}
-            <TouchableOpacity
-                className="absolute bottom-24 right-5 items-center justify-center"
-                style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: '#2B8EF0',
-                    shadowColor: '#2B8EF0',
-                    shadowOpacity: 0.4,
-                    shadowRadius: 10,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 8,
-                }}
-                activeOpacity={0.85}
-            >
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path
-                        d="M12 5v14M5 12h14"
-                        stroke="white"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                    />
-                </Svg>
-            </TouchableOpacity>
 
             {/* Bottom Navigation Bar */}
             <View 

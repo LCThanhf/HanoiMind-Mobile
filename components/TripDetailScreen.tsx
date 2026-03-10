@@ -1,29 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
-import Svg, { Path, Circle, Line } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
+import { TripData } from './tripDetail/types';
+import { ItineraryTab } from './tripDetail/ItineraryTab';
+import { MembersTab } from './tripDetail/MembersTab';
+import { MoodVoteTab } from './tripDetail/MoodVoteTab';
 
 interface TripDetailScreenProps {
     onBack: () => void;
     tripId: string;
 }
 
-// Timeline icon components
-const TimelineDot = () => (
-    <View
-        style={{
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            backgroundColor: '#2B8EF0',
-            borderWidth: 2,
-            borderColor: '#EBF5FF',
-        }}
-    />
-);
-
 export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
-    const [activeNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('trips');
     const [tabWidth, setTabWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
@@ -351,54 +340,10 @@ export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
                     </View>
                 </View>
 
-                {/* Itinerary Timeline */}
-                {activeSubTab === 'itinerary' && tripData.itinerary.map((dayData, dayIndex) => (
-                    <View key={dayIndex} className="px-5 mb-6">
-                        <View className="flex-row items-center justify-between mb-4">
-                            <Text className="text-[15px] text-gray-900 flex-1 mr-3" style={{ fontWeight: '700' }}>
-                                Ngày {dayData.day}: {dayData.title}
-                            </Text>
-                            <TouchableOpacity activeOpacity={0.7} style={{ flexShrink: 0 }}>
-                                <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                                    Thêm địa điểm
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                {activeSubTab === 'itinerary' && <ItineraryTab itinerary={tripData.itinerary} />}
 
-                        {/* Timeline Items */}
-                        {dayData.activities.map((activity, activityIndex) => (
-                            <View key={activityIndex} className="flex-row mb-4">
-                                {/* Timeline */}
-                                <View className="items-center mr-4" style={{ width: 12 }}>
-                                    <TimelineDot />
-                                    {activityIndex < dayData.activities.length - 1 && (
-                                        <View
-                                            style={{
-                                                width: 2,
-                                                flex: 1,
-                                                backgroundColor: '#E5E7EB',
-                                                marginVertical: 4,
-                                            }}
-                                        />
-                                    )}
-                                </View>
-
-                                {/* Content */}
-                                <View className="flex-1">
-                                    <Text className="text-[12px] mb-2" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                                        {activity.time}
-                                    </Text>
-                                    <Text className="text-[15px] text-gray-900 mb-1" style={{ fontWeight: '600' }}>
-                                        {activity.title}
-                                    </Text>
-                                    <Text className="text-[13px] text-gray-600 leading-5" style={{ fontWeight: '400' }}>
-                                        {activity.description}
-                                    </Text>
-                                </View>
-                            </View>
-                        ))}
-                    </View>
-                ))}
+                {activeSubTab === 'members' && <MembersTab />}
+                {activeSubTab === 'mood' && <MoodVoteTab />}
 
                 {/* Bottom padding */}
                 <View className="h-24" />

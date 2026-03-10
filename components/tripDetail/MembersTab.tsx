@@ -1,0 +1,225 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+
+const members = [
+    { name: 'Lan Anh', initials: 'L', color: '#A0785A' },
+    { name: 'Ánh Dương', initials: 'Á', color: '#7B6FB5' },
+    { name: 'Quang Minh', initials: 'Q', color: '#5C4033' },
+];
+
+export const MembersTab = () => {
+    return (
+        <View className="px-5">
+            {/* Subtitle */}
+            <Text className="text-[13px] text-center mb-5" style={{ color: '#6B7280', fontWeight: '400' }}>
+                Manage trip participants
+            </Text>
+
+            {/* Owner */}
+            <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
+                Owner
+            </Text>
+            <View
+                className="flex-row items-center px-4 py-3 rounded-2xl mb-5"
+                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
+            >
+                <View
+                    style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 23,
+                        backgroundColor: '#C4856A',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                    }}
+                >
+                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>M</Text>
+                </View>
+                <View className="flex-1">
+                    <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
+                        Minh Anh
+                    </Text>
+                    <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
+                        Member
+                    </Text>
+                </View>
+                <View className="px-3 py-1 rounded-full mr-3" style={{ backgroundColor: '#FEF3E2' }}>
+                    <Text className="text-[12px]" style={{ color: '#D4A574', fontWeight: '600' }}>
+                        Owner
+                    </Text>
+                </View>
+                <TouchableOpacity activeOpacity={0.7}>
+                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                        <Path
+                            d="M18 6L6 18M6 6l12 12"
+                            stroke="#9CA3AF"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </Svg>
+                </TouchableOpacity>
+            </View>
+
+            {/* Members List */}
+            <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
+                Members
+            </Text>
+            <View
+                className="rounded-2xl mb-5 overflow-hidden"
+                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
+            >
+                {members.map((member, index) => (
+                    <View
+                        key={member.name}
+                        className="flex-row items-center px-4 py-3"
+                        style={{
+                            borderBottomWidth: index < members.length - 1 ? 1 : 0,
+                            borderBottomColor: '#F3F4F6',
+                        }}
+                    >
+                        <View
+                            style={{
+                                width: 46,
+                                height: 46,
+                                borderRadius: 23,
+                                backgroundColor: member.color,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                            }}
+                        >
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
+                                {member.initials}
+                            </Text>
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-[15px] text-gray-900" style={{ fontWeight: '600' }}>
+                                {member.name}
+                            </Text>
+                            <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
+                                Member
+                            </Text>
+                        </View>
+                        <TouchableOpacity activeOpacity={0.7}>
+                            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                                <Path
+                                    d="M18 6L6 18M6 6l12 12"
+                                    stroke="#9CA3AF"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </Svg>
+                        </TouchableOpacity>
+                    </View>
+                ))}
+            </View>
+
+            {/* Invite Friends */}
+            <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
+                Invite Friends
+            </Text>
+            <View
+                className="px-4 py-4 rounded-2xl mb-5"
+                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
+            >
+                <Text className="text-[14px] text-gray-900 mb-1" style={{ fontWeight: '700' }}>
+                    Invite Friends
+                </Text>
+                <Text className="text-[12px] mb-3" style={{ color: '#9CA3AF', fontWeight: '400' }}>
+                    Share this link to invite others to join the trip
+                </Text>
+                {/* Link Box */}
+                <View
+                    className="flex-row items-center px-3 rounded-xl mb-3"
+                    style={{
+                        backgroundColor: '#F9FAFB',
+                        borderWidth: 1,
+                        borderColor: '#E5E7EB',
+                        height: 44,
+                    }}
+                >
+                    <Text className="flex-1 text-[13px] text-gray-700" style={{ fontWeight: '400' }}>
+                        hanoimind.com/join/8fj3KsI29Xab
+                    </Text>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => Alert.alert('Đã sao chép!', 'Link mời đã được sao chép.')}
+                    >
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                            <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
+                            <Path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                stroke="#2B8EF0"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                            />
+                        </Svg>
+                    </TouchableOpacity>
+                </View>
+                {/* Action Buttons */}
+                <View className="flex-row" style={{ gap: 10 }}>
+                    <TouchableOpacity
+                        className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
+                        style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
+                        activeOpacity={0.7}
+                        onPress={() => Alert.alert('Đã sao chép!', 'Link mời đã được sao chép.')}
+                    >
+                        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
+                            <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
+                            <Path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                stroke="#2B8EF0"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                            />
+                        </Svg>
+                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Copy link</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
+                        style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
+                        activeOpacity={0.7}
+                    >
+                        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
+                            <Circle cx="18" cy="5" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
+                            <Circle cx="6" cy="12" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
+                            <Circle cx="18" cy="19" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
+                            <Path
+                                d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"
+                                stroke="#2B8EF0"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                            />
+                        </Svg>
+                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Share</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Last Updated */}
+            <Text className="text-[12px] text-center mb-5" style={{ color: '#9CA3AF', fontWeight: '400' }}>
+                Last updated by{' '}
+                <Text style={{ color: '#374151', fontWeight: '600' }}>Minh Anh</Text>
+            </Text>
+
+            {/* Leave Trip */}
+            <TouchableOpacity
+                className="items-center justify-center py-4 rounded-2xl mb-4"
+                style={{ backgroundColor: '#FEE2E2' }}
+                activeOpacity={0.8}
+                onPress={() =>
+                    Alert.alert('Rời chuyến đi', 'Bạn có chắc chắn muốn rời khỏi chuyến đi này?', [
+                        { text: 'Huỷ', style: 'cancel' },
+                        { text: 'Rời đi', style: 'destructive' },
+                    ])
+                }
+            >
+                <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};

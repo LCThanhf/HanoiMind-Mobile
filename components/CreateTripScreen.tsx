@@ -224,7 +224,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
                     </Svg>
                 </TouchableOpacity>
                 <Text className="text-[17px] text-gray-900" style={{ fontWeight: '600' }}>
-                    Tạo Chuyến Đi Mới
+                    Tạo chuyến đi mới
                 </Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -518,23 +518,14 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
                             </Text>
                         </View>
                         <TouchableOpacity
-                            className="px-3 py-1.5 rounded-full"
-                            style={{
-                                backgroundColor: isSoloMode ? '#EBF5FF' : '#F3F4F6',
-                                borderWidth: 1,
-                                borderColor: isSoloMode ? '#2B8EF0' : '#E5E7EB',
-                            }}
                             onPress={() => setIsSoloMode(!isSoloMode)}
                             activeOpacity={0.7}
                         >
                             <Text
-                                className="text-[11px]"
-                                style={{
-                                    color: isSoloMode ? '#2B8EF0' : '#6B7280',
-                                    fontWeight: '600',
-                                }}
+                                className="text-[12px]"
+                                style={{ color: '#2B8EF0', fontWeight: '600' }}
                             >
-                                Solo Mode
+                                {isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
                             </Text>
                         </TouchableOpacity>
                     </View>

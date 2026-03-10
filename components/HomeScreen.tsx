@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 
 // Trip data
 const myTrips = [
@@ -158,7 +158,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 <View className="px-5 mb-6">
                     <View className="flex-row items-center justify-between mb-3">
                         <Text className="text-gray-900 text-[16px]" style={{ fontWeight: '600' }}>
-                            Chuyến Đi Của Bạn
+                            Chuyến đi của bạn
                         </Text>
                         <View className="bg-[#EBF5FF] px-3 py-1 rounded-full">
                             <Text className="text-[#2B8EF0] text-[13px] font-semibold">
@@ -240,7 +240,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                                                         strokeLinejoin="round"
                                                     />
                                                 ) : (
-                                                    <>
+                                                    <G>
                                                         <Circle cx="12" cy="12" r="9" stroke="#22C55E" strokeWidth="2" />
                                                         <Path
                                                             d="M12 3L9 12h6L12 3z"
@@ -251,7 +251,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                                                             fill="#22C55E"
                                                             fillOpacity="0.4"
                                                         />
-                                                    </>
+                                                    </G>
                                                 )}
                                             </Svg>
                                             <Text className="text-gray-600 text-[12px]">{trip.tag}</Text>
@@ -266,7 +266,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 {/* Suggestions Section */}
                 <View className="px-5 mb-8">
                     <Text className="text-gray-900 text-[16px] mb-3" style={{ fontWeight: '600' }}>
-                        Gợi ý cho bạn
+                        Chuyến đi mới
                     </Text>
 
                     {/* AI Plan Card */}

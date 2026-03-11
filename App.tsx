@@ -9,8 +9,9 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/TripDetailScreen';
+import { ProfileScreen } from './components/ProfileScreen';
 
-type AppState = 'starter' | 'auth' | 'home' | 'createTrip' | 'tripDetail';
+type AppState = 'starter' | 'auth' | 'home' | 'createTrip' | 'tripDetail' | 'profile';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -35,7 +36,7 @@ export default function App() {
       case 'home':
         return (
           <HomeScreen
-            onLogout={() => setAppState('starter')}
+            onOpenProfile={() => setAppState('profile')}
             onCreateTrip={() => setAppState('createTrip')}
             onTripClick={(tripId) => {
               setSelectedTripId(tripId);
@@ -47,6 +48,14 @@ export default function App() {
         return <CreateTripScreen onClose={() => setAppState('home')} />;
       case 'tripDetail':
         return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('home')} />;
+      case 'profile':
+        return (
+          <ProfileScreen
+            onBack={() => setAppState('home')}
+            onNavigateHome={() => setAppState('home')}
+            onLogout={() => setAppState('starter')}
+          />
+        );
       case 'auth':
       default:
         return isSignIn ? (

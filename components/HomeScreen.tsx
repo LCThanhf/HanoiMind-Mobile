@@ -26,7 +26,7 @@ const myTrips = [
     },
 ];
 
-export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?: () => void; onCreateTrip?: () => void; onTripClick?: (tripId: string) => void }) => {
+export const HomeScreen = ({ onOpenProfile, onCreateTrip, onTripClick }: { onOpenProfile?: () => void; onCreateTrip?: () => void; onTripClick?: (tripId: string) => void }) => {
     const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal');
     const [activeNavTab, setActiveNavTab] = useState<'home' | 'trips' | 'explore' | 'profile'>('home');
     const [tabWidth, setTabWidth] = useState(0);
@@ -69,7 +69,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                         </Svg>
                     </TouchableOpacity>
                     {/* Avatar */}
-                    <TouchableOpacity onPress={onLogout} activeOpacity={0.8}>
+                    <TouchableOpacity onPress={onOpenProfile} activeOpacity={0.8}>
                         <View
                             style={{
                                 width: 36,
@@ -84,12 +84,12 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
             </View>
 
             {/* Tab Switcher */}
-            <View 
-                className="mx-5 mb-5 rounded-xl p-1" 
+            <View
+                className="mx-5 mb-5 rounded-xl p-1"
                 style={{ backgroundColor: '#E5E7EB' }}
             >
-                <View 
-                    className="flex-row relative" 
+                <View
+                    className="flex-row relative"
                     style={{ height: 40 }}
                     onLayout={(e) => setTabWidth(e.nativeEvent.layout.width / 2)}
                 >
@@ -111,7 +111,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                             ],
                         }}
                     />
-                    
+
                     {/* Tab Buttons */}
                     <TouchableOpacity
                         className="flex-1 items-center justify-center"
@@ -120,7 +120,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                     >
                         <Animated.Text
                             className="text-[13px] tracking-wide"
-                            style={{ 
+                            style={{
                                 color: colorAnim.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: ['#2B8EF0', '#6B7280'],
@@ -138,7 +138,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                     >
                         <Animated.Text
                             className="text-[13px] tracking-wide"
-                            style={{ 
+                            style={{
                                 color: colorAnim.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: ['#6B7280', '#2B8EF0'],
@@ -323,7 +323,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
             </ScrollView>
 
             {/* Bottom Navigation Bar */}
-            <View 
+            <View
                 className="absolute bottom-0 left-0 right-0 bg-white flex-row items-center justify-around"
                 style={{
                     height: 70,
@@ -333,17 +333,17 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 }}
             >
                 {/* Trang chủ */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     className="flex-1 items-center justify-center"
                     activeOpacity={0.7}
                     onPress={() => setActiveNavTab('home')}
                 >
                     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Circle 
-                            cx="12" 
-                            cy="12" 
-                            r="4" 
-                            stroke={activeNavTab === 'home' ? '#2B8EF0' : '#9CA3AF'} 
+                        <Circle
+                            cx="12"
+                            cy="12"
+                            r="4"
+                            stroke={activeNavTab === 'home' ? '#2B8EF0' : '#9CA3AF'}
                             strokeWidth="2"
                         />
                         <Path
@@ -354,9 +354,9 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                             strokeLinejoin="round"
                         />
                     </Svg>
-                    <Text 
-                        className="text-[11px] mt-1" 
-                        style={{ 
+                    <Text
+                        className="text-[11px] mt-1"
+                        style={{
                             fontWeight: activeNavTab === 'home' ? '600' : '500',
                             color: activeNavTab === 'home' ? '#2B8EF0' : '#6B7280'
                         }}
@@ -366,7 +366,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 </TouchableOpacity>
 
                 {/* Chuyến đi */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     className="flex-1 items-center justify-center"
                     activeOpacity={0.7}
                     onPress={() => setActiveNavTab('trips')}
@@ -381,9 +381,9 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                         />
                         <Circle cx="12" cy="10" r="3" stroke={activeNavTab === 'trips' ? '#2B8EF0' : '#9CA3AF'} strokeWidth="2" />
                     </Svg>
-                    <Text 
-                        className="text-[11px] mt-1" 
-                        style={{ 
+                    <Text
+                        className="text-[11px] mt-1"
+                        style={{
                             fontWeight: activeNavTab === 'trips' ? '600' : '500',
                             color: activeNavTab === 'trips' ? '#2B8EF0' : '#6B7280'
                         }}
@@ -393,7 +393,7 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 </TouchableOpacity>
 
                 {/* Khám phá */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     className="flex-1 items-center justify-center"
                     activeOpacity={0.7}
                     onPress={() => setActiveNavTab('explore')}
@@ -407,9 +407,9 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                             strokeLinejoin="round"
                         />
                     </Svg>
-                    <Text 
-                        className="text-[11px] mt-1" 
-                        style={{ 
+                    <Text
+                        className="text-[11px] mt-1"
+                        style={{
                             fontWeight: activeNavTab === 'explore' ? '600' : '500',
                             color: activeNavTab === 'explore' ? '#2B8EF0' : '#6B7280'
                         }}
@@ -419,10 +419,13 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                 </TouchableOpacity>
 
                 {/* Cá nhân */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     className="flex-1 items-center justify-center"
                     activeOpacity={0.7}
-                    onPress={() => setActiveNavTab('profile')}
+                    onPress={() => {
+                        setActiveNavTab('profile');
+                        onOpenProfile?.();
+                    }}
                 >
                     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
                         <Path
@@ -432,17 +435,17 @@ export const HomeScreen = ({ onLogout, onCreateTrip, onTripClick }: { onLogout?:
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         />
-                        <Circle 
-                            cx="12" 
-                            cy="7" 
-                            r="4" 
-                            stroke={activeNavTab === 'profile' ? '#2B8EF0' : '#9CA3AF'} 
+                        <Circle
+                            cx="12"
+                            cy="7"
+                            r="4"
+                            stroke={activeNavTab === 'profile' ? '#2B8EF0' : '#9CA3AF'}
                             strokeWidth="2"
                         />
                     </Svg>
-                    <Text 
-                        className="text-[11px] mt-1" 
-                        style={{ 
+                    <Text
+                        className="text-[11px] mt-1"
+                        style={{
                             fontWeight: activeNavTab === 'profile' ? '600' : '500',
                             color: activeNavTab === 'profile' ? '#2B8EF0' : '#6B7280'
                         }}

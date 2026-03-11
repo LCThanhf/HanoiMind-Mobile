@@ -10,13 +10,41 @@ import { HomeScreen } from './components/HomeScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { MainTab } from './components/BottomTabBar';
 
-type AppState = 'starter' | 'auth' | 'home' | 'createTrip' | 'tripDetail' | 'profile';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<MainTab>('home');
+
+  const renderMainContent = () => {
+    if (activeTab === 'profile') {
+      return (
+        <ProfileScreen
+          activeTab={activeTab}
+          onBack={() => setActiveTab('home')}
+          onLogout={() => setAppState('starter')}
+          onTabChange={setActiveTab}
+        />
+      );
+    }
+
+    return (
+      <HomeScreen
+        activeNavTab={activeTab}
+        onTabChange={setActiveTab}
+        onOpenProfile={() => setActiveTab('profile')}
+        onCreateTrip={() => setAppState('createTrip')}
+        onTripClick={(tripId) => {
+          setSelectedTripId(tripId);
+          setAppState('tripDetail');
+        }}
+      />
+    );
+  };
 
   const renderContent = () => {
     switch (appState) {
@@ -33,42 +61,31 @@ export default function App() {
             }}
           />
         );
-      case 'home':
-        return (
-          <HomeScreen
-            onOpenProfile={() => setAppState('profile')}
-            onCreateTrip={() => setAppState('createTrip')}
-            onTripClick={(tripId) => {
-              setSelectedTripId(tripId);
-              setAppState('tripDetail');
-            }}
-          />
-        );
+      case 'main':
+        return renderMainContent();
       case 'createTrip':
-        return <CreateTripScreen onClose={() => setAppState('home')} />;
+        return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
-        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('home')} />;
-      case 'profile':
-        return (
-          <ProfileScreen
-            onBack={() => setAppState('home')}
-            onNavigateHome={() => setAppState('home')}
-            onLogout={() => setAppState('starter')}
-          />
-        );
+        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} />;
       case 'auth':
       default:
         return isSignIn ? (
           <SignInScreen
             onNavigateToSignUp={() => setIsSignIn(false)}
             onBack={() => setAppState('starter')}
-            onLogin={() => setAppState('home')}
+            onLogin={() => {
+              setActiveTab('home');
+              setAppState('main');
+            }}
           />
         ) : (
           <SignUpScreen
             onNavigateToSignIn={() => setIsSignIn(true)}
             onBack={() => setAppState('starter')}
-            onSignUp={() => setAppState('home')}
+            onSignUp={() => {
+              setActiveTab('home');
+              setAppState('main');
+            }}
           />
         );
     }

@@ -4,6 +4,29 @@ import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
 
 // Trip data
+const groupTrips = [
+    {
+        id: 'g1',
+        title: 'Hội An – Phố Cổ',
+        location: 'Quảng Nam, Việt Nam',
+        days: '5 ngày',
+        tag: 'Khám phá',
+        tagIcon: 'check',
+        type: 'Group',
+        colorBox: '#A8B8D8',
+    },
+    {
+        id: 'g2',
+        title: 'Phú Quốc – Biển Xanh',
+        location: 'Kiên Giang',
+        days: '4 ngày',
+        tag: 'Lãng mạn',
+        tagIcon: 'heart',
+        type: 'Group',
+        colorBox: '#B8D4C8',
+    },
+];
+
 const myTrips = [
     {
         id: '1',
@@ -166,6 +189,8 @@ export const HomeScreen = ({
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
 
+                {activeTab === 'personal' ? (
+                <>
                 {/* My Trips Section */}
                 <View className="px-5 mb-6">
                     <View className="flex-row items-center justify-between mb-3">
@@ -329,6 +354,174 @@ export const HomeScreen = ({
                         </Svg>
                     </TouchableOpacity>
                 </View>
+                </>
+                ) : (
+                <>
+                {/* Group Trips Section */}
+                <View className="px-5 mb-6">
+                    <View className="flex-row items-center justify-between mb-3">
+                        <Text className="text-gray-900 text-[16px]" style={{ fontWeight: '600' }}>
+                            Chuyến đi của bạn
+                        </Text>
+                        <View className="bg-[#EBF5FF] px-3 py-1 rounded-full">
+                            <Text className="text-[#2B8EF0] text-[13px] font-semibold">
+                                {groupTrips.length} Trips
+                            </Text>
+                        </View>
+                    </View>
+
+                    {groupTrips.map((trip) => (
+                        <TouchableOpacity
+                            key={trip.id}
+                            className="bg-white rounded-2xl mb-3 overflow-hidden"
+                            style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}
+                            onPress={() => onTripClick?.(trip.id)}
+                            activeOpacity={0.8}
+                        >
+                            <View className="flex-row">
+                                {/* Thumbnail */}
+                                <View
+                                    style={{
+                                        width: 110,
+                                        height: 110,
+                                        backgroundColor: trip.colorBox,
+                                    }}
+                                >
+                                    {/* Group badge */}
+                                    <View
+                                        className="absolute top-2 left-2 px-2 py-0.5 rounded-full"
+                                        style={{ backgroundColor: '#2B8EF0' }}
+                                    >
+                                        <Text className="text-white text-[10px] font-semibold">{trip.type}</Text>
+                                    </View>
+                                </View>
+
+                                {/* Info */}
+                                <View className="flex-1 px-4 py-3 justify-between">
+                                    <View className="flex-row items-start justify-between">
+                                        <View className="flex-1 pr-2">
+                                            <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
+                                                {trip.title}
+                                            </Text>
+                                            <View className="flex-row items-center mt-1">
+                                                <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
+                                                    <Path
+                                                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
+                                                        fill="#9CA3AF"
+                                                    />
+                                                </Svg>
+                                                <Text className="text-gray-500 text-[10px]">{trip.location}</Text>
+                                            </View>
+                                        </View>
+                                        {/* Three dots */}
+                                        <TouchableOpacity className="p-1" activeOpacity={0.6}>
+                                            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                                                <Circle cx="12" cy="5" r="1.5" fill="#9CA3AF" />
+                                                <Circle cx="12" cy="12" r="1.5" fill="#9CA3AF" />
+                                                <Circle cx="12" cy="19" r="1.5" fill="#9CA3AF" />
+                                            </Svg>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Tags row */}
+                                    <View className="flex-row items-center mt-2">
+                                        <View className="flex-row items-center mr-4">
+                                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginRight: 4 }}>
+                                                <Rect x="3" y="4" width="18" height="18" rx="2" stroke="#2B8EF0" strokeWidth="2" />
+                                                <Path d="M16 2v4M8 2v4M3 10h18" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" />
+                                            </Svg>
+                                            <Text className="text-gray-600 text-[12px]">{trip.days}</Text>
+                                        </View>
+                                        <View className="flex-row items-center">
+                                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginRight: 4 }}>
+                                                {trip.tagIcon === 'heart' ? (
+                                                    <Path
+                                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                                        stroke="#22C55E"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                ) : (
+                                                    <G>
+                                                        <Circle cx="12" cy="12" r="9" stroke="#22C55E" strokeWidth="2" />
+                                                        <Path
+                                                            d="M12 3L9 12h6L12 3z"
+                                                            fill="#22C55E"
+                                                        />
+                                                        <Path
+                                                            d="M12 21L15 12H9L12 21z"
+                                                            fill="#22C55E"
+                                                            fillOpacity="0.4"
+                                                        />
+                                                    </G>
+                                                )}
+                                            </Svg>
+                                            <Text className="text-gray-600 text-[12px]">{trip.tag}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Group Suggestions Section */}
+                <View className="px-5 mb-8">
+                    <Text className="text-gray-900 text-[16px] mb-3" style={{ fontWeight: '600' }}>
+                        Chuyến đi mới
+                    </Text>
+
+                    {/* AI Plan Card */}
+                    <TouchableOpacity
+                        className="bg-[#EBF5FF] rounded-2xl p-4 flex-row items-center"
+                        activeOpacity={0.8}
+                        onPress={onCreateTrip}
+                        style={{ shadowColor: '#2B8EF0', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 }}
+                    >
+                        {/* + Button */}
+                        <View
+                            className="items-center justify-center mr-4"
+                            style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 14,
+                                backgroundColor: '#2B8EF0',
+                            }}
+                        >
+                            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                                <Path
+                                    d="M12 5v14M5 12h14"
+                                    stroke="white"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                />
+                            </Svg>
+                        </View>
+
+                        <View className="flex-1">
+                            <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
+                                Tạo kế hoạch mới
+                            </Text>
+                            <Text className="text-gray-500 text-[12px] mt-0.5">
+                                Sử dụng AI để tối ưu lịch trình của bạn ngay!
+                            </Text>
+                        </View>
+
+                        {/* Chevron */}
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                            <Path
+                                d="M9 18l6-6-6-6"
+                                stroke="#9CA3AF"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </Svg>
+                    </TouchableOpacity>
+                </View>
+                </>
+                )}
 
                 {/* Bottom padding for navigation bar */}
                 <View className="h-20" />

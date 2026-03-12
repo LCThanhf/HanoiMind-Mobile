@@ -81,9 +81,10 @@ const StarRating = ({ rating, total = 5 }: { rating: number; total?: number }) =
 interface ExploreScreenProps {
     activeTab: MainTab;
     onTabChange: (tab: MainTab) => void;
+    onViewAllPlaces?: () => void;
 }
 
-export const ExploreScreen = ({ activeTab, onTabChange }: ExploreScreenProps) => {
+export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces }: ExploreScreenProps) => {
     const [searchText, setSearchText] = useState('');
 
     return (
@@ -137,7 +138,7 @@ export const ExploreScreen = ({ activeTab, onTabChange }: ExploreScreenProps) =>
                         <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
                             Khám phá địa điểm
                         </Text>
-                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
+                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center" onPress={onViewAllPlaces}>
                             <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem tất cả</Text>
                             <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
                                 <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

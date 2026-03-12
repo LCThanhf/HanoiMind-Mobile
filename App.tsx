@@ -8,12 +8,13 @@ import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { ExploreScreen } from './components/ExploreScreen';
+import { PlacesExploreScreen } from './components/PlacesExploreScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { MainTab } from './components/BottomTabBar';
 
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -39,6 +40,7 @@ export default function App() {
         <ExploreScreen
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          onViewAllPlaces={() => setAppState('placesExplore')}
         />
       );
     }
@@ -81,6 +83,8 @@ export default function App() {
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
         return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} />;
+      case 'placesExplore':
+        return <PlacesExploreScreen onBack={() => setAppState('main')} activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setAppState('main'); }} />;
       case 'auth':
       default:
         return isSignIn ? (

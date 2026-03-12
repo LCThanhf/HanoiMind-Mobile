@@ -7,6 +7,7 @@ import { StarterScreen } from './components/StarterScreen';
 import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
+import { ExploreScreen } from './components/ExploreScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
@@ -28,6 +29,15 @@ export default function App() {
           activeTab={activeTab}
           onBack={() => setActiveTab('home')}
           onLogout={() => setAppState('starter')}
+          onTabChange={setActiveTab}
+        />
+      );
+    }
+
+    if (activeTab === 'explore') {
+      return (
+        <ExploreScreen
+          activeTab={activeTab}
           onTabChange={setActiveTab}
         />
       );

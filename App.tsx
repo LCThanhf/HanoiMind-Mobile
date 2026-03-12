@@ -19,6 +19,7 @@ export default function App() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<MainTab>('home');
+  const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
   const renderMainContent = () => {
     if (activeTab === 'profile') {
@@ -38,6 +39,9 @@ export default function App() {
         onTabChange={setActiveTab}
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
+        onLogout={() => setAppState('starter')}
+        initialTripTab={homeTripTab}
+        onTripTabChange={setHomeTripTab}
         onTripClick={(tripId) => {
           setSelectedTripId(tripId);
           setAppState('tripDetail');
@@ -66,7 +70,7 @@ export default function App() {
       case 'createTrip':
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
-        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} />;
+        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} />;
       case 'auth':
       default:
         return isSignIn ? (

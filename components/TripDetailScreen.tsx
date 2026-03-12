@@ -9,9 +9,10 @@ import { MoodVoteTab } from './tripDetail/MoodVoteTab';
 interface TripDetailScreenProps {
     onBack: () => void;
     tripId: string;
+    onOpenProfile?: () => void;
 }
 
-export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
+export const TripDetailScreen = ({ onBack, tripId, onOpenProfile }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [tabWidth, setTabWidth] = useState(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -447,6 +448,7 @@ export const TripDetailScreen = ({ onBack, tripId }: TripDetailScreenProps) => {
                 <TouchableOpacity 
                     className="flex-1 items-center justify-center"
                     activeOpacity={0.7}
+                    onPress={onOpenProfile}
                 >
                     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
                         <Path

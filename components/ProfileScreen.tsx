@@ -134,14 +134,14 @@ export const ProfileScreen = ({ onBack, onLogout, activeTab, onTabChange }: Prof
           </View>
         </View>
 
-        <View className="px-7 mt-16">
+        <View className="px-5 mt-16">
           <TouchableOpacity
             onPress={onLogout}
             activeOpacity={0.85}
             className="items-center justify-center rounded-2xl py-4"
-            style={{ backgroundColor: '#F0C9D3' }}
+            style={{ backgroundColor: '#FEE2E2' }}
           >
-            <Text className="text-[17px]" style={{ color: '#FF3B30', fontWeight: '500' }}>
+            <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>
               Log Out
             </Text>
           </TouchableOpacity>

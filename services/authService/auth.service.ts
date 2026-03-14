@@ -1,4 +1,4 @@
-import apiClient from 'services/apiClient';
+import apiClient from '../apiClient';
 import { 
   AuthResponse, 
   LoginPayload, 
@@ -15,13 +15,14 @@ export const AuthService = {
     }
   },
 
-  login: async (payload: LoginPayload): Promise<AuthResponse> => {
-    try {
-      return await apiClient.post('/auth/login', payload);
-    } catch (error) {
-      throw error;
-    }
-  },
+    login: async (payload: LoginPayload): Promise<AuthResponse> => {
+        try {
+        const res = await apiClient.post('/auth/login', payload);
+        return await apiClient.post<AuthResponse>('/auth/login', payload) as any;
+        } catch (error) {
+        throw error;
+        }
+    },
 
   logout: async (): Promise<{ success: boolean }> => {
     try {

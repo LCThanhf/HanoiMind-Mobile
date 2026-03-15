@@ -2,8 +2,9 @@ import apiClient from '../apiClient';
 import { 
   Journey, 
   CreateJourneyPayload, 
+  UpdateJourneyPayload,
   AddStopPayload,
-  JourneyStatus 
+  GetPublicFeedParams 
 } from './journey.type';
 
 export const JourneyService = {
@@ -11,72 +12,63 @@ export const JourneyService = {
    * 1. Tạo hành trình mới
    */
   create: async (payload: CreateJourneyPayload): Promise<Journey> => {
-    try {
-      return await apiClient.post('/journeys', payload);
-    } catch (error) { throw error; }
+    return await apiClient.post('/journeys', payload);
   },
 
   /**
    * 2. Lấy danh sách hành trình của tôi
    */
   findMy: async (): Promise<Journey[]> => {
-    try {
-      return await apiClient.get('/journeys/my-journeys');
-    } catch (error) { throw error; }
+    return await apiClient.get('/journeys/my-journeys');
   },
 
   /**
-   * 3. Lấy danh sách hành trình công khai (Feed)
+   * 3. Lấy danh sách hành trình công khai (Feed) với bộ lọc nâng cao
    */
-  getPublicFeed: async (search?: string): Promise<Journey[]> => {
-    try {
-      return await apiClient.get('/journeys/public', { params: { search } });
-    } catch (error) { throw error; }
+  getPublicFeed: async (params: GetPublicFeedParams): Promise<Journey[]> => {
+    return await apiClient.get('/journeys/public', { params });
   },
 
   /**
    * 4. Xem chi tiết hành trình
    */
   findOne: async (id: string): Promise<Journey> => {
-    try {
-      return await apiClient.get(`/journeys/${id}`);
-    } catch (error) { throw error; }
+    return await apiClient.get(`/journeys/${id}`);
   },
 
   /**
-   * 5. Thêm địa điểm vào lịch trình
+   * 5. Cập nhật thông tin hành trình (Avatar, Tags, v.v.)
+   */
+  update: async (id: string, payload: UpdateJourneyPayload): Promise<Journey> => {
+    return await apiClient.patch(`/journeys/${id}`, payload);
+  },
+
+  /**
+   * 6. Thêm địa điểm vào lịch trình
    */
   addStop: async (id: string, payload: AddStopPayload): Promise<Journey> => {
-    try {
-      return await apiClient.patch(`/journeys/${id}/add-stop`, payload);
-    } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${id}/add-stop`, payload);
   },
 
   /**
-   * 6. Cập nhật thông tin điểm dừng (Stop)
+   * 7. Cập nhật thông tin điểm dừng (Stop)
    */
   updateStop: async (journeyId: string, dayId: string, stopId: string, payload: any): Promise<Journey> => {
-    try {
-      return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}`, payload);
-    } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}`, payload);
   },
 
   /**
-   * 7. Xóa một địa điểm khỏi lịch trình
+   * 8. Xóa một địa điểm khỏi lịch trình
    */
   removeStop: async (id: string, dayNumber: number, stopId: string): Promise<any> => {
-    try {
-      return await apiClient.delete(`/journeys/${id}/days/${dayNumber}/stops/${stopId}`);
-    } catch (error) { throw error; }
+    return await apiClient.delete(`/journeys/${id}/days/${dayNumber}/stops/${stopId}`);
   },
 
   /**
-   * 8. Thay đổi thứ tự địa điểm (Kéo thả)
+   * 9. Thay đổi thứ tự địa điểm (Kéo thả)
    */
   moveStop: async (payload: { journey_id: string; from_day_number: number; to_day_number: number; old_index: number; new_index: number }): Promise<Journey> => {
-    try {
-      return await apiClient.patch(`/journeys/${payload.journey_id}/move-stop`, payload);
-    } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${payload.journey_id}/move-stop`, payload);
   },
 
   // ==========================================
@@ -84,58 +76,34 @@ export const JourneyService = {
   // ==========================================
 
   startJourney: async (id: string): Promise<Journey> => {
-    try { return await apiClient.patch(`/journeys/${id}/start`); } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${id}/start`);
   },
 
   checkInStop: async (journeyId: string, dayId: string, stopId: string, data: { actual_cost?: number, check_in_image?: string }): Promise<Journey> => {
-    try {
-      return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/check-in`, data);
-    } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/check-in`, data);
   },
 
   skipStop: async (journeyId: string, dayId: string, stopId: string): Promise<Journey> => {
-    try {
-      return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/skip`);
-    } catch (error) { throw error; }
+    return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/skip`);
   },
 
   // ==========================================
   // SOCIAL & MEMBERS
   // ==========================================
 
-  /**
-   * Tham gia hành trình bằng mã mời
-   */
   joinByInviteCode: async (invite_code: string): Promise<Journey> => {
-    try {
-      return await apiClient.post('/journeys/join', { invite_code });
-    } catch (error) { throw error; }
+    return await apiClient.post('/journeys/join', { invite_code });
   },
 
-  /**
-   * Rời khỏi hành trình
-   */
   leaveJourney: async (id: string): Promise<any> => {
-    try {
-      return await apiClient.post(`/journeys/${id}/leave`);
-    } catch (error) { throw error; }
+    return await apiClient.post(`/journeys/${id}/leave`);
   },
 
-  /**
-   * Lấy Album ảnh (Check-in + Chat) của hành trình
-   */
   getAlbum: async (id: string): Promise<any[]> => {
-    try {
-      return await apiClient.get(`/journeys/${id}/album`);
-    } catch (error) { throw error; }
+    return await apiClient.get(`/journeys/${id}/album`);
   },
 
-  /**
-   * Lấy phân tích ngân sách chi tiết
-   */
   getBudgetBreakdown: async (id: string): Promise<any> => {
-    try {
-      return await apiClient.get(`/journeys/${id}/budget-breakdown`);
-    } catch (error) { throw error; }
+    return await apiClient.get(`/journeys/${id}/budget-breakdown`);
   }
 };

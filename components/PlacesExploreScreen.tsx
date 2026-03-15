@@ -192,27 +192,142 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
 
 // ... Styles giữ nguyên như các bước trước
 const styles = StyleSheet.create({
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 14 },
-    headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700' },
-    searchContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, borderRadius: 12, backgroundColor: 'white', height: 46, borderWidth: 1, borderColor: '#E5E7EB' },
-    scrollRow: { paddingHorizontal: 16, gap: 8, alignItems: 'center' },
-    sortGroup: { flexDirection: 'row', gap: 6 },
-    divider: { width: 1, height: 20, backgroundColor: '#D1D5DB', marginHorizontal: 4 },
-    pill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' },
-    pillSortActive: { backgroundColor: '#FBBF24', borderColor: '#FBBF24' },
-    pillCatActive: { backgroundColor: '#2B8EF0', borderColor: '#2B8EF0' },
-    pillText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
-    pillTextActive: { color: 'white', fontWeight: '700' },
-    filterLabel: { fontSize: 12, fontWeight: '700', color: '#374151', marginRight: 4 },
-    filterPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#F3F4F6' },
-    filterPillActive: { backgroundColor: '#10B981' },
-    filterPillText: { fontSize: 11, color: '#4B5563' },
-    placeCard: { flexDirection: 'row', backgroundColor: 'white', borderRadius: 16, padding: 12, marginBottom: 12, gap: 12 },
-    placeImage: { width: 100, height: 80, borderRadius: 10 },
-    placeName: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-    infoText: { fontSize: 12, color: '#6B7280' },
-    crowdBadge: { marginTop: 6, backgroundColor: '#FEF3C7', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    crowdText: { fontSize: 10, color: '#D97706', fontWeight: '700' },
-    loadMoreBtn: { padding: 15, alignItems: 'center' },
-    loadMoreText: { color: '#2B8EF0', fontWeight: '700' }
+    // Header & Search
+    header: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 16, 
+        paddingTop: 48, 
+        paddingBottom: 14 
+    },
+    headerTitle: { 
+        flex: 1, 
+        textAlign: 'center', 
+        fontSize: 18, 
+        fontWeight: '700' 
+    },
+    searchContainer: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 14, 
+        borderRadius: 12, 
+        backgroundColor: 'white', 
+        height: 46, 
+        borderWidth: 1, 
+        borderColor: '#E5E7EB' 
+    },
+
+    // Filter & Sort Bar
+    scrollRow: { 
+        paddingHorizontal: 16, 
+        gap: 8, 
+        alignItems: 'center' 
+    },
+    sortGroup: { 
+        flexDirection: 'row', 
+        gap: 6 
+    },
+    divider: { 
+        width: 1, 
+        height: 20, 
+        backgroundColor: '#D1D5DB', 
+        marginHorizontal: 4 
+    },
+
+    // Pills (Sort & Category)
+    pill: { 
+        paddingHorizontal: 14, 
+        paddingVertical: 6, 
+        borderRadius: 20, 
+        backgroundColor: 'white', 
+        borderWidth: 1, 
+        borderColor: '#E5E7EB' 
+    },
+    pillSortActive: { 
+        backgroundColor: '#FBBF24', 
+        borderColor: '#FBBF24' 
+    },
+    pillCatActive: { 
+        backgroundColor: '#2B8EF0', 
+        borderColor: '#2B8EF0' 
+    },
+    pillText: { 
+        fontSize: 12, 
+        color: '#6B7280', 
+        fontWeight: '500' 
+    },
+    pillTextActive: { 
+        color: 'white', 
+        fontWeight: '700' 
+    },
+
+    // Crowd Filter Labels
+    filterLabel: { 
+        fontSize: 12, 
+        fontWeight: '700', 
+        color: '#374151', 
+        marginRight: 4 
+    },
+    filterPill: { 
+        paddingHorizontal: 12, 
+        paddingVertical: 5, 
+        borderRadius: 8, 
+        backgroundColor: '#F3F4F6' 
+    },
+    filterPillActive: { 
+        backgroundColor: '#10B981' 
+    },
+    filterPillText: { 
+        fontSize: 11, 
+        color: '#4B5563' 
+    },
+
+    // Place Cards
+    placeCard: { 
+        flexDirection: 'row', 
+        backgroundColor: 'white', 
+        borderRadius: 16, 
+        padding: 12, 
+        marginBottom: 12, 
+        gap: 12 
+    },
+    placeImage: { 
+        width: 100, 
+        height: 80, 
+        borderRadius: 10 
+    },
+    placeName: { 
+        fontSize: 15, 
+        fontWeight: '700', 
+        marginBottom: 4 
+    },
+    infoText: { 
+        fontSize: 12, 
+        color: '#6B7280' 
+    },
+
+    // Crowd Badge (Inside Card)
+    crowdBadge: { 
+        marginTop: 6, 
+        backgroundColor: '#FEF3C7', 
+        alignSelf: 'flex-start', 
+        paddingHorizontal: 6, 
+        paddingVertical: 2, 
+        borderRadius: 4 
+    },
+    crowdText: { 
+        fontSize: 10, 
+        color: '#D97706', 
+        fontWeight: '700' 
+    },
+
+    // Load More
+    loadMoreBtn: { 
+        padding: 15, 
+        alignItems: 'center' 
+    },
+    loadMoreText: { 
+        color: '#2B8EF0', 
+        fontWeight: '700' 
+    }
 });

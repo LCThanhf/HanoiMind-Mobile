@@ -7,6 +7,23 @@ export enum JourneyStatus {
   CANCELLED = 'CANCELLED'
 }
 
+export enum JourneyTag {
+  BEACH = 'BEACH',
+  MOUNTAIN = 'MOUNTAIN',
+  FOODIE = 'FOODIE',
+  ADVENTURE = 'ADVENTURE',
+  RELAX = 'RELAX',
+  CULTURE = 'CULTURE',
+  FAMILY = 'FAMILY',
+  COUPLE = 'COUPLE',
+  CHILL = 'CHILL',
+  NATURE = 'NATURE',
+  CITY = 'CITY',
+  HISTORICAL = 'HISTORICAL',
+  CHILD_FRIENDLY = 'CHILD_FRIENDLY',
+  AGE_RESTRICTED = 'AGE_RESTRICTED',
+}
+
 export enum JourneyVisibility {
   PRIVATE = 'PRIVATE',
   FRIENDS = 'FRIENDS',
@@ -81,6 +98,8 @@ export interface Journey {
   total_budget: number;
   cost_per_person: number;
   planned_members_count: number;
+  avatar?: string | null;
+  tags: JourneyTag[];
 }
 
 // DTO Payloads
@@ -91,7 +110,11 @@ export interface CreateJourneyPayload {
   budget_limit?: number;
   planned_members_count?: number;
   visibility?: JourneyVisibility;
+  avatar?: string;
+  tags?: JourneyTag[];
 }
+
+export interface UpdateJourneyPayload extends Partial<CreateJourneyPayload> {}
 
 export interface AddStopPayload {
   day_index: number;
@@ -103,6 +126,15 @@ export interface AddStopPayload {
   cost_type?: CostType;
   participant_ids?: string[];
   is_prepaid?: boolean;
-  checkout_day_index?: number; // Dành cho khách sạn
-  checkout_time?: string;     // Dành cho khách sạn
+  checkout_day_index?: number;
+  checkout_time?: string;
+}
+
+export interface GetPublicFeedParams {
+  search?: string;
+  tag?: JourneyTag;
+  minPrice?: number;
+  maxPrice?: number;
+  startDate?: string;
+  endDate?: string;
 }

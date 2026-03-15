@@ -3,29 +3,49 @@ import apiClient from '../apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChatMessage, ChatConversation, SendMessagePayload } from './chat.type';
 
-// URL của Backend 
-const SOCKET_URL = 'https://sybausuzuka-berotravel-backend.hf.space/chat'; 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://sybausuzuka-berotravel-backend.hf.space/api/v1/';
+const SOCKET_URL = API_URL.replace('/api/v1/', '') + '/chat'; 
 
 class ChatService {
   private socket: Socket | null = null;
 
+  // ==========================================
+  // 1. API CALLS (REST)
+  // ==========================================
+
   async getConversations(): Promise<ChatConversation[]> {
-    return await apiClient.get('/chat/conversations');
+    try {
+      return await apiClient.get('/chat/conversations');
+    } catch (error) {
+      throw error;
+    }
   }
 
   /** Lấy lịch sử tin nhắn trong phòng */
   async getMessages(roomId: string): Promise<ChatMessage[]> {
-    return await apiClient.get(`/chat/history/${roomId}`);
+    try {
+      return await apiClient.get(`/chat/history/${roomId}`);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /** Lấy kho ảnh của phòng chat */
   async getRoomImages(roomId: string): Promise<ChatMessage[]> {
-    return await apiClient.get(`/chat/${roomId}/images`);
+    try {
+      return await apiClient.get(`/chat/${roomId}/images`);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /** Tìm kiếm tin nhắn */
   async searchMessages(roomId: string, keyword: string): Promise<ChatMessage[]> {
-    return await apiClient.get(`/chat/${roomId}/search`, { params: { keyword } });
+    try {
+      return await apiClient.get(`/chat/${roomId}/search`, { params: { keyword } });
+    } catch (error) {
+      throw error;
+    }
   }
 
   // ==========================================
@@ -35,7 +55,7 @@ class ChatService {
   /** Khởi tạo kết nối Socket */
   async connect() {
     const token = await AsyncStorage.getItem('accessToken');
-    if (!token) return;
+    if (!token || this.socket) return;
 
     this.socket = io(SOCKET_URL, {
       query: { token },
@@ -46,8 +66,8 @@ class ChatService {
       console.log('✅ Connected to Chat Socket');
     });
 
-    this.socket.on('error', (err) => {
-      console.error('❌ Socket Error:', err);
+    this.socket.on('connect_error', (err) => {
+      console.error('❌ Chat Socket Error:', err.message);
     });
   }
 
@@ -97,7 +117,6 @@ class ChatService {
       this.socket = null;
     }
   }
-  
 }
 
 export default new ChatService();

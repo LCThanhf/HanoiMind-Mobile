@@ -1,8 +1,13 @@
 import { io, Socket } from 'socket.io-client';
 import apiClient from '../apiClient';
-import { Notification, NotificationType } from './notification.type';
+import { Notification } from './notification.type';
 
 let socket: Socket | null = null;
+
+// Lấy Base URL từ env và xử lý để lấy domain cho Socket
+// Thường Socket sẽ nối vào domain chính (bỏ phần /api/v1/)
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://sybausuzuka-berotravel-backend.hf.space/api/v1/';
+const SOCKET_URL = API_URL.replace('/api/v1/', ''); 
 
 export const NotificationService = {
   /**
@@ -12,7 +17,7 @@ export const NotificationService = {
     if (socket) return;
 
     // Kết nối tới namespace /notifications đã định nghĩa ở Backend
-    socket = io(`https://sybausuzuka-berotravel-backend.hf.space/notifications`, {
+    socket = io(`${SOCKET_URL}/notifications`, {
       query: { token },
       transports: ['websocket'],
     });
@@ -23,8 +28,15 @@ export const NotificationService = {
     });
 
     socket.on('connect', () => console.log('Connected to Notification Socket'));
+    
+    socket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err.message);
+    });
   },
 
+  /**
+   * Ngắt kết nối Socket
+   */
   disconnectSocket: () => {
     if (socket) {
       socket.disconnect();
@@ -38,7 +50,9 @@ export const NotificationService = {
   getMyNotifications: async (): Promise<Notification[]> => {
     try {
       return await apiClient.get('/notifications');
-    } catch (error) { throw error; }
+    } catch (error) { 
+      throw error; 
+    }
   },
 
   /**
@@ -47,7 +61,9 @@ export const NotificationService = {
   markAsRead: async (id: string): Promise<Notification> => {
     try {
       return await apiClient.patch(`/notifications/${id}/read`);
-    } catch (error) { throw error; }
+    } catch (error) { 
+      throw error; 
+    }
   },
 
   /**
@@ -56,6 +72,8 @@ export const NotificationService = {
   markAllAsRead: async (): Promise<{ success: boolean }> => {
     try {
       return await apiClient.patch('/notifications/read-all');
-    } catch (error) { throw error; }
+    } catch (error) { 
+      throw error; 
+    }
   }
 };

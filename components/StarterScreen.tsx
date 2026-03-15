@@ -63,7 +63,7 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSi
             <View className="px-6 pb-10">
                 {/* Sign Up Button */}
                 <TouchableOpacity
-                    className="w-full rounded-lg items-center justify-center mb-3"
+                    className="w-full rounded-lg flex-row items-center justify-center mb-3"
                     style={{
                         backgroundColor: '#2B8EF0',
                         paddingVertical: 16,
@@ -75,8 +75,11 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSi
                         className="text-white text-[16px]"
                         style={{ fontFamily: 'Georgia', fontWeight: '600', letterSpacing: 0.2 }}
                     >
-                        Chưa có tài khoản  →
+                        Chưa có tài khoản
                     </Text>
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 6 }}>
+                        <Path d="M5 12h14M12 5l7 7-7 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
                 </TouchableOpacity>
 
                 {/* Login Button */}

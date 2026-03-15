@@ -1,4 +1,3 @@
-// src/services/placesService/places.types.ts
 
 export enum PlaceCategory {
   // LƯU TRÚ

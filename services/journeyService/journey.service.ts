@@ -1,5 +1,3 @@
-// src/services/journeyService/journey.service.ts
-
 import apiClient from '../apiClient';
 import { 
   Journey, 

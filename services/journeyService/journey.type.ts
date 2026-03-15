@@ -1,5 +1,3 @@
-// src/services/journeyService/journey.types.ts
-
 export enum JourneyStatus {
   PLANNING = 'PLANNING',
   UPCOMING = 'UPCOMING',

@@ -1,5 +1,3 @@
-// src/services/placesService/places.service.ts
-
 import apiClient from '../apiClient';
 import { 
   Place, 
@@ -10,7 +8,6 @@ import {
 export const PlacesService = {
   /**
    * Tìm kiếm & Nearby Search
-   * Khớp với @Get() trong PlacesController
    */
   findAll: async (params: SearchPlaceParams): Promise<{ data: Place[]; meta: any }> => {
     try {
@@ -22,7 +19,6 @@ export const PlacesService = {
 
   /**
    * Lấy chi tiết địa điểm
-   * Khớp với @Get(':id') trong PlacesController
    */
   findOne: async (id: string): Promise<Place> => {
     try {
@@ -34,7 +30,6 @@ export const PlacesService = {
 
   /**
    * Tạo địa điểm mới
-   * Khớp với @Post() trong PlacesController
    */
   create: async (payload: CreatePlacePayload): Promise<{ message: string; data: Place }> => {
     try {
@@ -46,7 +41,6 @@ export const PlacesService = {
 
   /**
    * Cập nhật địa điểm
-   * Khớp với @Patch(':id') trong PlacesController
    */
   update: async (id: string, payload: Partial<CreatePlacePayload>): Promise<any> => {
     try {
@@ -58,7 +52,6 @@ export const PlacesService = {
 
   /**
    * Xóa địa điểm
-   * Khớp với @Delete(':id') trong PlacesController
    */
   remove: async (id: string): Promise<{ success: boolean; message: string }> => {
     try {
@@ -70,7 +63,6 @@ export const PlacesService = {
 
   /**
    * Merchant: Gửi yêu cầu xác nhận chủ sở hữu (Claim Place)
-   * Khớp với @Post(':id/claim') sử dụng FilesInterceptor
    * * @param id ID địa điểm
    * @param businessProofs Mảng các object chứa thông tin file (uri, name, type)
    */

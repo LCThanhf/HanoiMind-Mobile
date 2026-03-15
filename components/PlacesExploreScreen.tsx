@@ -1,352 +1,333 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    SafeAreaView,
-    TextInput,
-    Image,
+    View, Text, ScrollView, TouchableOpacity, SafeAreaView,
+    TextInput, Image, ActivityIndicator, Alert, RefreshControl, StyleSheet
 } from 'react-native';
-import Svg, { Path, Circle, Polygon } from 'react-native-svg';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import Svg, { Path } from 'react-native-svg';
+import * as Location from 'expo-location';
+import { BottomTabBar } from './BottomTabBar';
 
-const allPlaces = [
-    {
-        id: 'p1',
-        name: 'Bún chả Hàng Mành',
-        rating: 4.8,
-        distance: '1,2 km',
-        reviews: '36K',
-        tags: ['#street_food', '#local'],
-        category: 'Nhà Hàng',
-        image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p2',
-        name: 'Phở bò Hà Nội',
-        rating: 4.7,
-        distance: '2 km',
-        reviews: '18K',
-        tags: ['#street_food', '#local'],
-        category: 'Nhà Hàng',
-        image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p3',
-        name: "Pizza 4P'S",
-        rating: 4.6,
-        distance: '1,4 km',
-        reviews: '67K',
-        tags: ['#restaurant'],
-        category: 'Nhà Hàng',
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p4',
-        name: 'Cafe trứng Giàng',
-        rating: 4.6,
-        distance: '800 m',
-        reviews: '18K',
-        tags: ['#cafe', '#chill'],
-        category: 'Cafe',
-        image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p5',
-        name: 'Cà phê Nhân',
-        rating: 4.5,
-        distance: '1,1 km',
-        reviews: '12K',
-        tags: ['#cafe', '#local'],
-        category: 'Cafe',
-        image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p6',
-        name: 'Công viên Thống Nhất',
-        rating: 4.4,
-        distance: '3 km',
-        reviews: '9K',
-        tags: ['#park', '#chill'],
-        category: 'Công viên',
-        image: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=400&q=80',
-    },
+// Import Service và Types
+import { PlacesService } from '../services/placeService/place.service';
+import { Place, PlaceCategory } from '../services/placeService/place.type';
+
+// 1. Bản dịch tiếng Việt cho các Category (Khớp với PlaceCategory Enum)
+const CategoryVi: Record<string, string> = {
+    'Tất cả': 'Tất cả',
+    [PlaceCategory.ACCOMMODATION]: 'Lưu trú',
+    [PlaceCategory.HOTEL]: 'Khách sạn',
+    [PlaceCategory.HOSTEL]: 'Hostel',
+    [PlaceCategory.HOMESTAY]: 'Homestay',
+    [PlaceCategory.RESORT]: 'Resort',
+    [PlaceCategory.GUEST_HOUSE]: 'Nhà nghỉ',
+    [PlaceCategory.RESTAURANT]: 'Nhà hàng',
+    [PlaceCategory.CAFE]: 'Cà phê',
+    [PlaceCategory.BAR_PUB]: 'Bar & Pub',
+    [PlaceCategory.STREET_FOOD]: 'Ẩm thực vỉa hè',
+    [PlaceCategory.SIGHTSEEING]: 'Tham quan',
+    [PlaceCategory.CULTURE]: 'Văn hóa',
+    [PlaceCategory.PARK]: 'Công viên',
+    [PlaceCategory.EXPERIENCE]: 'Trải nghiệm',
+    [PlaceCategory.ENTERTAINMENT]: 'Giải trí',
+    [PlaceCategory.WELLNESS]: 'Sức khỏe & Spa',
+    [PlaceCategory.SHOPPING]: 'Mua sắm',
+    [PlaceCategory.LOCAL_MARKET]: 'Chợ địa phương',
+    [PlaceCategory.TRANSPORT]: 'Giao thông',
+    [PlaceCategory.HEALTH]: 'Y tế',
+    [PlaceCategory.FINANCE]: 'Tài chính',
+    [PlaceCategory.CONVENIENCE]: 'Cửa hàng tiện lợi',
+    [PlaceCategory.LAUNDRY]: 'Giặt là',
+    [PlaceCategory.OTHER]: 'Khác'
+};
+
+const CATEGORY_LIST = ['Tất cả', ...Object.values(PlaceCategory)];
+
+const SORT_OPTIONS = [
+    { label: 'Gần nhất', value: 'distance' },
+    { label: 'Đánh giá', value: 'rating' },
+    { label: 'Mới nhất', value: 'createdAt' },
+    { label: 'Độ đông đúc', value: 'crowdLevel' },
 ];
 
-const categories = ['Tất cả', 'Nhà Hàng', 'Cafe', 'Công viên'];
+const CROWD_FILTERS = [
+    { label: 'Tất cả ', value: undefined },
+    { label: 'Rất vắng (1)', value: 1 },
+    { label: 'Thoải mái (≤2)', value: 2 },
+    { label: 'Trung bình (≤3)', value: 3 },
+    { label: 'Đông đúc (≤4)', value: 4 },
+    { label: 'Cực đông (5)', value: 5 },
+];
 
-const OutlineStarRating = ({ rating, total = 5 }: { rating: number; total?: number }) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        {Array.from({ length: total }).map((_, i) => (
-            <Svg key={i} width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginRight: 2 }}>
-                <Polygon
-                    points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                    fill={i < Math.floor(rating) ? '#FCD34D' : 'none'}
-                    stroke="#FBBF24"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                />
-            </Svg>
-        ))}
-        <Text style={{ fontSize: 13, color: '#F59E0B', fontWeight: '700', marginLeft: 4 }}>{rating}</Text>
-    </View>
-);
-
-interface PlacesExploreScreenProps {
-    onBack: () => void;
-    activeTab: MainTab;
-    onTabChange: (tab: MainTab) => void;
-}
-
-export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: PlacesExploreScreenProps) => {
+export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => {
+    const [places, setPlaces] = useState<Place[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    
     const [searchText, setSearchText] = useState('');
     const [activeCategory, setActiveCategory] = useState('Tất cả');
+    const [sortBy, setSortBy] = useState<'rating' | 'distance' | 'createdAt' | 'crowdLevel'>('distance');
+    const [maxCrowd, setMaxCrowd] = useState<number | undefined>(undefined);
+    
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
-    const filteredPlaces = allPlaces.filter((place) => {
-        const matchCategory = activeCategory === 'Tất cả' || place.category === activeCategory;
-        const matchSearch = place.name.toLowerCase().includes(searchText.toLowerCase());
-        return matchCategory && matchSearch;
-    });
+    useEffect(() => {
+        setPage(1);
+        fetchData(1, false);
+    }, [activeCategory, sortBy, maxCrowd]);
+
+    const fetchData = async (targetPage: number, isLoadMore: boolean) => {
+        try {
+            isLoadMore ? setLoadingMore(true) : setLoading(true);
+
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            let coords = { latitude: 21.0285, longitude: 105.8542 }; 
+            if (status === 'granted') {
+                const location = await Location.getCurrentPositionAsync({});
+                coords = location.coords;
+            }
+
+            const response = await PlacesService.findAll({
+                name: searchText || undefined,
+                category: activeCategory === 'Tất cả' ? undefined : (activeCategory as PlaceCategory),
+                lat: coords.latitude,
+                lng: coords.longitude,
+                radius: 10000, 
+                page: targetPage,
+                limit: 10,
+                sortBy: sortBy,
+                sortOrder: sortBy === 'rating' ? 'DESC' : 'ASC',
+                maxCrowd: maxCrowd 
+            });
+
+            setPlaces(isLoadMore ? [...places, ...response.data] : response.data);
+            setHasMore(response.data.length === 10);
+        } catch (error) {
+            Alert.alert("Lỗi", "Không thể tải danh sách địa điểm");
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+            setRefreshing(false);
+        }
+    };
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        setPage(1);
+        fetchData(1, false);
+    }, [activeCategory, searchText, sortBy, maxCrowd]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F6FA' }}>
-            {/* Header */}
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingTop: 48,
-                    paddingBottom: 14,
-                    backgroundColor: '#F5F6FA',
-                }}
-            >
-                <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path
-                            d="M19 12H5M12 19l-7-7 7-7"
-                            stroke="#111827"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                </TouchableOpacity>
-                <Text
-                    style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        fontSize: 18,
-                        fontWeight: '700',
-                        color: '#111827',
-                        marginRight: 36,
-                    }}
-                >
-                    Khám phá địa điểm
-                </Text>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={onBack}><Svg width={24} height={24} viewBox="0 0 24 24" fill="none"><Path d="M19 12H5M12 19l-7-7 7-7" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg></TouchableOpacity>
+                <Text style={styles.headerTitle}>Khám phá địa điểm</Text>
             </View>
 
-            {/* Search Bar */}
             <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        paddingHorizontal: 14,
-                        borderRadius: 14,
-                        backgroundColor: 'white',
-                        borderWidth: 1,
-                        borderColor: '#E5E7EB',
-                        height: 46,
-                    }}
-                >
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 10 }}>
-                        <Path
-                            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-                            stroke="#9CA3AF"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                    <TextInput
-                        value={searchText}
-                        onChangeText={setSearchText}
-                        placeholder="Tìm địa điểm..."
-                        placeholderTextColor="#9CA3AF"
-                        style={{ flex: 1, fontSize: 14, color: '#111827' }}
-                    />
+                <View style={styles.searchContainer}>
+                    <TextInput value={searchText} onChangeText={setSearchText} onSubmitEditing={() => {setPage(1); fetchData(1, false);}} placeholder="Tìm địa điểm..." style={{ flex: 1, fontSize: 14 }} />
                 </View>
             </View>
 
-            {/* Category Tabs */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 2 }}
-                style={{ flexGrow: 0, marginBottom: 10 }}
-            >
-                {categories.map((cat) => {
-                    const isActive = activeCategory === cat;
-                    return (
-                        <TouchableOpacity
-                            key={cat}
-                            onPress={() => setActiveCategory(cat)}
-                            activeOpacity={0.75}
-                            style={{
-                                paddingHorizontal: 16,
-                                paddingVertical: 7,
-                                borderRadius: 20,
-                                backgroundColor: isActive ? '#2B8EF0' : 'white',
-                                borderWidth: 1,
-                                borderColor: isActive ? '#2B8EF0' : '#E5E7EB',
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 13,
-                                    fontWeight: isActive ? '700' : '500',
-                                    color: isActive ? 'white' : '#6B7280',
-                                }}
-                            >
-                                {cat}
-                            </Text>
+            {/* Dòng 1: Sort Options + Categories (Tiếng Việt) */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0 }}>
+                <View style={styles.sortGroup}>
+                    {SORT_OPTIONS.map((opt) => (
+                        <TouchableOpacity key={opt.value} onPress={() => setSortBy(opt.value as any)} style={[styles.pill, sortBy === opt.value && styles.pillSortActive]}>
+                            <Text style={[styles.pillText, sortBy === opt.value && styles.pillTextActive]}>{opt.label}</Text>
                         </TouchableOpacity>
-                    );
-                })}
-            </ScrollView>
-
-            {/* Sort Row */}
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingBottom: 10,
-                }}
-            >
-                <Text style={{ fontSize: 13, color: '#6B7280', fontWeight: '500' }}>Sắp xếp: </Text>
-                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginRight: 4 }}>
-                    <Polygon
-                        points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                        fill="#FBBF24"
-                        stroke="#FBBF24"
-                        strokeWidth="1"
-                    />
-                </Svg>
-                <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600' }}>Rating</Text>
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 4 }}>
-                    <Path
-                        d="M8 10l4-4 4 4M8 14l4 4 4-4"
-                        stroke="#9CA3AF"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </Svg>
-            </View>
-
-            {/* Places List */}
-            <ScrollView
-                style={{ flex: 1 }}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100, gap: 10 }}
-            >
-                {filteredPlaces.map((place) => (
-                    <TouchableOpacity
-                        key={place.id}
-                        activeOpacity={0.8}
-                        style={{
-                            flexDirection: 'row',
-                            backgroundColor: 'white',
-                            borderRadius: 16,
-                            borderWidth: 1,
-                            borderColor: '#F3F4F6',
-                            padding: 10,
-                            alignItems: 'center',
-                            gap: 12,
-                        }}
-                    >
-                        {/* Image */}
-                        <Image
-                            source={{ uri: place.image }}
-                            style={{ width: 140, height: 110, borderRadius: 10 }}
-                            resizeMode="cover"
-                        />
-
-                        {/* Info */}
-                        <View style={{ flex: 1 }}>
-                            {/* Name */}
-                            <Text
-                                style={{ fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 4 }}
-                                numberOfLines={1}
-                            >
-                                {place.name}
-                            </Text>
-
-                            {/* Stars */}
-                            <OutlineStarRating rating={place.rating} />
-
-                            {/* Tags */}
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 5 }}>
-                                {place.tags.map((tag) => (
-                                    <View
-                                        key={tag}
-                                        style={{
-                                            backgroundColor: '#EBF5FF',
-                                            borderRadius: 20,
-                                            paddingHorizontal: 8,
-                                            paddingVertical: 2,
-                                        }}
-                                    >
-                                        <Text style={{ fontSize: 11, color: '#2B8EF0', fontWeight: '600' }}>{tag}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                            {/* Distance & Reviews */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, gap: 12 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
-                                        <Path
-                                            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
-                                            fill="#9CA3AF"
-                                        />
-                                    </Svg>
-                                    <Text style={{ fontSize: 11, color: '#6B7280' }}>{place.distance}</Text>
-                                </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
-                                        <Path
-                                            d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                                            stroke="#9CA3AF"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                        />
-                                        <Circle cx="9" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2" />
-                                        <Path
-                                            d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
-                                            stroke="#9CA3AF"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                        />
-                                    </Svg>
-                                    <Text style={{ fontSize: 11, color: '#6B7280' }}>{place.reviews}</Text>
-                                </View>
-                            </View>
-                        </View>
+                    ))}
+                </View>
+                <View style={styles.divider} />
+                {CATEGORY_LIST.map((cat) => (
+                    <TouchableOpacity key={cat} onPress={() => setActiveCategory(cat)} style={[styles.pill, activeCategory === cat && styles.pillCatActive]}>
+                        <Text style={[styles.pillText, activeCategory === cat && styles.pillTextActive]}>
+                            {CategoryVi[cat] || cat}
+                        </Text>
                     </TouchableOpacity>
                 ))}
-
-                {filteredPlaces.length === 0 && (
-                    <View style={{ alignItems: 'center', marginTop: 48 }}>
-                        <Text style={{ fontSize: 15, color: '#9CA3AF', fontWeight: '500' }}>Không tìm thấy địa điểm</Text>
-                    </View>
-                )}
             </ScrollView>
 
+            {/* Dòng 2: Filter Options (Crowd Level) */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0, marginTop: 8, marginBottom: 10 }}>
+                <Text style={styles.filterLabel}>Lọc:</Text>
+                {CROWD_FILTERS.map((f) => (
+                    <TouchableOpacity key={String(f.value)} onPress={() => setMaxCrowd(f.value)} style={[styles.filterPill, maxCrowd === f.value && styles.filterPillActive]}>
+                        <Text style={[styles.filterPillText, maxCrowd === f.value && styles.pillTextActive]}>{f.label}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#2B8EF0" style={{ marginTop: 20 }} />
+                ) : (
+                    <>
+                        {places.map((place) => (
+                            <TouchableOpacity key={place._id} style={styles.placeCard}>
+                                <Image source={{ uri: place.images[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.placeName}>{place.name}</Text>
+                                    <Text style={styles.infoText}>{place.distance ? `${(place.distance / 1000).toFixed(1)} km` : 'N/A'} • {place.reviewCount} đánh giá</Text>
+                                    <View style={styles.crowdBadge}>
+                                        <Text style={styles.crowdText}>Độ đông đúc: {place.crowdLevel}/5</Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                        {hasMore && (
+                            <TouchableOpacity style={styles.loadMoreBtn} onPress={() => { const p = page + 1; setPage(p); fetchData(p, true); }}>
+                                {loadingMore ? <ActivityIndicator size="small" color="#2B8EF0" /> : <Text style={styles.loadMoreText}>Xem thêm địa điểm</Text>}
+                            </TouchableOpacity>
+                        )}
+                    </>
+                )}
+            </ScrollView>
             <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };
+
+// ... Styles giữ nguyên như các bước trước
+const styles = StyleSheet.create({
+    // Header & Search
+    header: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 16, 
+        paddingTop: 48, 
+        paddingBottom: 14 
+    },
+    headerTitle: { 
+        flex: 1, 
+        textAlign: 'center', 
+        fontSize: 18, 
+        fontWeight: '700' 
+    },
+    searchContainer: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 14, 
+        borderRadius: 12, 
+        backgroundColor: 'white', 
+        height: 46, 
+        borderWidth: 1, 
+        borderColor: '#E5E7EB' 
+    },
+
+    // Filter & Sort Bar
+    scrollRow: { 
+        paddingHorizontal: 16, 
+        gap: 8, 
+        alignItems: 'center' 
+    },
+    sortGroup: { 
+        flexDirection: 'row', 
+        gap: 6 
+    },
+    divider: { 
+        width: 1, 
+        height: 20, 
+        backgroundColor: '#D1D5DB', 
+        marginHorizontal: 4 
+    },
+
+    // Pills (Sort & Category)
+    pill: { 
+        paddingHorizontal: 14, 
+        paddingVertical: 6, 
+        borderRadius: 20, 
+        backgroundColor: 'white', 
+        borderWidth: 1, 
+        borderColor: '#E5E7EB' 
+    },
+    pillSortActive: { 
+        backgroundColor: '#FBBF24', 
+        borderColor: '#FBBF24' 
+    },
+    pillCatActive: { 
+        backgroundColor: '#2B8EF0', 
+        borderColor: '#2B8EF0' 
+    },
+    pillText: { 
+        fontSize: 12, 
+        color: '#6B7280', 
+        fontWeight: '500' 
+    },
+    pillTextActive: { 
+        color: 'white', 
+        fontWeight: '700' 
+    },
+
+    // Crowd Filter Labels
+    filterLabel: { 
+        fontSize: 12, 
+        fontWeight: '700', 
+        color: '#374151', 
+        marginRight: 4 
+    },
+    filterPill: { 
+        paddingHorizontal: 12, 
+        paddingVertical: 5, 
+        borderRadius: 8, 
+        backgroundColor: '#F3F4F6' 
+    },
+    filterPillActive: { 
+        backgroundColor: '#10B981' 
+    },
+    filterPillText: { 
+        fontSize: 11, 
+        color: '#4B5563' 
+    },
+
+    // Place Cards
+    placeCard: { 
+        flexDirection: 'row', 
+        backgroundColor: 'white', 
+        borderRadius: 16, 
+        padding: 12, 
+        marginBottom: 12, 
+        gap: 12 
+    },
+    placeImage: { 
+        width: 100, 
+        height: 80, 
+        borderRadius: 10 
+    },
+    placeName: { 
+        fontSize: 15, 
+        fontWeight: '700', 
+        marginBottom: 4 
+    },
+    infoText: { 
+        fontSize: 12, 
+        color: '#6B7280' 
+    },
+
+    // Crowd Badge (Inside Card)
+    crowdBadge: { 
+        marginTop: 6, 
+        backgroundColor: '#FEF3C7', 
+        alignSelf: 'flex-start', 
+        paddingHorizontal: 6, 
+        paddingVertical: 2, 
+        borderRadius: 4 
+    },
+    crowdText: { 
+        fontSize: 10, 
+        color: '#D97706', 
+        fontWeight: '700' 
+    },
+
+    // Load More
+    loadMoreBtn: { 
+        padding: 15, 
+        alignItems: 'center' 
+    },
+    loadMoreText: { 
+        color: '#2B8EF0', 
+        fontWeight: '700' 
+    }
+});

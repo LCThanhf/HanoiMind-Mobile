@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polygon } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
+import { AppHeader } from './AppHeader';
 
 const places = [
     {
@@ -82,19 +84,16 @@ interface ExploreScreenProps {
     activeTab: MainTab;
     onTabChange: (tab: MainTab) => void;
     onViewAllPlaces?: () => void;
+    onOpenProfile: () => void;
+    onLogout: () => void;
 }
 
-export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces }: ExploreScreenProps) => {
+export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenProfile, onLogout }: ExploreScreenProps) => {
     const [searchText, setSearchText] = useState('');
 
     return (
-        <SafeAreaView className="flex-1 bg-[#F5F6FA]">
-            {/* Header */}
-            <View className="px-5 pt-12 pb-4 bg-[#F5F6FA]">
-                <Text className="text-gray-900 text-[22px] text-center" style={{ fontWeight: '700' }}>
-                    Khám phá
-                </Text>
-            </View>
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+            <AppHeader onOpenProfile={onOpenProfile} onLogout={onLogout} />
 
             {/* Search Bar */}
             <View className="px-5 mb-4">

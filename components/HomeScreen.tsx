@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Animated, Image, Modal, TouchableWithoutFeedback, Dimensions, TextInput, ImageBackground, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ImageBackground, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Polygon } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
+import { AppHeader } from './AppHeader';
 
 // API Imports
-import { UsersService } from '../services/userService/user.service';
 import { PlacesService } from '../services/placeService/place.service';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { Place, PlaceCategory } from '../services/placeService/place.type';
@@ -111,12 +112,6 @@ export const HomeScreen = ({
     onTripClick?: (tripId: string) => void;
     onLogout?: () => void;
 }) => {
-    const avatarRef = useRef<View>(null);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
-    const dropdownOpacity = useRef(new Animated.Value(0)).current;
-    const dropdownTranslateY = useRef(new Animated.Value(-8)).current;
-
     const [searchText, setSearchText] = useState('');
     const [activeFilter, setActiveFilter] = useState<PlaceFilterLabel>('All');
     const [activeTourFilter, setActiveTourFilter] = useState<TourFilterLabel>('All');
@@ -125,7 +120,6 @@ export const HomeScreen = ({
     const [myTrips, setMyTrips] = useState<Journey[]>([]);
     const [joinTours, setJoinTours] = useState<Journey[]>([]);
     const [places, setPlaces] = useState<Place[]>([]);
-    const [userProfile, setUserProfile] = useState<{ fullName?: string; avatar?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchHomeData = async (filterCategory: PlaceFilterLabel, tourFilter: TourFilterLabel) => {
@@ -134,19 +128,12 @@ export const HomeScreen = ({
             const category = PLACE_CATEGORY_MAP[filterCategory];
             const tourTag = TOUR_TAG_MAP[tourFilter];
 
-            const [userRes, journeysRes, placesRes, publicRes] = await Promise.allSettled([
-                UsersService.getMe(),
+            const [journeysRes, placesRes, publicRes] = await Promise.allSettled([
                 JourneyService.findMy(),
                 PlacesService.findAll({ limit: 10, category }),
                 JourneyService.getPublicFeed({ tag: tourTag, maxPrice: 3000000 }),
             ]);
 
-            if (userRes.status === 'fulfilled') {
-                setUserProfile({
-                    fullName: userRes.value.fullName,
-                    avatar: userRes.value.avatar,
-                });
-            }
             if (journeysRes.status === 'fulfilled') {
                 setMyTrips(normalizeJourneyList(journeysRes.value));
             }
@@ -156,7 +143,7 @@ export const HomeScreen = ({
             if (publicRes.status === 'fulfilled') {
                 setJoinTours(normalizeJourneyList(publicRes.value));
             }
-            
+
         } catch (error) {
             console.error('Home data load error:', error);
         } finally {
@@ -177,126 +164,10 @@ export const HomeScreen = ({
 
 
     return (
-        <SafeAreaView className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+            <AppHeader onOpenProfile={onOpenProfile ?? (() => { })} onLogout={onLogout ?? (() => { })} />
+
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90 }}>
-                {/* Header */}
-                <View className="flex-row items-center justify-between px-5 pt-8 pb-4">
-                    <View className="flex-1 justify-center">
-                        <Text className="text-[#22C55E] text-[28px] font-bold mb-1" style={{ fontWeight: '900' }}>
-                            HanoiMind
-                        </Text>
-                        <View className="flex-row items-center">
-                            <Text className="text-gray-900 text-[20px] font-bold mr-2">Chào mừng, {userProfile?.fullName || 'bạn'}!</Text>
-                        </View>
-                        <TouchableOpacity className="mt-1 flex-row" activeOpacity={0.7}>
-                           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                <Circle cx="5" cy="5" r="2" fill="#9CA3AF" />
-                                <Circle cx="12" cy="5" r="2" fill="#9CA3AF" />
-                                <Circle cx="19" cy="5" r="2" fill="#9CA3AF" />
-                                <Circle cx="5" cy="12" r="2" fill="#9CA3AF" />
-                                <Circle cx="12" cy="12" r="2" fill="#9CA3AF" />
-                                <Circle cx="19" cy="12" r="2" fill="#9CA3AF" />
-                                <Circle cx="5" cy="19" r="2" fill="#9CA3AF" />
-                                <Circle cx="12" cy="19" r="2" fill="#9CA3AF" />
-                                <Circle cx="19" cy="19" r="2" fill="#9CA3AF" />
-                           </Svg>
-                        </TouchableOpacity>
-                    </View>
-                    
-                    {/* Avatar Block */}
-                    <TouchableOpacity
-                        className="ml-2 mt-4"
-                        activeOpacity={0.8}
-                        onPress={() => {
-                            avatarRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
-                                const screenWidth = Dimensions.get('window').width;
-                                setDropdownPos({ top: y + height + 4, right: screenWidth - x - width });
-                                dropdownOpacity.setValue(0);
-                                dropdownTranslateY.setValue(-8);
-                                setShowDropdown(true);
-                                Animated.parallel([
-                                    Animated.timing(dropdownOpacity, {
-                                        toValue: 1,
-                                        duration: 280,
-                                        useNativeDriver: true,
-                                    }),
-                                    Animated.timing(dropdownTranslateY, {
-                                        toValue: 0,
-                                        duration: 280,
-                                        useNativeDriver: true,
-                                    }),
-                                ]).start();
-                            });
-                        }}
-                    >
-                        <View ref={avatarRef}>
-                            <Image
-                                source={{ uri: userProfile?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
-                                style={{ width: 44, height: 44, borderRadius: 22 }}
-                            />
-                        </View>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Dropdown Menu */}
-                <Modal
-                    visible={showDropdown}
-                    transparent
-                    animationType="none"
-                    onRequestClose={() => setShowDropdown(false)}
-                >
-                    <TouchableWithoutFeedback onPress={() => setShowDropdown(false)}>
-                        <View style={{ flex: 1 }}>
-                            <TouchableWithoutFeedback>
-                                <Animated.View
-                                    style={{
-                                        position: 'absolute',
-                                        top: dropdownPos.top,
-                                        right: dropdownPos.right,
-                                        backgroundColor: 'white',
-                                        borderRadius: 14,
-                                        minWidth: 180,
-                                        shadowColor: '#000',
-                                        shadowOpacity: 0.12,
-                                        shadowRadius: 16,
-                                        shadowOffset: { width: 0, height: 4 },
-                                        elevation: 8,
-                                        borderWidth: 1,
-                                        borderColor: '#F3F4F6',
-                                        overflow: 'hidden',
-                                        opacity: dropdownOpacity,
-                                        transform: [{ translateY: dropdownTranslateY }],
-                                    }}
-                                >
-                                    <TouchableOpacity
-                                        activeOpacity={0.75}
-                                        onPress={() => { setShowDropdown(false); onOpenProfile?.(); }}
-                                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}
-                                    >
-                                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 12 }}>
-                                            <Circle cx="12" cy="8" r="4" stroke="#374151" strokeWidth="1.8" />
-                                            <Path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" />
-                                        </Svg>
-                                        <Text style={{ fontSize: 15, color: '#111827', fontWeight: '500' }}>Hồ sơ</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        activeOpacity={0.75}
-                                        onPress={() => { setShowDropdown(false); onLogout?.(); }}
-                                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
-                                    >
-                                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 12 }}>
-                                            <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                            <Path d="M16 17l5-5-5-5" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                            <Path d="M21 12H9" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                        </Svg>
-                                        <Text style={{ fontSize: 15, color: '#EF4444', fontWeight: '500' }}>Đăng xuất</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </TouchableWithoutFeedback>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
-
                 {/* Weather Card */}
                 <View className="px-5 mb-5 mt-2">
                     <View className="rounded-[20px] overflow-hidden" style={{ height: 160 }}>
@@ -305,10 +176,10 @@ export const HomeScreen = ({
                             style={{ width: '100%', height: '100%' }}
                         >
                             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' }} />
-                            
+
                             <View className="p-4 flex-1 justify-between">
                                 <Text className="text-white text-[13px] font-semibold">Dự báo hôm nay: Có mây</Text>
-                                
+
                                 <View className="flex-row items-end justify-between">
                                     <View>
                                         <View className="flex-row items-end">
@@ -319,7 +190,7 @@ export const HomeScreen = ({
                                         <Text className="text-white text-[13px] font-medium mt-1">Cầu Giấy, Hà Nội</Text>
                                         <Text className="text-white text-[13px] font-medium mt-1">Thích hợp để ra ngoài</Text>
                                     </View>
-                                    
+
                                     <View className="items-end">
                                         <View className="bg-black/30 px-3 py-1.5 rounded-lg mb-2 border border-white/10">
                                             <Text className="text-white text-[11px] font-medium">Độ ẩm: --</Text>
@@ -395,8 +266,8 @@ export const HomeScreen = ({
                         {PLACE_FILTERS.map(chip => {
                             const isActive = activeFilter === chip;
                             return (
-                                <TouchableOpacity 
-                                    key={chip} 
+                                <TouchableOpacity
+                                    key={chip}
                                     activeOpacity={0.8}
                                     onPress={() => setActiveFilter(chip)}
                                     className={`px-4 py-1.5 rounded-full mr-2 ${isActive ? 'bg-[#DCFCE7]' : 'bg-gray-100 border border-gray-200'}`}
@@ -412,14 +283,14 @@ export const HomeScreen = ({
                     <View className="px-5 mb-4">
                         <View className="flex-row items-center bg-gray-100/80 px-4 py-2.5 rounded-[20px]">
                             <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" className="mr-2">
-                               <Path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <Path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </Svg>
-                            <TextInput 
+                            <TextInput
                                 value={searchText}
                                 onChangeText={setSearchText}
-                                placeholder="Tìm địa điểm..." 
-                                placeholderTextColor="#6B7280" 
-                                className="flex-1 text-[14px] text-gray-900 py-1" 
+                                placeholder="Tìm địa điểm..."
+                                placeholderTextColor="#6B7280"
+                                className="flex-1 text-[14px] text-gray-900 py-1"
                             />
                         </View>
                     </View>
@@ -430,30 +301,30 @@ export const HomeScreen = ({
                         </View>
                     ) : (
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pl-5" contentContainerStyle={{ paddingRight: 20 }}>
-                        {filteredPlaces.map(place => (
-                            <TouchableOpacity key={place._id} className="w-[160px] mr-4 bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm">
-                                <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/400' }} className="w-full h-[100px]" />
-                                <View className="px-3 py-3">
-                                    <Text className="text-gray-900 text-[14px] font-bold mb-1" numberOfLines={1}>{place.name}</Text>
-                                    <StarRating rating={place.rating || 0} />
-                                    <View className="flex-row items-center mt-2 justify-between">
-                                        <View className="flex-row items-center">
-                                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" className="mr-1">
-                                                <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#6B7280" />
-                                            </Svg>
-                                            <Text className="text-gray-500 text-[12px]">{formatDistance(place.distance)}</Text>
-                                        </View>
-                                        <View className="flex-row items-center">
-                                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" className="mr-1">
-                                                <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
-                                                <Circle cx="9" cy="7" r="4" stroke="#6B7280" strokeWidth="1.5" />
-                                            </Svg>
-                                            <Text className="text-gray-500 text-[12px]">{place.reviewCount || 0}</Text>
+                            {filteredPlaces.map(place => (
+                                <TouchableOpacity key={place._id} className="w-[160px] mr-4 bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm">
+                                    <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/400' }} className="w-full h-[100px]" />
+                                    <View className="px-3 py-3">
+                                        <Text className="text-gray-900 text-[14px] font-bold mb-1" numberOfLines={1}>{place.name}</Text>
+                                        <StarRating rating={place.rating || 0} />
+                                        <View className="flex-row items-center mt-2 justify-between">
+                                            <View className="flex-row items-center">
+                                                <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" className="mr-1">
+                                                    <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#6B7280" />
+                                                </Svg>
+                                                <Text className="text-gray-500 text-[12px]">{formatDistance(place.distance)}</Text>
+                                            </View>
+                                            <View className="flex-row items-center">
+                                                <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" className="mr-1">
+                                                    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
+                                                    <Circle cx="9" cy="7" r="4" stroke="#6B7280" strokeWidth="1.5" />
+                                                </Svg>
+                                                <Text className="text-gray-500 text-[12px]">{place.reviewCount || 0}</Text>
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                                </TouchableOpacity>
+                            ))}
                         </ScrollView>
                     )}
                 </View>
@@ -539,7 +410,7 @@ export const HomeScreen = ({
                             <Text className="text-white text-[13px] font-semibold">Xem thêm</Text>
                         </TouchableOpacity>
                     </View>
-                    
+
                     {myTrips.map(trip => {
                         const tripId = trip._id;
                         return (
@@ -561,18 +432,18 @@ export const HomeScreen = ({
                                             </Svg>
                                         </TouchableOpacity>
                                     </View>
-                                    
+
                                     <View className="flex-row items-center mt-1">
                                         <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" className="mr-1">
                                             <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#6B7280" />
                                         </Svg>
                                         <Text className="text-gray-500 text-[11px]" numberOfLines={1}>{trip.days?.length ? `${trip.days.length} điểm dừng` : 'Nhiều điểm dừng'}</Text>
                                     </View>
-                                    
+
                                     <View className="mt-2 self-start border border-[#2B8EF0] rounded-full px-3 py-1">
                                         <Text className="text-[#2B8EF0] text-[11px] font-medium">{getTripStatusText(trip)}</Text>
                                     </View>
-                                    
+
                                     <View className="flex-row items-center mt-2">
                                         <View className="flex-row items-center mr-3">
                                             <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" className="mr-1.5">

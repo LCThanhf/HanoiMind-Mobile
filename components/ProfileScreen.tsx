@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Image, 
-  SafeAreaView, 
-  ScrollView, 
-  Text, 
-  TouchableOpacity, 
-  View, 
-  ActivityIndicator, 
-  Alert 
+import {
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
 
@@ -17,8 +17,8 @@ import { UsersService } from '../services/userService/user.service';
 import { User } from '../services/userService/user.type';
 
 interface ProfileScreenProps {
-  onBack: () => void;
   onLogout: () => void;
+  onOpenProfile: () => void;
   activeTab: MainTab;
   onTabChange: (tab: MainTab) => void;
 }
@@ -55,7 +55,7 @@ const profileItems = [
   },
 ];
 
-export const ProfileScreen = ({ onBack, onLogout, activeTab, onTabChange }: ProfileScreenProps) => {
+export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange }: ProfileScreenProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -84,9 +84,9 @@ export const ProfileScreen = ({ onBack, onLogout, activeTab, onTabChange }: Prof
       'Bạn có chắc chắn muốn thoát ứng dụng?',
       [
         { text: 'Hủy', style: 'cancel' },
-        { 
-          text: 'Đăng xuất', 
-          style: 'destructive', 
+        {
+          text: 'Đăng xuất',
+          style: 'destructive',
           onPress: onLogout // Gọi hàm đăng xuất từ props
         },
       ]
@@ -95,47 +95,26 @@ export const ProfileScreen = ({ onBack, onLogout, activeTab, onTabChange }: Prof
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+      <SafeAreaView edges={['top']} className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#2B8EF0" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F4F4F7]">
-      <View className="px-5 pt-12 pb-4 bg-white">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7} className="w-10">
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M15 18l-6-6 6-6"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
+    <SafeAreaView edges={['top']} className="flex-1 bg-[#F4F4F7]">
 
-          <Text className="text-[18px] text-gray-900 font-bold">
-            Trang cá nhân
-          </Text>
-
-          <View className="w-10" />
-        </View>
-      </View>
-
-      <View className="h-px bg-[#E5E7EB]" />
-
-      <ScrollView 
-        className="flex-1" 
-        contentContainerStyle={{ paddingBottom: 120 }} 
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ height: 18 }} />
+
         <View className="items-center px-5 pt-5 pb-6">
           <Image
-            source={{ 
-              uri: user?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' 
+            source={{
+              uri: user?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'
             }}
             style={{ width: 96, height: 96, borderRadius: 48 }}
           />

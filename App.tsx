@@ -12,6 +12,7 @@ import { PlacesExploreScreen } from './components/PlacesExploreScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { TripsScreen } from './components/TripsScreen';
 import { MainTab } from './components/BottomTabBar';
 
 type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore';
@@ -28,8 +29,8 @@ export default function App() {
       return (
         <ProfileScreen
           activeTab={activeTab}
-          onBack={() => setActiveTab('home')}
           onLogout={() => setAppState('starter')}
+          onOpenProfile={() => setActiveTab('profile')}
           onTabChange={setActiveTab}
         />
       );
@@ -41,6 +42,24 @@ export default function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onViewAllPlaces={() => setAppState('placesExplore')}
+          onOpenProfile={() => setActiveTab('profile')}
+          onLogout={() => setAppState('starter')}
+        />
+      );
+    }
+
+    if (activeTab === 'trips') {
+      return (
+        <TripsScreen
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onCreateTrip={() => setAppState('createTrip')}
+          onTripClick={(tripId) => {
+            setSelectedTripId(tripId);
+            setAppState('tripDetail');
+          }}
+          onOpenProfile={() => setActiveTab('profile')}
+          onLogout={() => setAppState('starter')}
         />
       );
     }

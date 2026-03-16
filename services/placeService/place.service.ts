@@ -5,13 +5,40 @@ import {
   CreatePlacePayload 
 } from './place.type';
 
+const normalizePlaceListResponse = (payload: unknown): { data: Place[]; meta: any } => {
+  if (Array.isArray(payload)) {
+    return { data: payload as Place[], meta: null };
+  }
+
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+
+    if (Array.isArray(record.data)) {
+      return {
+        data: record.data as Place[],
+        meta: record.meta ?? null,
+      };
+    }
+
+    if (Array.isArray(record.items)) {
+      return {
+        data: record.items as Place[],
+        meta: record.meta ?? null,
+      };
+    }
+  }
+
+  return { data: [], meta: null };
+};
+
 export const PlacesService = {
   /**
    * Tìm kiếm & Nearby Search
    */
   findAll: async (params: SearchPlaceParams): Promise<{ data: Place[]; meta: any }> => {
     try {
-      return await apiClient.get('/places', { params });
+      const payload = await apiClient.get('/places', { params });
+      return normalizePlaceListResponse(payload);
     } catch (error) {
       throw error;
     }

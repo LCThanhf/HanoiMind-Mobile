@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View, Text, ScrollView, TouchableOpacity, SafeAreaView,
     TextInput, Image, ActivityIndicator, Alert, RefreshControl, StyleSheet
@@ -58,6 +58,8 @@ const CROWD_FILTERS = [
     { label: 'Cực đông (5)', value: 5 },
 ];
 
+const FALLBACK_COORDS = { latitude: 21.0285, longitude: 105.8542 };
+
 export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => {
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
@@ -71,6 +73,31 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
     
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [locationVersion, setLocationVersion] = useState(0);
+    const coordsRef = useRef(FALLBACK_COORDS);
+    const skipInitialLocationRefresh = useRef(true);
+
+    const resolveCoordinatesInBackground = useCallback(async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                return;
+            }
+
+            const location = await Location.getCurrentPositionAsync({});
+            coordsRef.current = {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+            };
+            setLocationVersion((prev) => prev + 1);
+        } catch (error) {
+            console.warn('Location unavailable, using fallback coordinates in Ha Noi.', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        resolveCoordinatesInBackground();
+    }, [resolveCoordinatesInBackground]);
 
     useEffect(() => {
         setPage(1);
@@ -81,12 +108,7 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
         try {
             isLoadMore ? setLoadingMore(true) : setLoading(true);
 
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            let coords = { latitude: 21.0285, longitude: 105.8542 }; 
-            if (status === 'granted') {
-                const location = await Location.getCurrentPositionAsync({});
-                coords = location.coords;
-            }
+            const coords = coordsRef.current;
 
             const response = await PlacesService.findAll({
                 name: searchText || undefined,
@@ -101,8 +123,9 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
                 maxCrowd: maxCrowd 
             });
 
-            setPlaces(isLoadMore ? [...places, ...response.data] : response.data);
-            setHasMore(response.data.length === 10);
+            const nextPlaces = response?.data || [];
+            setPlaces((prev) => (isLoadMore ? [...prev, ...nextPlaces] : nextPlaces));
+            setHasMore(nextPlaces.length === 10);
         } catch (error) {
             Alert.alert("Lỗi", "Không thể tải danh sách địa điểm");
         } finally {
@@ -117,6 +140,16 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
         setPage(1);
         fetchData(1, false);
     }, [activeCategory, searchText, sortBy, maxCrowd]);
+
+    useEffect(() => {
+        if (skipInitialLocationRefresh.current) {
+            skipInitialLocationRefresh.current = false;
+            return;
+        }
+
+        setPage(1);
+        fetchData(1, false);
+    }, [locationVersion]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F6FA' }}>
@@ -165,9 +198,14 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
                     <ActivityIndicator size="large" color="#2B8EF0" style={{ marginTop: 20 }} />
                 ) : (
                     <>
+                        {places.length === 0 && (
+                            <View style={{ marginTop: 16, alignItems: 'center' }}>
+                                <Text style={{ color: '#6B7280', fontSize: 14 }}>Không tìm thấy địa điểm phù hợp</Text>
+                            </View>
+                        )}
                         {places.map((place) => (
                             <TouchableOpacity key={place._id} style={styles.placeCard}>
-                                <Image source={{ uri: place.images[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
+                                <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.placeName}>{place.name}</Text>
                                     <Text style={styles.infoText}>{place.distance ? `${(place.distance / 1000).toFixed(1)} km` : 'N/A'} • {place.reviewCount} đánh giá</Text>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
 import { DayItinerary } from './types';
 
 const TimelineDot = () => (
@@ -21,10 +20,28 @@ interface ItineraryTabProps {
 }
 
 export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
+    if (!itinerary.length) {
+        return (
+            <View className="px-5 pb-6">
+                <View
+                    className="rounded-2xl p-5"
+                    style={{ backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+                >
+                    <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
+                        Chưa có lịch trình chi tiết.
+                    </Text>
+                    <Text className="text-[13px] text-gray-500 mt-1" style={{ fontWeight: '400' }}>
+                        Hãy thêm địa điểm để bắt đầu lên kế hoạch cho chuyến đi.
+                    </Text>
+                </View>
+            </View>
+        );
+    }
+
     return (
         <>
             {itinerary.map((dayData, dayIndex) => (
-                <View key={dayIndex} className="px-5 mb-6">
+                <View key={`${dayData.day}-${dayData.date || dayIndex}`} className="px-5 mb-6">
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-[15px] text-gray-900 flex-1 mr-3" style={{ fontWeight: '700' }}>
                             Ngày {dayData.day}: {dayData.title}
@@ -37,7 +54,7 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                     </View>
 
                     {dayData.activities.map((activity, activityIndex) => (
-                        <View key={activityIndex} className="flex-row mb-4">
+                        <View key={activity.id} className="flex-row mb-4">
                             {/* Timeline */}
                             <View className="items-center mr-4" style={{ width: 12 }}>
                                 <TimelineDot />

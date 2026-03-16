@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { MoodVoteOption } from './types';
 
 const StarSparkleIcon = () => (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -13,66 +14,52 @@ const StarSparkleIcon = () => (
     </Svg>
 );
 
-export const MoodVoteTab = () => {
-    const [selectedMood, setSelectedMood] = useState<string>('reset');
+interface MoodVoteTabProps {
+    options: MoodVoteOption[];
+    membersCount: number;
+    tripName: string;
+}
 
-    const moods = [
-        {
-            id: 'reset',
-            title: 'Reset & Healing',
-            desc: 'Tập trung vào sự tĩnh lặng, thiền định và hồi phục năng lượng.',
-            icon: (
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path d="M12 22C12 22 20 18 20 10C20 2 12 2 12 2C12 2 4 2 4 10C4 18 12 22 12 22Z" fill="#BEF264" />
-                    <Path d="M12 22V10M12 14C10 12 8 13 8 13" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" />
-                </Svg>
-            )
-        },
-        {
-            id: 'food',
-            title: 'Food Adventure',
-            desc: 'Khám phá ẩm thực địa phương và những quán ăn nức tiếng.',
-            icon: (
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path d="M4 12C4 16 7 20 12 20C17 20 20 16 20 12H4Z" fill="#F43F5E" />
-                    <Path d="M2 12H22M8 4H16M10 8H14" stroke="#BE123C" strokeWidth="2" strokeLinecap="round" />
-                    <Path d="M8 3V7M12 2V6M16 3V7" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
-                </Svg>
-            )
-        },
-        {
-            id: 'nature',
-            title: 'Nature & Relax',
-            desc: 'Hòa mình vào thiên nhiên hoang sơ và tận hưởng không khí trong lành.',
-            icon: (
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path d="M12 22V15" stroke="#78350F" strokeWidth="3" strokeLinecap="round" />
-                    <Path d="M12 15L8 20M12 15L16 20M12 3C8 3 5 6 5 10C5 13 7.5 15 12 15C16.5 15 19 13 19 10C19 6 16 3 12 3Z" fill="#4ADE80" stroke="#16A34A" strokeWidth="1.5" strokeLinejoin="round" />
-                </Svg>
-            )
-        },
-        {
-            id: 'culture',
-            title: 'Culture & History',
-            desc: 'Tìm hiểu về di sản, bảo tàng và những câu chuyện lịch sử.',
-            icon: (
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path d="M4 22H20M4 18V10M20 18V10M8 18V14M16 18V14M12 18V14M12 2L2 10H22L12 2Z" fill="#9CA3AF" stroke="#4B5563" strokeWidth="2" strokeLinejoin="round" />
-                </Svg>
-            )
-        },
-        {
-            id: 'fun',
-            title: 'Fun & Entertainment',
-            desc: 'Những hoạt động sôi nổi, vui chơi giải trí và tiệc tùng.',
-            icon: (
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                    <Path d="M21 3L14 10M14 10L10 14M14 10L18 14M14 10L10 6M3 21L10 14M21 8V3H16M3 5L5 7M6 2L8 4M19 19L17 17M22 18L20 16" stroke="#9333EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <Path d="M16 16L12 12M18 12L20 10M16 12L18 14" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" />
-                </Svg>
-            )
-        }
-    ];
+const moodIconById: Record<string, JSX.Element> = {
+    relax: (
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M12 22C12 22 20 18 20 10C20 2 12 2 12 2C12 2 4 2 4 10C4 18 12 22 12 22Z" fill="#BEF264" />
+            <Path d="M12 22V10M12 14C10 12 8 13 8 13" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" />
+        </Svg>
+    ),
+    foodie: (
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M4 12C4 16 7 20 12 20C17 20 20 16 20 12H4Z" fill="#F43F5E" />
+            <Path d="M2 12H22M8 4H16M10 8H14" stroke="#BE123C" strokeWidth="2" strokeLinecap="round" />
+            <Path d="M8 3V7M12 2V6M16 3V7" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+        </Svg>
+    ),
+    nature: (
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M12 22V15" stroke="#78350F" strokeWidth="3" strokeLinecap="round" />
+            <Path d="M12 15L8 20M12 15L16 20M12 3C8 3 5 6 5 10C5 13 7.5 15 12 15C16.5 15 19 13 19 10C19 6 16 3 12 3Z" fill="#4ADE80" stroke="#16A34A" strokeWidth="1.5" strokeLinejoin="round" />
+        </Svg>
+    ),
+    culture: (
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M4 22H20M4 18V10M20 18V10M8 18V14M16 18V14M12 18V14M12 2L2 10H22L12 2Z" fill="#9CA3AF" stroke="#4B5563" strokeWidth="2" strokeLinejoin="round" />
+        </Svg>
+    ),
+    chill: (
+        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M21 3L14 10M14 10L10 14M14 10L18 14M14 10L10 6M3 21L10 14M21 8V3H16M3 5L5 7M6 2L8 4M19 19L17 17M22 18L20 16" stroke="#9333EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M16 16L12 12M18 12L20 10M16 12L18 14" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" />
+        </Svg>
+    ),
+};
+
+export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProps) => {
+    const [selectedMood, setSelectedMood] = useState<string>(options[0]?.id || '');
+
+    const moods = options.map((option) => ({
+        ...option,
+        icon: moodIconById[option.id] || moodIconById.chill,
+    }));
 
     return (
         <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
@@ -86,7 +73,7 @@ export const MoodVoteTab = () => {
                 </View>
                 <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' }}>
                     <Text className="text-[12px] text-gray-600" style={{ fontWeight: '500' }}>
-                        Nhóm: Summer 2024
+                        {tripName}
                     </Text>
                 </View>
             </View>
@@ -132,7 +119,7 @@ export const MoodVoteTab = () => {
                                     className="text-[15px] text-gray-900 mb-1"
                                     style={{ fontWeight: '700' }}
                                 >
-                                    {mood.title}
+                                    {mood.title} ({mood.votes})
                                 </Text>
                                 <Text
                                     className="text-[13px] text-gray-600"
@@ -194,7 +181,7 @@ export const MoodVoteTab = () => {
                     <Path d="M12 8h.01" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
                 </Svg>
                 <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
-                    Bạn có thể thay đổi trước khi trưởng nhóm chốt
+                    Dữ liệu bình chọn được đồng bộ từ thông tin chuyến đi
                 </Text>
             </View>
 
@@ -222,7 +209,7 @@ export const MoodVoteTab = () => {
                     <Text style={{ fontSize: 13, color: '#4B5563', fontWeight: '500', marginBottom: 24 }}>
                         Phân bổ xu hướng chuyến đi
                     </Text>
-                    
+
                     {/* Donut Chart */}
                     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                         <Svg width={140} height={140} viewBox="0 0 120 120">
@@ -239,7 +226,7 @@ export const MoodVoteTab = () => {
                         </Svg>
                     </View>
                 </View>
-                
+
                 {/* Card Footer */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -249,7 +236,7 @@ export const MoodVoteTab = () => {
                             <Circle cx="17" cy="7" r="3" stroke="#4B5563" strokeWidth="1.5" />
                         </Svg>
                         <Text style={{ fontSize: 13, color: '#374151', fontWeight: '500' }}>
-                            5 thành viên đã bình chọn
+                            {membersCount} thành viên
                         </Text>
                     </View>
                     <TouchableOpacity activeOpacity={0.7}>

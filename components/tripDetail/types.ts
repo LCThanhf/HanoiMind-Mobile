@@ -1,13 +1,32 @@
 export interface Activity {
+    id: string;
     time: string;
     title: string;
     description: string;
+    status?: string;
 }
 
 export interface DayItinerary {
     day: number;
     title: string;
+    date?: string;
     activities: Activity[];
+}
+
+export interface TripMemberView {
+    id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+    joinedAt?: string;
+    isOwner?: boolean;
+}
+
+export interface MoodVoteOption {
+    id: string;
+    title: string;
+    desc: string;
+    votes: number;
 }
 
 export interface TripData {
@@ -17,4 +36,7 @@ export interface TripData {
     days: string;
     status: string;
     itinerary: DayItinerary[];
+    members: TripMemberView[];
+    inviteCode?: string;
+    moodVotes: MoodVoteOption[];
 }

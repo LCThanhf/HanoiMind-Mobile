@@ -36,9 +36,13 @@ export interface AiProposal {
 }
 
 export interface RequestAiPlanPayload {
+  total_days?: number;
   mode: 'solo' | 'group';
   mood: string;
+  mood_distribution?: Record<string, number>;
   total_budget_vnd?: number;
+  daily_budget_vnd?: number;
+  hours_per_day?: number;
   travel_style: 'sightseeing' | 'relaxing' | 'balanced';
   max_places_per_day?: number;
   must_include_categories?: string[];

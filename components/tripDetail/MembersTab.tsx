@@ -1,14 +1,46 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Image, Share, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { TripMemberView } from './types';
 
-const members = [
-    { name: 'Lan Anh', initials: 'L', color: '#A0785A' },
-    { name: 'Ánh Dương', initials: 'Á', color: '#7B6FB5' },
-    { name: 'Quang Minh', initials: 'Q', color: '#5C4033' },
-];
+interface MembersTabProps {
+    members: TripMemberView[];
+    inviteCode?: string;
+    onLeaveTrip: () => void;
+    isLeaving?: boolean;
+}
 
-export const MembersTab = () => {
+const initialsFromName = (name: string) => {
+    const words = name.trim().split(' ').filter(Boolean);
+    if (!words.length) return 'U';
+    if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
+    return `${words[0].slice(0, 1)}${words[words.length - 1].slice(0, 1)}`.toUpperCase();
+};
+
+export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false }: MembersTabProps) => {
+    const owner = members.find((member) => member.isOwner) || members[0];
+    const otherMembers = members.filter((member) => !member.isOwner);
+
+    const inviteLink = inviteCode
+        ? `hanoimind.com/join/${inviteCode}`
+        : 'Chưa có mã mời cho chuyến đi này';
+
+    const handleCopyInvite = () => {
+        Alert.alert('Mã mời', inviteCode ? `Mã mời: ${inviteCode}` : 'Chuyến đi này chưa có mã mời.');
+    };
+
+    const handleShareInvite = async () => {
+        try {
+            await Share.share({
+                message: inviteCode
+                    ? `Tham gia chuyến đi cùng mình với mã: ${inviteCode}`
+                    : 'Chuyến đi này chưa có mã mời để chia sẻ.',
+            });
+        } catch {
+            Alert.alert('Không thể chia sẻ', 'Vui lòng thử lại sau.');
+        }
+    };
+
     return (
         <View className="px-5">
             {/* Subtitle */}
@@ -20,48 +52,43 @@ export const MembersTab = () => {
             <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
                 Owner
             </Text>
-            <View
-                className="flex-row items-center px-4 py-3 rounded-2xl mb-5"
-                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
-            >
+            {owner ? (
                 <View
-                    style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 23,
-                        backgroundColor: '#C4856A',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 12,
-                    }}
+                    className="flex-row items-center px-4 py-3 rounded-2xl mb-5"
+                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
-                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>M</Text>
+                    {owner.avatar ? (
+                        <Image source={{ uri: owner.avatar }} style={{ width: 46, height: 46, borderRadius: 23, marginRight: 12 }} />
+                    ) : (
+                        <View
+                            style={{
+                                width: 46,
+                                height: 46,
+                                borderRadius: 23,
+                                backgroundColor: '#C4856A',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12,
+                            }}
+                        >
+                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>{initialsFromName(owner.name)}</Text>
+                        </View>
+                    )}
+                    <View className="flex-1">
+                        <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
+                            {owner.name}
+                        </Text>
+                        <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
+                            {owner.role}
+                        </Text>
+                    </View>
+                    <View className="px-3 py-1 rounded-full" style={{ backgroundColor: '#FEF3E2' }}>
+                        <Text className="text-[12px]" style={{ color: '#D4A574', fontWeight: '600' }}>
+                            Owner
+                        </Text>
+                    </View>
                 </View>
-                <View className="flex-1">
-                    <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-                        Minh Anh
-                    </Text>
-                    <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
-                        Member
-                    </Text>
-                </View>
-                <View className="px-3 py-1 rounded-full mr-3" style={{ backgroundColor: '#FEF3E2' }}>
-                    <Text className="text-[12px]" style={{ color: '#D4A574', fontWeight: '600' }}>
-                        Owner
-                    </Text>
-                </View>
-                <TouchableOpacity activeOpacity={0.7}>
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                        <Path
-                            d="M18 6L6 18M6 6l12 12"
-                            stroke="#9CA3AF"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                </TouchableOpacity>
-            </View>
+            ) : null}
 
             {/* Members List */}
             <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
@@ -71,51 +98,49 @@ export const MembersTab = () => {
                 className="rounded-2xl mb-5 overflow-hidden"
                 style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
             >
-                {members.map((member, index) => (
+                {otherMembers.map((member, index) => (
                     <View
-                        key={member.name}
+                        key={member.id}
                         className="flex-row items-center px-4 py-3"
                         style={{
-                            borderBottomWidth: index < members.length - 1 ? 1 : 0,
+                            borderBottomWidth: index < otherMembers.length - 1 ? 1 : 0,
                             borderBottomColor: '#F3F4F6',
                         }}
                     >
-                        <View
-                            style={{
-                                width: 46,
-                                height: 46,
-                                borderRadius: 23,
-                                backgroundColor: member.color,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginRight: 12,
-                            }}
-                        >
-                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
-                                {member.initials}
-                            </Text>
-                        </View>
+                        {member.avatar ? (
+                            <Image source={{ uri: member.avatar }} style={{ width: 46, height: 46, borderRadius: 23, marginRight: 12 }} />
+                        ) : (
+                            <View
+                                style={{
+                                    width: 46,
+                                    height: 46,
+                                    borderRadius: 23,
+                                    backgroundColor: '#7B6FB5',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: 12,
+                                }}
+                            >
+                                <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
+                                    {initialsFromName(member.name)}
+                                </Text>
+                            </View>
+                        )}
                         <View className="flex-1">
                             <Text className="text-[15px] text-gray-900" style={{ fontWeight: '600' }}>
                                 {member.name}
                             </Text>
                             <Text className="text-[12px]" style={{ color: '#9CA3AF', fontWeight: '400' }}>
-                                Member
+                                {member.role}
                             </Text>
                         </View>
-                        <TouchableOpacity activeOpacity={0.7}>
-                            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                                <Path
-                                    d="M18 6L6 18M6 6l12 12"
-                                    stroke="#9CA3AF"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </Svg>
-                        </TouchableOpacity>
                     </View>
                 ))}
+                {otherMembers.length === 0 && (
+                    <View className="px-4 py-4">
+                        <Text style={{ fontSize: 13, color: '#6B7280' }}>Chưa có thành viên nào khác.</Text>
+                    </View>
+                )}
             </View>
 
             {/* Invite Friends */}
@@ -143,11 +168,11 @@ export const MembersTab = () => {
                     }}
                 >
                     <Text className="flex-1 text-[13px] text-gray-700" style={{ fontWeight: '400' }}>
-                        hanoimind.com/join/8fj3KsI29Xab
+                        {inviteLink}
                     </Text>
                     <TouchableOpacity
                         activeOpacity={0.7}
-                        onPress={() => Alert.alert('Đã sao chép!', 'Link mời đã được sao chép.')}
+                        onPress={handleCopyInvite}
                     >
                         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                             <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
@@ -166,7 +191,7 @@ export const MembersTab = () => {
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
-                        onPress={() => Alert.alert('Đã sao chép!', 'Link mời đã được sao chép.')}
+                        onPress={handleCopyInvite}
                     >
                         <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
                             <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
@@ -183,6 +208,7 @@ export const MembersTab = () => {
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
+                        onPress={handleShareInvite}
                     >
                         <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
                             <Circle cx="18" cy="5" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
@@ -203,7 +229,7 @@ export const MembersTab = () => {
             {/* Last Updated */}
             <Text className="text-[12px] text-center mb-5" style={{ color: '#9CA3AF', fontWeight: '400' }}>
                 Last updated by{' '}
-                <Text style={{ color: '#374151', fontWeight: '600' }}>Minh Anh</Text>
+                <Text style={{ color: '#374151', fontWeight: '600' }}>{owner?.name || 'Trip owner'}</Text>
             </Text>
 
             {/* Leave Trip */}
@@ -214,11 +240,16 @@ export const MembersTab = () => {
                 onPress={() =>
                     Alert.alert('Rời chuyến đi', 'Bạn có chắc chắn muốn rời khỏi chuyến đi này?', [
                         { text: 'Huỷ', style: 'cancel' },
-                        { text: 'Rời đi', style: 'destructive' },
+                        { text: 'Rời đi', style: 'destructive', onPress: onLeaveTrip },
                     ])
                 }
+                disabled={isLeaving}
             >
-                <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
+                {isLeaving ? (
+                    <ActivityIndicator color="#EF4444" />
+                ) : (
+                    <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
+                )}
             </TouchableOpacity>
         </View>
     );

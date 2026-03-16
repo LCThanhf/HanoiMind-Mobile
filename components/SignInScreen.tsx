@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,14 +9,32 @@ import { AuthService } from '../services/authService/auth.service';
 interface SignInScreenProps {
     onNavigateToSignUp: () => void;
     onBack?: () => void;
-    onLogin?: () => void; 
+    onLogin?: () => void;
 }
 
 export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, onBack, onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberLogin, setRememberLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const hydrateSavedCredentials = async () => {
+            try {
+                const raw = await AsyncStorage.getItem('savedLoginCredentials');
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                if (saved?.email) setEmail(saved.email);
+                if (saved?.password) setPassword(saved.password);
+                setRememberLogin(Boolean(saved?.remember));
+            } catch {
+                // no-op
+            }
+        };
+
+        hydrateSavedCredentials();
+    }, []);
 
     const handleSignIn = async () => {
         // 1. Validate
@@ -28,22 +46,35 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
         setLoading(true);
         try {
             // 2. Gọi API login
-            const response = await AuthService.login({ 
-                email: email.trim(), 
-                password: password 
+            const response = await AuthService.login({
+                email: email.trim(),
+                password: password
             });
 
             // 3. Lưu tokens vào bộ nhớ
             await AsyncStorage.setItem('accessToken', response.access_token);
             await AsyncStorage.setItem('refreshToken', response.refresh_token);
 
+            if (rememberLogin) {
+                await AsyncStorage.setItem(
+                    'savedLoginCredentials',
+                    JSON.stringify({
+                        email: email.trim(),
+                        password,
+                        remember: true,
+                    })
+                );
+            } else {
+                await AsyncStorage.removeItem('savedLoginCredentials');
+            }
+
             Alert.alert('Thành công', `Chào mừng ${response.fullName} quay trở lại!`);
-            
+
             // 4. Kích hoạt logic điều hướng của code cũ thông qua prop
             if (onLogin) {
-                onLogin(); 
+                onLogin();
             }
-            
+
         } catch (error: any) {
             // Lấy message lỗi từ backend nếu có
             const errorMsg = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
@@ -95,9 +126,39 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                         editable={!loading}
                     />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                         <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
+                        <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
                     </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity
+                    className="flex-row items-center mb-6"
+                    activeOpacity={0.75}
+                    onPress={() => setRememberLogin((prev) => !prev)}
+                    disabled={loading}
+                >
+                    <View
+                        style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: 4,
+                            borderWidth: 1.5,
+                            borderColor: rememberLogin ? '#2B8EF0' : '#D1D5DB',
+                            backgroundColor: rememberLogin ? '#2B8EF0' : 'white',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 8,
+                        }}
+                    >
+                        {rememberLogin ? (
+                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+                                <Path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
+                        ) : null}
+                    </View>
+                    <Text className="text-[13px] text-gray-600" style={{ fontWeight: '500' }}>
+                        Ghi nhớ tài khoản và mật khẩu trên thiết bị này
+                    </Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                     className={`w-full rounded-lg items-center justify-center mb-6 ${loading ? 'opacity-70' : ''}`}

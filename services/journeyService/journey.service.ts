@@ -1,10 +1,10 @@
 import apiClient from '../apiClient';
-import { 
-  Journey, 
-  CreateJourneyPayload, 
+import {
+  Journey,
+  CreateJourneyPayload,
   UpdateJourneyPayload,
   AddStopPayload,
-  GetPublicFeedParams 
+  GetPublicFeedParams
 } from './journey.type';
 
 export const JourneyService = {
@@ -44,28 +44,35 @@ export const JourneyService = {
   },
 
   /**
-   * 6. Thêm địa điểm vào lịch trình
+   * 6. Xóa hành trình
+   */
+  remove: async (id: string): Promise<any> => {
+    return await apiClient.delete(`/journeys/${id}`);
+  },
+
+  /**
+   * 7. Thêm địa điểm vào lịch trình
    */
   addStop: async (id: string, payload: AddStopPayload): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${id}/add-stop`, payload);
   },
 
   /**
-   * 7. Cập nhật thông tin điểm dừng (Stop)
+   * 8. Cập nhật thông tin điểm dừng (Stop)
    */
   updateStop: async (journeyId: string, dayId: string, stopId: string, payload: any): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}`, payload);
   },
 
   /**
-   * 8. Xóa một địa điểm khỏi lịch trình
+   * 9. Xóa một địa điểm khỏi lịch trình
    */
   removeStop: async (id: string, dayNumber: number, stopId: string): Promise<any> => {
     return await apiClient.delete(`/journeys/${id}/days/${dayNumber}/stops/${stopId}`);
   },
 
   /**
-   * 9. Thay đổi thứ tự địa điểm (Kéo thả)
+   * 10. Thay đổi thứ tự địa điểm (Kéo thả)
    */
   moveStop: async (payload: { journey_id: string; from_day_number: number; to_day_number: number; old_index: number; new_index: number }): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${payload.journey_id}/move-stop`, payload);

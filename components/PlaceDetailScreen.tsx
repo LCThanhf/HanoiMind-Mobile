@@ -33,6 +33,13 @@ const StarIcon = ({ color = "#475569" }) => (
     </Svg>
 );
 
+// Icon Chat mới thêm
+const MessageCircleIcon = ({ color = "#3B82F6" }) => (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </Svg>
+);
+
 export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; placeId: string }) => {
     const [place, setPlace] = useState<Place | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +82,16 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
         }
     };
 
+    const handleShare = async () => {
+        if (!place) return;
+        try {
+            await Share.share({
+                message: `Khám phá ${place.name} trên BeroTravel!\nĐịa chỉ: ${place.address}`,
+                url: place.website || '',
+            });
+        } catch (error) { console.log(error); }
+    };
+
     const getEstimatedPrice = () => {
         if (!place) return '0';
         if (place.estimated_cost_vnd && place.estimated_cost_vnd > 0) return `${(place.estimated_cost_vnd / 1000).toLocaleString()}k`;
@@ -115,6 +132,9 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
     if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator size="large" color="#3B82F6" /></View>;
     if (!place) return null;
 
+    // Biến phụ để kiểm tra có thông tin liên hệ nào không
+    const hasContactInfo = place.phoneNumber || place.website || place.ownerId || (place as any).owner_id;
+
     return (
         <View className="flex-1 bg-slate-50">
             {/* Header Nổi */}
@@ -122,11 +142,18 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
                 <TouchableOpacity onPress={onBack} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
                     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#1F2937" strokeWidth="2.5"><Path d="M15 18l-6-6 6-6" /></Svg>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleToggleFavorite} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
-                    <Svg width={22} height={22} viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#1F2937"} strokeWidth="2">
-                        <Path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
-                    </Svg>
-                </TouchableOpacity>
+                <View className="flex-row gap-x-2">
+                    {/* Nút Chia sẻ */}
+                    <TouchableOpacity onPress={handleShare} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
+                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1F2937" strokeWidth="2"><Path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" /></Svg>
+                    </TouchableOpacity>
+                    {/* Nút Yêu thích */}
+                    <TouchableOpacity onPress={handleToggleFavorite} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
+                        <Svg width={22} height={22} viewBox="0 0 24 24" fill={isFavorite ? "#EF4444" : "none"} stroke={isFavorite ? "#EF4444" : "#1F2937"} strokeWidth="2">
+                            <Path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
+                        </Svg>
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
@@ -141,7 +168,7 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
                 {/* Nội dung chính */}
                 <View className="bg-white rounded-t-[32px] -mt-8 px-5 pt-8 pb-40 shadow-2xl">
                     
-                    {/* KHÔI PHỤC: Tên địa điểm & Số sao Đánh giá */}
+                    {/* Tên địa điểm & Số sao Đánh giá */}
                     <View className="flex-row justify-between items-start mb-6">
                         <View className="flex-1 pr-4">
                             <Text className="text-2xl font-bold text-slate-900 leading-tight mb-2">{place.name}</Text>
@@ -174,17 +201,38 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
                         </View>
                     </View>
 
-                    {/* KHÔI PHỤC: Giới thiệu */}
+                    {/* Giới thiệu */}
                     <View className="mb-8">
                         <Text className="text-lg font-bold text-slate-900 mb-2">Giới thiệu</Text>
                         <Text className="text-slate-600 leading-relaxed text-base">{place.description}</Text>
                     </View>
 
                     {/* Thông tin liên hệ */}
-                    {(place.phoneNumber || place.website) && (
+                    {hasContactInfo && (
                         <View className="mb-8 bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
+                            
+                            {/* Nút Nhắn tin (Chỉ hiện khi có ownerId) */}
+                            {(place.ownerId || (place as any).owner_id) && (
+                                <TouchableOpacity 
+                                    onPress={() => Alert.alert("Nhắn tin", "Tính năng chat với chủ cơ sở đang được phát triển!")} 
+                                    className="flex-row items-center mb-4"
+                                >
+                                    <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+                                        <MessageCircleIcon />
+                                    </View>
+                                    <View className="flex-1">
+                                        <Text className="text-slate-900 font-semibold">Chat với chủ cơ sở</Text>
+                                    </View>
+                                    <Text className="text-blue-600 text-xs font-bold uppercase">Nhắn tin</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {/* Nút Gọi điện */}
                             {place.phoneNumber && (
-                                <TouchableOpacity onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)} className="flex-row items-center mb-4">
+                                <TouchableOpacity 
+                                    onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)} 
+                                    className={`flex-row items-center ${place.website ? 'mb-4' : ''}`}
+                                >
                                     <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
                                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2"><Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></Svg>
                                     </View>
@@ -192,6 +240,8 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
                                     <Text className="text-blue-600 text-xs font-bold uppercase">Gọi điện</Text>
                                 </TouchableOpacity>
                             )}
+
+                            {/* Nút Website */}
                             {place.website && (
                                 <TouchableOpacity onPress={() => Linking.openURL(place.website || '')} className="flex-row items-center">
                                     <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">

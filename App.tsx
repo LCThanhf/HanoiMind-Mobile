@@ -15,8 +15,9 @@ import { ProfileScreen } from './components/ProfileScreen';
 import { TripsScreen } from './components/TripsScreen';
 import { MainTab } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
+import { ReviewScreen } from './components/ReviewScreen';
 
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -144,6 +145,15 @@ export default function App() {
           <PlaceDetailScreen 
             placeId={selectedPlaceId} 
             onBack={() => setAppState(previousState)} // Quay về màn hình đã lưu trong state
+            onReview={() => setAppState('reviewPlace')}
+          />
+        );
+        
+      case 'reviewPlace':
+        return (
+          <ReviewScreen
+            placeId={selectedPlaceId}
+            onBack={() => setAppState('placeDetail')}
           />
         );
 

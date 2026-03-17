@@ -40,7 +40,7 @@ const MessageCircleIcon = ({ color = "#3B82F6" }) => (
     </Svg>
 );
 
-export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; placeId: string }) => {
+export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () => void; onReview?: () => void; placeId: string }) => {
     const [place, setPlace] = useState<Place | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -282,7 +282,7 @@ export const PlaceDetailScreen = ({ onBack, placeId }: { onBack: () => void; pla
                     <Text className="text-slate-400 text-[9px] font-bold uppercase">Ngân sách dự kiến</Text>
                     <Text className="text-lg font-black text-slate-900">{getEstimatedPrice()}<Text className="text-xs font-normal text-slate-400"> /người</Text></Text>
                 </View>
-                <TouchableOpacity onPress={() => Alert.alert("Review", "Tính năng review sắp ra mắt!")} className="flex-1 bg-slate-100 h-14 rounded-2xl items-center justify-center flex-row">
+                <TouchableOpacity onPress={onReview} className="flex-1 bg-slate-100 h-14 rounded-2xl items-center justify-center flex-row">
                     <StarIcon />
                     <Text className="text-slate-600 font-bold ml-2">Review</Text>
                 </TouchableOpacity>

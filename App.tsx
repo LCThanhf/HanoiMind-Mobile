@@ -14,13 +14,15 @@ import { TripDetailScreen } from './components/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { TripsScreen } from './components/TripsScreen';
 import { MainTab } from './components/BottomTabBar';
+import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
@@ -102,8 +104,31 @@ export default function App() {
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
         return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} />;
+      
       case 'placesExplore':
-        return <PlacesExploreScreen onBack={() => setAppState('main')} activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); setAppState('main'); }} />;
+        return (
+          <PlacesExploreScreen 
+            onBack={() => setAppState('main')} 
+            activeTab={activeTab} 
+            onTabChange={(tab: any) => { 
+              setActiveTab(tab); 
+              setAppState('main'); 
+            }}
+            onPlaceClick={(placeId: string) => {
+              setSelectedPlaceId(placeId);
+              setAppState('placeDetail');
+            }}
+          />
+        );
+
+      case 'placeDetail':
+        return (
+          <PlaceDetailScreen 
+            placeId={selectedPlaceId} 
+            onBack={() => setAppState('placesExplore')} 
+          />
+        );
+
       case 'auth':
       default:
         return isSignIn ? (

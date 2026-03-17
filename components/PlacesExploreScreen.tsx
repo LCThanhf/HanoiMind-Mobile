@@ -11,7 +11,6 @@ import { BottomTabBar } from './BottomTabBar';
 import { PlacesService } from '../services/placeService/place.service';
 import { Place, PlaceCategory } from '../services/placeService/place.type';
 
-// 1. Bản dịch tiếng Việt cho các Category (Khớp với PlaceCategory Enum)
 const CategoryVi: Record<string, string> = {
     'Tất cả': 'Tất cả',
     [PlaceCategory.ACCOMMODATION]: 'Lưu trú',
@@ -60,7 +59,14 @@ const CROWD_FILTERS = [
 
 const FALLBACK_COORDS = { latitude: 21.0285, longitude: 105.8542 };
 
-export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => {
+interface PlacesExploreScreenProps {
+    onBack: () => void;
+    activeTab: any;
+    onTabChange: (tab: any) => void;
+    onPlaceClick: (placeId: string) => void; 
+}
+
+export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceClick }: PlacesExploreScreenProps) => {
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -153,18 +159,30 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F6FA' }}>
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onBack}><Svg width={24} height={24} viewBox="0 0 24 24" fill="none"><Path d="M19 12H5M12 19l-7-7 7-7" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg></TouchableOpacity>
+                <TouchableOpacity onPress={onBack}>
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Path d="M19 12H5M12 19l-7-7 7-7" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Khám phá địa điểm</Text>
             </View>
 
+            {/* Search Bar */}
             <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
                 <View style={styles.searchContainer}>
-                    <TextInput value={searchText} onChangeText={setSearchText} onSubmitEditing={() => {setPage(1); fetchData(1, false);}} placeholder="Tìm địa điểm..." style={{ flex: 1, fontSize: 14 }} />
+                    <TextInput 
+                        value={searchText} 
+                        onChangeText={setSearchText} 
+                        onSubmitEditing={() => {setPage(1); fetchData(1, false);}} 
+                        placeholder="Tìm địa điểm..." 
+                        style={{ flex: 1, fontSize: 14 }} 
+                    />
                 </View>
             </View>
 
-            {/* Dòng 1: Sort Options + Categories (Tiếng Việt) */}
+            {/* Sort & Category Bar */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0 }}>
                 <View style={styles.sortGroup}>
                     {SORT_OPTIONS.map((opt) => (
@@ -183,7 +201,7 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
                 ))}
             </ScrollView>
 
-            {/* Dòng 2: Filter Options (Crowd Level) */}
+            {/* Crowd Level Filter Bar */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0, marginTop: 8, marginBottom: 10 }}>
                 <Text style={styles.filterLabel}>Lọc:</Text>
                 {CROWD_FILTERS.map((f) => (
@@ -193,44 +211,39 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange }: any) => 
                 ))}
             </ScrollView>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+            {/* Places List */}
+<ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#2B8EF0" style={{ marginTop: 20 }} />
+                    <ActivityIndicator size="large" color="#2B8EF0" />
                 ) : (
-                    <>
-                        {places.length === 0 && (
-                            <View style={{ marginTop: 16, alignItems: 'center' }}>
-                                <Text style={{ color: '#6B7280', fontSize: 14 }}>Không tìm thấy địa điểm phù hợp</Text>
-                            </View>
-                        )}
-                        {places.map((place) => (
-                            <TouchableOpacity key={place._id} style={styles.placeCard}>
-                                <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.placeName}>{place.name}</Text>
-                                    <Text style={styles.infoText}>{place.distance ? `${(place.distance / 1000).toFixed(1)} km` : 'N/A'} • {place.reviewCount} đánh giá</Text>
-                                    <View style={styles.crowdBadge}>
-                                        <Text style={styles.crowdText}>Độ đông đúc: {place.crowdLevel}/5</Text>
-                                    </View>
+                    places.map((place) => (
+                        <TouchableOpacity 
+                            key={place._id} 
+                            style={styles.placeCard}
+                            onPress={() => onPlaceClick(place._id)} // GỌI PROP TẠI ĐÂY
+                        >
+                            <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.placeName}>{place.name}</Text>
+                                <Text style={styles.infoText}>
+                                    {place.distance ? `${(place.distance / 1000).toFixed(1)} km` : 'N/A'} • {place.reviewCount} đánh giá
+                                </Text>
+                                <View style={styles.crowdBadge}>
+                                    <Text style={styles.crowdText}>Độ đông đúc: {place.crowdLevel}/5</Text>
                                 </View>
-                            </TouchableOpacity>
-                        ))}
-                        {hasMore && (
-                            <TouchableOpacity style={styles.loadMoreBtn} onPress={() => { const p = page + 1; setPage(p); fetchData(p, true); }}>
-                                {loadingMore ? <ActivityIndicator size="small" color="#2B8EF0" /> : <Text style={styles.loadMoreText}>Xem thêm địa điểm</Text>}
-                            </TouchableOpacity>
-                        )}
-                    </>
+                            </View>
+                        </TouchableOpacity>
+                    ))
                 )}
             </ScrollView>
+            
+            {/* Nav Bar */}
             <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };
 
-// ... Styles giữ nguyên như các bước trước
 const styles = StyleSheet.create({
-    // Header & Search
     header: { 
         flexDirection: 'row', 
         alignItems: 'center', 
@@ -254,8 +267,6 @@ const styles = StyleSheet.create({
         borderWidth: 1, 
         borderColor: '#E5E7EB' 
     },
-
-    // Filter & Sort Bar
     scrollRow: { 
         paddingHorizontal: 16, 
         gap: 8, 
@@ -271,8 +282,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#D1D5DB', 
         marginHorizontal: 4 
     },
-
-    // Pills (Sort & Category)
     pill: { 
         paddingHorizontal: 14, 
         paddingVertical: 6, 
@@ -298,8 +307,6 @@ const styles = StyleSheet.create({
         color: 'white', 
         fontWeight: '700' 
     },
-
-    // Crowd Filter Labels
     filterLabel: { 
         fontSize: 12, 
         fontWeight: '700', 
@@ -319,32 +326,35 @@ const styles = StyleSheet.create({
         fontSize: 11, 
         color: '#4B5563' 
     },
-
-    // Place Cards
     placeCard: { 
         flexDirection: 'row', 
         backgroundColor: 'white', 
         borderRadius: 16, 
         padding: 12, 
         marginBottom: 12, 
-        gap: 12 
+        gap: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2
     },
     placeImage: { 
         width: 100, 
         height: 80, 
-        borderRadius: 10 
+        borderRadius: 10,
+        backgroundColor: '#E5E7EB'
     },
     placeName: { 
         fontSize: 15, 
         fontWeight: '700', 
-        marginBottom: 4 
+        marginBottom: 4,
+        color: '#111827'
     },
     infoText: { 
         fontSize: 12, 
         color: '#6B7280' 
     },
-
-    // Crowd Badge (Inside Card)
     crowdBadge: { 
         marginTop: 6, 
         backgroundColor: '#FEF3C7', 
@@ -358,8 +368,6 @@ const styles = StyleSheet.create({
         color: '#D97706', 
         fontWeight: '700' 
     },
-
-    // Load More
     loadMoreBtn: { 
         padding: 15, 
         alignItems: 'center' 

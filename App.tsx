@@ -20,6 +20,9 @@ type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'pla
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
+  // State lưu màn hình trước đó để quay lại đúng chỗ khi bấm back từ PlaceDetail
+  const [previousState, setPreviousState] = useState<AppState>('main');
+
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
@@ -43,9 +46,17 @@ export default function App() {
         <ExploreScreen
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onViewAllPlaces={() => setAppState('placesExplore')}
+          onViewAllPlaces={() => {
+            setPreviousState('main');
+            setAppState('placesExplore');
+          }}
           onOpenProfile={() => setActiveTab('profile')}
           onLogout={() => setAppState('starter')}
+          onPlaceClick={(placeId: string) => {
+            setSelectedPlaceId(placeId);
+            setPreviousState('main'); // Đang ở main (Explore) -> xem detail -> bấm back về lại main
+            setAppState('placeDetail');
+          }}
         />
       );
     }
@@ -103,7 +114,13 @@ export default function App() {
       case 'createTrip':
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
-        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} />;
+        return (
+          <TripDetailScreen 
+            tripId={selectedTripId} 
+            onBack={() => setAppState('main')} 
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} 
+          />
+        );
       
       case 'placesExplore':
         return (
@@ -116,6 +133,7 @@ export default function App() {
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
+              setPreviousState('placesExplore'); // Đang ở danh sách tất cả -> xem detail -> bấm back về danh sách
               setAppState('placeDetail');
             }}
           />
@@ -125,7 +143,7 @@ export default function App() {
         return (
           <PlaceDetailScreen 
             placeId={selectedPlaceId} 
-            onBack={() => setAppState('placesExplore')} 
+            onBack={() => setAppState(previousState)} // Quay về màn hình đã lưu trong state
           />
         );
 

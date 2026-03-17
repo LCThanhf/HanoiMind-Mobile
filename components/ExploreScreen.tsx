@@ -1,29 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polygon } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
 import { AppHeader } from './AppHeader';
 
-const places = [
-    {
-        id: 'p1',
-        name: 'Phở bò Hà Nội',
-        rating: 4.7,
-        distance: '2 km',
-        reviews: '18K',
-        image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-        id: 'p2',
-        name: 'Bún chả Hàng Mành',
-        rating: 4.8,
-        distance: '1,2 km',
-        reviews: '36K',
-        image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=400&q=80',
-    },
-];
+// --- IMPORT SERVICE & TYPES ---
+import { PlacesService } from '../services/placeService/place.service';
+// Import thêm PlaceCategory để filter
+import { Place, PlaceCategory } from '../services/placeService/place.type';
 
+// --- MOCK DATA (Cho Diễn đàn & Đánh giá) ---
 const forumPosts = [
     {
         id: 'f1',
@@ -52,15 +39,15 @@ const reviews = [
         id: 'r1',
         author: 'Minh Anh',
         avatarImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
-        rating: 1,
+        rating: 5,
         content: 'Phở rất ngon nên thử',
     },
     {
         id: 'r2',
         author: 'Quang Minh',
         avatarImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80',
-        rating: 1,
-        content: 'Quán hơi đông - 1star',
+        rating: 4,
+        content: 'Quán hơi đông',
     },
 ];
 
@@ -86,10 +73,67 @@ interface ExploreScreenProps {
     onViewAllPlaces?: () => void;
     onOpenProfile: () => void;
     onLogout: () => void;
+    onPlaceClick: (placeId: string) => void;
 }
 
-export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenProfile, onLogout }: ExploreScreenProps) => {
+export const ExploreScreen = ({ 
+    activeTab, 
+    onTabChange, 
+    onViewAllPlaces, 
+    onOpenProfile, 
+    onLogout, 
+    onPlaceClick 
+}: ExploreScreenProps) => {
     const [searchText, setSearchText] = useState('');
+    
+    // State quản lý dữ liệu từ API
+    const [places, setPlaces] = useState<Place[]>([]);
+    const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
+
+    // Lấy dữ liệu địa điểm khi màn hình load
+    useEffect(() => {
+        const fetchPlaces = async () => {
+            try {
+                setIsLoadingPlaces(true);
+                // Gọi API lấy 2 nhà hàng có đánh giá cao nhất
+                const response = await PlacesService.findAll({ 
+                    limit: 2, 
+                    sortBy: 'rating', 
+                    sortOrder: 'DESC',
+                    category: PlaceCategory.RESTAURANT // <-- THÊM FILTER CATEGORY Ở ĐÂY
+                });
+                
+                // Set dữ liệu trả về
+                if (response && response.data) {
+                    setPlaces(response.data);
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải danh sách địa điểm:', error);
+            } finally {
+                setIsLoadingPlaces(false);
+            }
+        };
+        fetchPlaces();
+    }, []);
+
+    // Format số lượng đánh giá (VD: 1500 -> 1.5K)
+    const formatReviewCount = (count: number) => {
+        if (!count) return '0';
+        return count >= 1000 ? `${(count / 1000).toFixed(1)}K` : count.toString();
+    };
+
+    // Hàm lấy mô tả vị trí (Ưu tiên khoảng cách distance, nếu không có thì lấy quận/thành phố)
+    const getLocationInfo = (place: Place) => {
+        if (place.distance !== undefined) {
+            return `${place.distance.toFixed(1)} km`;
+        }
+        if (place.address) {
+            const parts = place.address.split(',');
+            // Lấy phần tử chứa thông tin quận hoặc rút gọn địa chỉ
+            return parts.length > 2 ? parts[parts.length - 3].trim() : parts[0];
+        }
+        return 'Gần bạn';
+    };
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
@@ -99,12 +143,7 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
             <View className="px-5 mb-4">
                 <View
                     className="flex-row items-center px-4 rounded-2xl"
-                    style={{
-                        backgroundColor: 'white',
-                        borderWidth: 1,
-                        borderColor: '#E5E7EB',
-                        height: 46,
-                    }}
+                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 46 }}
                 >
                     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 10 }}>
                         <Path
@@ -127,15 +166,14 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90 }}>
 
-                {/* Khám phá địa điểm */}
+                {/* ================= KHÁM PHÁ ĐỊA ĐIỂM ================= */}
                 <View
                     className="mx-5 mb-4 rounded-2xl overflow-hidden"
                     style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
-                    {/* Section Header */}
                     <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
                         <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
-                            Khám phá địa điểm
+                            Khám phá nhà hàng
                         </Text>
                         <TouchableOpacity activeOpacity={0.7} className="flex-row items-center" onPress={onViewAllPlaces}>
                             <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem tất cả</Text>
@@ -145,52 +183,65 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
                         </TouchableOpacity>
                     </View>
 
-                    {/* Place Cards Grid */}
                     <View className="flex-row px-4 pb-4" style={{ gap: 12 }}>
-                        {places.map((place) => (
-                            <TouchableOpacity
-                                key={place.id}
-                                activeOpacity={0.8}
-                                style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
-                            >
-                                <Image
-                                    source={{ uri: place.image }}
-                                    style={{ width: '100%', height: 100 }}
-                                    resizeMode="cover"
-                                />
-                                <View style={{ padding: 8 }}>
-                                    <Text style={{ fontSize: 13, color: '#111827', fontWeight: '600', marginBottom: 4 }} numberOfLines={1}>
-                                        {place.name}
-                                    </Text>
-                                    <StarRating rating={place.rating} />
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, gap: 10 }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
-                                                <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#9CA3AF" />
-                                            </Svg>
-                                            <Text style={{ fontSize: 11, color: '#6B7280' }}>{place.distance}</Text>
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
-                                                <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                                                <Circle cx="9" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2" />
-                                                <Path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
-                                            </Svg>
-                                            <Text style={{ fontSize: 11, color: '#6B7280' }}>{place.reviews}</Text>
+                        {isLoadingPlaces ? (
+                            <View className="flex-1 items-center justify-center py-6">
+                                <ActivityIndicator size="small" color="#2B8EF0" />
+                            </View>
+                        ) : places.length === 0 ? (
+                            <View className="flex-1 items-center justify-center py-6">
+                                <Text className="text-gray-500 text-sm">Chưa có nhà hàng nào</Text>
+                            </View>
+                        ) : (
+                            places.map((place) => (
+                                <TouchableOpacity
+                                    key={place._id}
+                                    activeOpacity={0.8}
+                                    onPress={() => onPlaceClick(place._id)}
+                                    style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+                                >
+                                    <Image
+                                        source={{ uri: place.images && place.images.length > 0 ? place.images[0] : 'https://via.placeholder.com/400' }}
+                                        style={{ width: '100%', height: 100 }}
+                                        resizeMode="cover"
+                                    />
+                                    <View style={{ padding: 8 }}>
+                                        <Text style={{ fontSize: 13, color: '#111827', fontWeight: '600', marginBottom: 4 }} numberOfLines={1}>
+                                            {place.name}
+                                        </Text>
+                                        <StarRating rating={place.rating || 0} />
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, gap: 10 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                                <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
+                                                    <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#9CA3AF" />
+                                                </Svg>
+                                                <Text style={{ fontSize: 11, color: '#6B7280' }} numberOfLines={1}>
+                                                    {getLocationInfo(place)}
+                                                </Text>
+                                            </View>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
+                                                    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
+                                                    <Circle cx="9" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2" />
+                                                    <Path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" />
+                                                </Svg>
+                                                <Text style={{ fontSize: 11, color: '#6B7280' }}>
+                                                    {formatReviewCount(place.reviewCount)}
+                                                </Text>
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                                </TouchableOpacity>
+                            ))
+                        )}
                     </View>
                 </View>
 
-                {/* Diễn đàn du lịch */}
+                {/* ================= DIỄN ĐÀN DU LỊCH ================= */}
                 <View
                     className="mx-5 mb-4 rounded-2xl overflow-hidden"
                     style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
-                    {/* Section Header */}
                     <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
                         <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
                             Diễn đàn du lịch
@@ -203,7 +254,6 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
                         </TouchableOpacity>
                     </View>
 
-                    {/* Forum Posts */}
                     {forumPosts.map((post, index) => (
                         <TouchableOpacity
                             key={post.id}
@@ -255,12 +305,11 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
                     ))}
                 </View>
 
-                {/* Đánh giá địa điểm */}
+                {/* ================= ĐÁNH GIÁ ĐỊA ĐIỂM ================= */}
                 <View
                     className="mx-5 mb-4 rounded-2xl overflow-hidden"
                     style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
-                    {/* Section Header */}
                     <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
                         <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
                             Đánh giá địa điểm
@@ -273,7 +322,6 @@ export const ExploreScreen = ({ activeTab, onTabChange, onViewAllPlaces, onOpenP
                         </TouchableOpacity>
                     </View>
 
-                    {/* Reviews */}
                     {reviews.map((review, index) => (
                         <TouchableOpacity
                             key={review.id}

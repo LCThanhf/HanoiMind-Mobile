@@ -62,3 +62,15 @@ export interface CreateReviewPayload {
   images?: string[];
   is_anonymous?: boolean;
 }
+
+export interface UpdateReviewPayload {
+  criteria?: {
+    cleanliness: number;
+    service: number;
+    location: number;
+    price: number;
+  };
+  content?: string;
+  images?: string[];
+  is_anonymous?: boolean;
+}

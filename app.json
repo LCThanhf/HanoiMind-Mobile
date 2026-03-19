@@ -21,15 +21,28 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyAjJ3aT8qkpWtHVfb2AgWPlBtCUFU0EY4c"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.myexpoapp"
+      "package": "com.anonymous.myexpoapp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAjJ3aT8qkpWtHVfb2AgWPlBtCUFU0EY4c"
+        }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     }
   }
 }

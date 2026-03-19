@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "my-expo-app",
     "slug": "my-expo-app",
@@ -21,11 +21,11 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-
     "ios": {
       "supportsTablet": true,
       "config": {
-        "googleMapsApiKey": "AIzaSyAjJ3aT8qkpWtHVfb2AgWPlBtCUFU0EY4c"
+        // Sử dụng biến môi trường hợp lệ trong file .js
+        "googleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
       }
     },
     "android": {
@@ -36,7 +36,8 @@
       "package": "com.anonymous.myexpoapp",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyAjJ3aT8qkpWtHVfb2AgWPlBtCUFU0EY4c"
+          // Sử dụng biến môi trường hợp lệ trong file .js
+          "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
         }
       },
       "permissions": [
@@ -45,4 +46,4 @@
       ]
     }
   }
-}
+};

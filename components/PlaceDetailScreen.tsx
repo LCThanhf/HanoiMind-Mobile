@@ -69,10 +69,6 @@ export const PlaceDetailScreen = ({
                 const response: any = await PlacesService.findOne(placeId);
                 const data = response.data || response;
                 
-                console.log("--- [1] BACKEND RESPONSE ---");
-                console.log("Place Name:", data?.name);
-                console.log("Coordinates:", data?.location?.coordinates);
-                
                 setPlace(data);
 
                 const myFavs = await FavoriteService.getMyFavorites(FavoriteType.PLACE);

@@ -92,8 +92,8 @@ export default function App() {
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
         onLogout={() => setAppState('starter')}
-        initialTripTab={homeTripTab}
-        onTripTabChange={setHomeTripTab}
+        //initialTripTab={homeTripTab}
+        //onTripTabChange={setHomeTripTab}
         onTripClick={(tripId) => {
           setSelectedTripId(tripId);
           setAppState('tripDetail');

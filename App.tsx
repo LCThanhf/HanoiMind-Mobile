@@ -26,7 +26,7 @@ export default function App() {
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
@@ -116,21 +116,21 @@ export default function App() {
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
         return (
-          <TripDetailScreen 
-            tripId={selectedTripId} 
-            onBack={() => setAppState('main')} 
-            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} 
+          <TripDetailScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('main')}
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
           />
         );
-      
+
       case 'placesExplore':
         return (
-          <PlacesExploreScreen 
-            onBack={() => setAppState('main')} 
-            activeTab={activeTab} 
-            onTabChange={(tab: any) => { 
-              setActiveTab(tab); 
-              setAppState('main'); 
+          <PlacesExploreScreen
+            onBack={() => setAppState('main')}
+            activeTab={activeTab}
+            onTabChange={(tab: any) => {
+              setActiveTab(tab);
+              setAppState('main');
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
@@ -142,18 +142,23 @@ export default function App() {
 
       case 'placeDetail':
         return (
-          <PlaceDetailScreen 
-            placeId={selectedPlaceId} 
+          <PlaceDetailScreen
+            placeId={selectedPlaceId}
             onBack={() => setAppState(previousState)} // Quay về màn hình đã lưu trong state
             onReview={() => setAppState('reviewPlace')}
           />
         );
-        
+
       case 'reviewPlace':
         return (
           <ReviewScreen
             placeId={selectedPlaceId}
             onBack={() => setAppState('placeDetail')}
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setAppState('main');
+            }}
           />
         );
 

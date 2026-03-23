@@ -16,17 +16,24 @@ import { TripsScreen } from './components/TripsScreen';
 import { MainTab } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
+import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
 
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace';
+// 1. Thêm 'mapScreen' vào AppState
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
-  // State lưu màn hình trước đó để quay lại đúng chỗ khi bấm back từ PlaceDetail
   const [previousState, setPreviousState] = useState<AppState>('main');
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  
+  // State lưu ID để gọi API trong PlaceDetailScreen
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
+  
+  // 2. State MỚI: Lưu toàn bộ object place để ném sang MapScreen (tránh phải gọi API lại 2 lần)
+  const [selectedPlaceData, setSelectedPlaceData] = useState<any>(null);
+
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
@@ -55,7 +62,7 @@ export default function App() {
           onLogout={() => setAppState('starter')}
           onPlaceClick={(placeId: string) => {
             setSelectedPlaceId(placeId);
-            setPreviousState('main'); // Đang ở main (Explore) -> xem detail -> bấm back về lại main
+            setPreviousState('main'); 
             setAppState('placeDetail');
           }}
         />
@@ -134,7 +141,7 @@ export default function App() {
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
-              setPreviousState('placesExplore'); // Đang ở danh sách tất cả -> xem detail -> bấm back về danh sách
+              setPreviousState('placesExplore');
               setAppState('placeDetail');
             }}
           />
@@ -144,11 +151,25 @@ export default function App() {
         return (
           <PlaceDetailScreen 
             placeId={selectedPlaceId} 
-            onBack={() => setAppState(previousState)} // Quay về màn hình đã lưu trong state
+            onBack={() => setAppState(previousState)} 
             onReview={() => setAppState('reviewPlace')}
+            // 3. Xử lý sự kiện mở bản đồ
+            onOpenMap={(place) => {
+              setSelectedPlaceData(place); // Lưu data vào state
+              setAppState('mapScreen');    // Chuyển sang màn hình map
+            }}
           />
         );
         
+      // 4. Khai báo màn hình MapScreen
+      case 'mapScreen':
+        return (
+            <MapScreen 
+                place={selectedPlaceData} 
+                onBack={() => setAppState('placeDetail')} // Bấm back trên Map sẽ về lại PlaceDetail
+            />
+        );
+
       case 'reviewPlace':
         return (
           <ReviewScreen

@@ -72,8 +72,34 @@ class ChatService {
   }
 
   /** Tham gia vào phòng chat (Journey hoặc Direct) */
-  joinRoom(params: { room_id?: string; journey_id?: string }) {
-    this.socket?.emit('join_room', params);
+  joinRoom(params: { room_id?: string; journey_id?: string }): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket) {
+        return reject(new Error('Socket chưa được khởi tạo'));
+      }
+
+      // 1. Gửi yêu cầu join room
+      this.socket.emit('join_room', params);
+
+      // 2. Lắng nghe phản hồi thành công một lần duy nhất
+      this.socket.once('room_joined_success', (data: { room_id: string }) => {
+        this.socket?.off('error'); // Hủy lắng nghe lỗi nếu thành công
+        resolve(data.room_id);
+      });
+
+      // 3. Lắng nghe phản hồi lỗi một lần duy nhất
+      this.socket.once('error', (err: { message: string }) => {
+        this.socket?.off('room_joined_success'); // Hủy lắng nghe thành công nếu lỗi
+        reject(new Error(err.message));
+      });
+
+      // 4. Timeout (Tùy chọn) để tránh treo UI nếu server không phản hồi
+      setTimeout(() => {
+        this.socket?.off('room_joined_success');
+        this.socket?.off('error');
+        reject(new Error('Kết nối phòng chat quá hạn (Timeout)'));
+      }, 5000);
+    });
   }
 
   /** Gửi tin nhắn mới */

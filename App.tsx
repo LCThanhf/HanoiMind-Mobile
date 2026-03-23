@@ -17,9 +17,10 @@ import { MainTab } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
+import { NotificationScreen } from './components/NotificationScreen';
 
 // 1. Thêm 'mapScreen' vào AppState
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'notifications';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -58,8 +59,6 @@ export default function App() {
             setPreviousState('main');
             setAppState('placesExplore');
           }}
-          onOpenProfile={() => setActiveTab('profile')}
-          onLogout={() => setAppState('starter')}
           onPlaceClick={(placeId: string) => {
             setSelectedPlaceId(placeId);
             setPreviousState('main'); 
@@ -81,6 +80,7 @@ export default function App() {
           }}
           onOpenProfile={() => setActiveTab('profile')}
           onLogout={() => setAppState('starter')}
+          onOpenNotifications={() => setAppState('notifications')}
         />
       );
     }
@@ -92,6 +92,7 @@ export default function App() {
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
         onLogout={() => setAppState('starter')}
+        onOpenNotifications={() => setAppState('notifications')}
         initialTripTab={homeTripTab}
         onTripTabChange={setHomeTripTab}
         onTripClick={(tripId) => {
@@ -175,6 +176,18 @@ export default function App() {
           <ReviewScreen
             placeId={selectedPlaceId}
             onBack={() => setAppState('placeDetail')}
+          />
+        );
+
+      case 'notifications':
+        return (
+          <NotificationScreen
+            activeTab={activeTab}
+            onBack={() => setAppState('main')}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setAppState('main');
+            }}
           />
         );
 

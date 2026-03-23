@@ -1,7 +1,7 @@
 // src/screens/forum/ForumScreen.tsx
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
-import { Search, Bell, Plus, MessageSquare } from 'lucide-react-native';
+import { Search, Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
 import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn component Tab
 import { ForumPost, ForumCategory, PostStatus } from '../../services/forumService/forum.type';
@@ -40,14 +40,17 @@ const MOCK_POSTS: ForumPost[] = [
   }
 ];
 
-const ForumScreen = () => {
+const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
   const [activeTab, setActiveTab] = useState<'FEED' | 'CREATE' | 'BUDDY'>('FEED');
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* 1. HEADER: Greeting & Icons */}
       <View className="flex-row justify-between items-center px-4 py-3 bg-white">
-        <View>
+        <TouchableOpacity onPress={onBack} className="p-1">
+          <ArrowLeft size={24} color="#374151" />
+        </TouchableOpacity>
+        <View className="flex-1 ml-3">
           <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, Hoàng! 👋</Text>
           <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
         </View>
@@ -104,4 +107,4 @@ const ForumScreen = () => {
   );
 };
 
-export default ForumScreen;
+export { ForumScreen };

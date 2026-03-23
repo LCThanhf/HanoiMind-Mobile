@@ -3,6 +3,7 @@ import {
   Review, 
   ReviewStats, 
   CreateReviewPayload, 
+  UpdateReviewPayload,
   ReviewFilter, 
   ReviewSortBy 
 } from './review.type';
@@ -57,7 +58,7 @@ export const ReviewService = {
   /**
    * 5. Sửa đánh giá (Chỉ cho phép trong vòng 48h từ lúc gửi)
    */
-  update: async (reviewId: string, payload: Partial<CreateReviewPayload>): Promise<Review> => {
+  update: async (reviewId: string, payload: UpdateReviewPayload): Promise<Review> => {
     try {
       return await apiClient.patch(`/reviews/${reviewId}`, payload);
     } catch (error) { throw error; }

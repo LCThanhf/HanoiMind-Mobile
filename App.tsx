@@ -15,14 +15,25 @@ import { ProfileScreen } from './components/ProfileScreen';
 import { TripsScreen } from './components/TripsScreen';
 import { MainTab } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
+import { ReviewScreen } from './components/ReviewScreen';
+import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
 
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail';
+// 1. Thêm 'mapScreen' vào AppState
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
+  const [previousState, setPreviousState] = useState<AppState>('main');
+
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  
+  // State lưu ID để gọi API trong PlaceDetailScreen
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
+  
+  // 2. State MỚI: Lưu toàn bộ object place để ném sang MapScreen (tránh phải gọi API lại 2 lần)
+  const [selectedPlaceData, setSelectedPlaceData] = useState<any>(null);
+
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
@@ -43,9 +54,17 @@ export default function App() {
         <ExploreScreen
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onViewAllPlaces={() => setAppState('placesExplore')}
+          onViewAllPlaces={() => {
+            setPreviousState('main');
+            setAppState('placesExplore');
+          }}
           onOpenProfile={() => setActiveTab('profile')}
           onLogout={() => setAppState('starter')}
+          onPlaceClick={(placeId: string) => {
+            setSelectedPlaceId(placeId);
+            setPreviousState('main'); 
+            setAppState('placeDetail');
+          }}
         />
       );
     }
@@ -103,7 +122,13 @@ export default function App() {
       case 'createTrip':
         return <CreateTripScreen onClose={() => setAppState('main')} />;
       case 'tripDetail':
-        return <TripDetailScreen tripId={selectedTripId} onBack={() => setAppState('main')} onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} />;
+        return (
+          <TripDetailScreen 
+            tripId={selectedTripId} 
+            onBack={() => setAppState('main')} 
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} 
+          />
+        );
       
       case 'placesExplore':
         return (
@@ -116,6 +141,7 @@ export default function App() {
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
+              setPreviousState('placesExplore');
               setAppState('placeDetail');
             }}
           />
@@ -125,7 +151,30 @@ export default function App() {
         return (
           <PlaceDetailScreen 
             placeId={selectedPlaceId} 
-            onBack={() => setAppState('placesExplore')} 
+            onBack={() => setAppState(previousState)} 
+            onReview={() => setAppState('reviewPlace')}
+            // 3. Xử lý sự kiện mở bản đồ
+            onOpenMap={(place) => {
+              setSelectedPlaceData(place); // Lưu data vào state
+              setAppState('mapScreen');    // Chuyển sang màn hình map
+            }}
+          />
+        );
+        
+      // 4. Khai báo màn hình MapScreen
+      case 'mapScreen':
+        return (
+            <MapScreen 
+                place={selectedPlaceData} 
+                onBack={() => setAppState('placeDetail')} // Bấm back trên Map sẽ về lại PlaceDetail
+            />
+        );
+
+      case 'reviewPlace':
+        return (
+          <ReviewScreen
+            placeId={selectedPlaceId}
+            onBack={() => setAppState('placeDetail')}
           />
         );
 

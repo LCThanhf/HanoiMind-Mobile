@@ -10,6 +10,8 @@ import { PlacesService } from '../services/placeService/place.service';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { Place, PlaceCategory } from '../services/placeService/place.type';
 import { Journey, JourneyTag } from '../services/journeyService/journey.type';
+import { WeatherService } from '../services/weatherService/weather.service';
+import { OpenWeatherCurrent } from '../services/weatherService/weather.type';
 
 type PlaceFilterLabel = 'All' | 'Nhà hàng' | 'Khách sạn' | 'Thắng cảnh' | 'Bar';
 type TourFilterLabel = 'All' | 'Chill' | 'Ẩm thực' | 'Phượt' | 'Thương mại';
@@ -34,6 +36,7 @@ const TOUR_TAG_MAP: Record<TourFilterLabel, JourneyTag | undefined> = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const WEATHER_CITY = 'Ha Noi,VN';
 
 const formatDistance = (distance?: number) => {
     if (!distance || Number.isNaN(distance)) {
@@ -81,6 +84,38 @@ const normalizePlaceList = (payload: unknown): Place[] => {
     return [];
 };
 
+const formatWeatherDescription = (description?: string) => {
+    if (!description) {
+        return 'Không có dữ liệu';
+    }
+    return description.charAt(0).toUpperCase() + description.slice(1);
+};
+
+const formatVisibility = (visibility?: number) => {
+    if (!visibility || Number.isNaN(visibility)) {
+        return '--';
+    }
+    return `${(visibility / 1000).toFixed(1)} km`;
+};
+
+const getWeatherSuggestion = (weather?: OpenWeatherCurrent) => {
+    if (!weather) {
+        return 'Đang cập nhật khuyến nghị thời tiết';
+    }
+
+    if (weather.temperature >= 35) {
+        return 'Trời khá nóng, nên mang theo nước';
+    }
+    if (weather.conditionMain.toLowerCase().includes('rain')) {
+        return 'Có thể có mưa, nên mang theo ô';
+    }
+    if (weather.temperature <= 18) {
+        return 'Trời se lạnh, nên mặc ấm khi ra ngoài';
+    }
+
+    return 'Thích hợp để ra ngoài';
+};
+
 const StarRating = ({ rating, total = 5 }: { rating: number; total?: number }) => (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         {Array.from({ length: total }).map((_, i) => (
@@ -120,6 +155,9 @@ export const HomeScreen = ({
     const [myTrips, setMyTrips] = useState<Journey[]>([]);
     const [joinTours, setJoinTours] = useState<Journey[]>([]);
     const [places, setPlaces] = useState<Place[]>([]);
+    const [weatherData, setWeatherData] = useState<OpenWeatherCurrent | null>(null);
+    const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+    const [weatherError, setWeatherError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchHomeData = async (filterCategory: PlaceFilterLabel, tourFilter: TourFilterLabel) => {
@@ -155,6 +193,37 @@ export const HomeScreen = ({
         fetchHomeData(activeFilter, activeTourFilter);
     }, [activeFilter, activeTourFilter]);
 
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchWeatherData = async () => {
+            try {
+                setIsWeatherLoading(true);
+                setWeatherError(null);
+                const weather = await WeatherService.getCurrentWeatherByCity(WEATHER_CITY);
+
+                if (isMounted) {
+                    setWeatherData(weather);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    setWeatherError('Không thể tải dữ liệu thời tiết');
+                }
+                console.error('Weather data load error:', error);
+            } finally {
+                if (isMounted) {
+                    setIsWeatherLoading(false);
+                }
+            }
+        };
+
+        fetchWeatherData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     const filteredPlaces = places.filter((place) => {
         if (!searchText.trim()) {
             return true;
@@ -178,28 +247,45 @@ export const HomeScreen = ({
                             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' }} />
 
                             <View className="p-4 flex-1 justify-between">
-                                <Text className="text-white text-[13px] font-semibold">Dự báo hôm nay: Có mây</Text>
+                                <Text className="text-white text-[13px] font-semibold">
+                                    Dự báo hôm nay: {isWeatherLoading ? 'Đang tải...' : formatWeatherDescription(weatherData?.description)}
+                                </Text>
 
                                 <View className="flex-row items-end justify-between">
                                     <View>
                                         <View className="flex-row items-end">
-                                            <Text className="text-white text-[48px] font-bold leading-none">36</Text>
+                                            <Text className="text-white text-[48px] font-bold leading-none">
+                                                {weatherData ? Math.round(weatherData.temperature) : '--'}
+                                            </Text>
                                             <Text className="text-white text-[20px] font-bold mb-2 ml-1">°C</Text>
-                                            <Text className="text-white text-[16px] font-bold mb-2 ml-3">Trời nắng</Text>
+                                            <Text className="text-white text-[16px] font-bold mb-2 ml-3">
+                                                {weatherData?.conditionMain || 'Đang cập nhật'}
+                                            </Text>
                                         </View>
-                                        <Text className="text-white text-[13px] font-medium mt-1">Cầu Giấy, Hà Nội</Text>
-                                        <Text className="text-white text-[13px] font-medium mt-1">Thích hợp để ra ngoài</Text>
+                                        <Text className="text-white text-[13px] font-medium mt-1">
+                                            {weatherData ? `${weatherData.cityName}, ${weatherData.country}` : 'Hà Nội, VN'}
+                                        </Text>
+                                        <Text className="text-white text-[13px] font-medium mt-1">{getWeatherSuggestion(weatherData || undefined)}</Text>
+                                        {weatherError && (
+                                            <Text className="text-[#FDE68A] text-[11px] font-medium mt-1">{weatherError}</Text>
+                                        )}
                                     </View>
 
                                     <View className="items-end">
                                         <View className="bg-black/30 px-3 py-1.5 rounded-lg mb-2 border border-white/10">
-                                            <Text className="text-white text-[11px] font-medium">Độ ẩm: --</Text>
+                                            <Text className="text-white text-[11px] font-medium">
+                                                Độ ẩm: {weatherData ? `${weatherData.humidity}%` : '--'}
+                                            </Text>
                                         </View>
                                         <View className="bg-black/30 px-3 py-1.5 rounded-lg mb-2 border border-white/10">
-                                            <Text className="text-white text-[11px] font-medium">Sức gió: --</Text>
+                                            <Text className="text-white text-[11px] font-medium">
+                                                Sức gió: {weatherData ? `${weatherData.windSpeed.toFixed(1)} m/s` : '--'}
+                                            </Text>
                                         </View>
                                         <View className="bg-black/30 px-3 py-1.5 rounded-lg border border-white/10">
-                                            <Text className="text-white text-[11px] font-medium">Some stat i dunno: --</Text>
+                                            <Text className="text-white text-[11px] font-medium">
+                                                Tầm nhìn: {weatherData ? formatVisibility(weatherData.visibility) : '--'}
+                                            </Text>
                                         </View>
                                     </View>
                                 </View>

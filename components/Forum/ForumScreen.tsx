@@ -7,6 +7,14 @@ import { ForumPost, ForumCategory, PostStatus, PostSortBy } from '../../services
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
 
+// 1. Thêm các thư viện xử lý ảnh
+import * as ImagePicker from 'expo-image-picker';
+import { Modal } from 'react-native'; // Để hiện màn hình chờ
+
+// 2. Import cái "nhà máy" xử lý ảnh bạn vừa viết ở file utils
+// Nhớ chỉnh lại đường dẫn '../utils/uploadImage' cho đúng chỗ bạn đặt file nhé
+import { processImage, upImageToCloudinary } from '../../utils/uploadImage';
+
 const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
   const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
   const [userName, setUserName] = useState<string>('');
@@ -40,7 +48,7 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
       setError('');
       const response = await ForumService.findAll({
         page: 1,
-        limit: 20,
+        limit: 10,
         sortBy: PostSortBy.LATEST,
         category: currentCategory
       });
@@ -50,7 +58,7 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
         // Nếu category hiện tại chưa có bài, thử fetch tất cả để không để trắng
         const fallback = await ForumService.findAll({
           page: 1,
-          limit: 20,
+          limit: 10,
           sortBy: PostSortBy.LATEST
         });
         setPosts(fallback.data || []);
@@ -65,6 +73,46 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
     }
   };
 
+  // 3. Quản lý trạng thái đang upload
+const [isUploading, setIsUploading] = useState(false);
+
+// 4. Hàm "Phù phép" cho nút Plus
+const handleAddPostWithImage = async () => {
+  // Xin quyền
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    alert('Bạn cần cho phép truy cập ảnh để dùng tính năng này!');
+    return;
+  }
+
+  // Mở kho ảnh
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    quality: 1,
+  });
+
+  if (!result.canceled) {
+    try {
+      setIsUploading(true); // Bật vòng xoay chờ đợi
+
+      // Quy trình khoa học: Xử lý nhẹ -> Bắn lên mây
+      const processedUri = await processImage(result.assets[0].uri);
+      const cloudUrl = await upImageToCloudinary(processedUri);
+
+      if (cloudUrl) {
+        console.log("Link ảnh Cloudinary của bạn đây:", cloudUrl);
+        alert("Upload thành công! Link ảnh: " + cloudUrl.substring(0, 20) + "...");
+        // Sau này bạn dùng link cloudUrl này để post bài nhé!
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUploading(false); // Tắt vòng xoay
+    }
+  }
+};
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50 pt-12">
       {/* 1. HEADER: Greeting & Icons */}
@@ -73,7 +121,7 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <View className="flex-1 ml-3">
-          <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, {userName}! 👋</Text>
+          <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, {userName}!👋</Text>
           <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
         </View>
         <View className="flex-row space-x-3">
@@ -90,8 +138,8 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
         onCategoryChange={setCurrentCategory} 
       />
 
-      {/* 3. SEARCH & FILTER (Chỉ hiện ở tab Diễn đàn) */}
-      {currentCategory === ForumCategory.REVIEW && (
+      {/* 3. SEARCH & FILTER */}
+      {currentCategory === ForumCategory.EXPERIENCE &&(
         <View className="px-4 py-3">
           <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
             <Search size={18} color="#999" />
@@ -140,13 +188,23 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
         />
       )}
 
-      {/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
+{/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
       <TouchableOpacity 
-        className="absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg shadow-blue-500"
-        onPress={() => console.log('Go to Create Post')}
+        className="absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg"
+        onPress={handleAddPostWithImage}
       >
         <Plus size={28} color="white" />
       </TouchableOpacity>
+
+      {/* 6. Modal chờ đợi khi đang upload ảnh */}
+      <Modal transparent visible={isUploading} animationType="fade">
+        <View className="flex-1 bg-black/50 items-center justify-center">
+          <View className="bg-white p-6 rounded-2xl items-center shadow-xl">
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text className="mt-4 font-bold text-gray-700">Đang tải ảnh lên...</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

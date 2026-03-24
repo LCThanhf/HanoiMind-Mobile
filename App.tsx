@@ -27,10 +27,10 @@ export default function App() {
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
-  
+
   // State lưu ID để gọi API trong PlaceDetailScreen
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
-  
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
+
   // 2. State MỚI: Lưu toàn bộ object place để ném sang MapScreen (tránh phải gọi API lại 2 lần)
   const [selectedPlaceData, setSelectedPlaceData] = useState<any>(null);
 
@@ -62,7 +62,7 @@ export default function App() {
           onLogout={() => setAppState('starter')}
           onPlaceClick={(placeId: string) => {
             setSelectedPlaceId(placeId);
-            setPreviousState('main'); 
+            setPreviousState('main');
             setAppState('placeDetail');
           }}
         />
@@ -120,24 +120,32 @@ export default function App() {
       case 'main':
         return renderMainContent();
       case 'createTrip':
-        return <CreateTripScreen onClose={() => setAppState('main')} />;
-      case 'tripDetail':
         return (
-          <TripDetailScreen 
-            tripId={selectedTripId} 
-            onBack={() => setAppState('main')} 
-            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} 
+          <CreateTripScreen
+            onClose={() => setAppState('main')}
+            onJourneyCreated={(journeyId) => {
+              setSelectedTripId(journeyId);
+              setAppState('tripDetail');
+            }}
           />
         );
-      
+      case 'tripDetail':
+        return (
+          <TripDetailScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('main')}
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+          />
+        );
+
       case 'placesExplore':
         return (
-          <PlacesExploreScreen 
-            onBack={() => setAppState('main')} 
-            activeTab={activeTab} 
-            onTabChange={(tab: any) => { 
-              setActiveTab(tab); 
-              setAppState('main'); 
+          <PlacesExploreScreen
+            onBack={() => setAppState('main')}
+            activeTab={activeTab}
+            onTabChange={(tab: any) => {
+              setActiveTab(tab);
+              setAppState('main');
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
@@ -149,9 +157,9 @@ export default function App() {
 
       case 'placeDetail':
         return (
-          <PlaceDetailScreen 
-            placeId={selectedPlaceId} 
-            onBack={() => setAppState(previousState)} 
+          <PlaceDetailScreen
+            placeId={selectedPlaceId}
+            onBack={() => setAppState(previousState)}
             onReview={() => setAppState('reviewPlace')}
             // 3. Xử lý sự kiện mở bản đồ
             onOpenMap={(place) => {
@@ -160,14 +168,14 @@ export default function App() {
             }}
           />
         );
-        
+
       // 4. Khai báo màn hình MapScreen
       case 'mapScreen':
         return (
-            <MapScreen 
-                place={selectedPlaceData} 
-                onBack={() => setAppState('placeDetail')} // Bấm back trên Map sẽ về lại PlaceDetail
-            />
+          <MapScreen
+            place={selectedPlaceData}
+            onBack={() => setAppState('placeDetail')} // Bấm back trên Map sẽ về lại PlaceDetail
+          />
         );
 
       case 'reviewPlace':

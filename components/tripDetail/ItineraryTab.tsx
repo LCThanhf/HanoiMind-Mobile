@@ -84,6 +84,23 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                             </View>
                         </View>
                     ))}
+
+                    {!dayData.activities.length ? (
+                        <View
+                            style={{
+                                backgroundColor: '#F9FAFB',
+                                borderWidth: 1,
+                                borderColor: '#E5E7EB',
+                                borderRadius: 12,
+                                paddingHorizontal: 12,
+                                paddingVertical: 12,
+                            }}
+                        >
+                            <Text style={{ fontSize: 13, color: '#4B5563', fontWeight: '500' }}>
+                                Nghỉ ngơi, tự do tham quan
+                            </Text>
+                        </View>
+                    ) : null}
                 </View>
             ))}
         </>

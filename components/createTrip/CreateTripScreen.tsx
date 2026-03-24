@@ -35,7 +35,13 @@ const formatDateInput = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
+export const CreateTripScreen = ({
+  onClose,
+  onJourneyCreated,
+}: {
+  onClose?: () => void;
+  onJourneyCreated?: (journeyId: string) => void;
+}) => {
   const today = useMemo(() => new Date(), []);
   const tomorrow = useMemo(() => {
     const next = new Date(today);
@@ -519,19 +525,19 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
   const validateStepOne = () => {
     const cleanName = tripName.trim();
     if (!cleanName) {
-      Alert.alert('Thieu thong tin', 'Ban can nhap ten chuyen di truoc khi sang buoc tiep theo.');
+      Alert.alert('Thiếu thông tin', 'Bạn cần nhập tên chuyến đi trước khi sang bước tiếp theo.');
       return false;
     }
 
     const budgetLimit = parseBudgetValue(budget);
     if (budgetLimit !== undefined && budgetLimit < 500000) {
-      Alert.alert('Ngan sach chua hop le', 'Ngan sach toi thieu la 500.000 VND.');
+      Alert.alert('Ngân sách chưa hợp lệ', 'Ngân sách tối thiểu là 500.000 VND.');
       return false;
     }
 
     const { start_date, end_date } = buildIsoDateRange(startDate, endDate);
     if (!start_date || !end_date) {
-      Alert.alert('Ngay chua hop le', 'Hay chon ngay bat dau/ket thuc hop le va dam bao ngay ket thuc khong truoc ngay bat dau.');
+      Alert.alert('Ngày chưa hợp lệ', 'Hãy chọn ngày bắt đầu/kết thúc hợp lệ và đảm bảo ngày kết thúc không trước ngày bắt đầu.');
       return false;
     }
 
@@ -566,7 +572,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
 
     if (currentStep === 2) {
       if (!selectedPlaceIds.length) {
-        Alert.alert('Thieu dia diem', 'Ban hay chon it nhat 1 dia diem o buoc 2.');
+        Alert.alert('Thiếu địa điểm', 'Bạn cần chọn ít nhất 1 địa điểm ở bước 2.');
         return;
       }
       setCurrentStep(3);
@@ -578,7 +584,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
     const { start_date, end_date, daysCount } = buildIsoDateRange(startDate, endDate);
 
     if (!start_date || !end_date || daysCount <= 0) {
-      Alert.alert('Ngay chua hop le', 'Khong the chay AI vi ngay bat dau/ket thuc khong hop le.');
+      Alert.alert('Ngày chưa hợp lệ', 'Không thể chạy AI vì ngày bắt đầu/kết thúc không hợp lệ.');
       return;
     }
 
@@ -660,8 +666,11 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
 
       await AiService.runAiPlan(journeyId, aiPlanPayload);
 
-      Alert.alert('Thanh cong', 'Da tao hanh trinh va chay toi uu AI.');
-      onClose?.();
+      onJourneyCreated?.(journeyId);
+      if (!onJourneyCreated) {
+        Alert.alert('Thanh cong', 'Da tao hanh trinh va chay toi uu AI.');
+        onClose?.();
+      }
     } catch (error) {
       const message = getReadableErrorMessage(error, 'Khong the chay luong tao hanh trinh AI luc nay.');
       Alert.alert('That bai', message);
@@ -718,7 +727,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
                     </Text>
                   </View>
                   <Text className="text-[10px] mt-1.5" style={{ color: currentStep >= step ? '#2B8EF0' : '#9CA3AF', fontWeight: '500' }}>
-                    {step === 1 ? 'THONG TIN' : step === 2 ? 'DIA DIEM' : 'AI TAO'}
+                    {step === 1 ? 'THÔNG TIN' : step === 2 ? 'ĐỊA ĐIỂM' : 'AI TẠO'}
                   </Text>
                 </View>
 

@@ -1,10 +1,86 @@
 // src/components/forum/ForumPostCard.tsx
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, ImageBackground } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
 import { MapPin, MessageCircle, Eye, Heart, Navigation } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
+import { ForumService } from '../../services/forumService/forum.service';
 
-export const ForumPostCard = ({ post }: { post: ForumPost }) => {
+interface ForumPostCardProps {
+  post?: ForumPost;
+  postId?: string;
+}
+
+export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps) => {
+  const [post, setPost] = useState<ForumPost | null>(initialPost || null);
+  const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    const loadPost = async () => {
+      if (!postId) {
+        setError('Không có post ID');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+      try {
+        const fetched = await ForumService.getPostDetail(postId);
+        setPost(fetched as ForumPost);
+      } catch (err) {
+        console.error('Error fetching post detail:', err);
+        setError('Không tải được bài viết');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Nếu chưa có dữ liệu chi tiết, fetch từ API
+    if (!initialPost && postId) {
+      loadPost();
+    }
+  }, [initialPost, postId]);
+
+  if (loading) {
+    return (
+      <View className="m-4 p-6 bg-white rounded-3xl border border-gray-100 items-center">
+        <ActivityIndicator size="small" color="#3b82f6" />
+        <Text className="mt-2 text-gray-500">Đang tải bài viết...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="m-4 p-6 bg-white rounded-3xl border border-red-100 items-center">
+        <Text className="text-red-500 mb-2">{error}</Text>
+        <TouchableOpacity
+          className="px-4 py-2 bg-blue-500 rounded-full"
+          onPress={() => {
+            setError('');
+            setLoading(true);
+            if (postId) {
+              ForumService.getPostDetail(postId)
+                .then((fetched) => setPost(fetched as ForumPost))
+                .catch((err2) => {
+                  console.error('Retry error:', err2);
+                  setError('Không tải được bài viết');
+                })
+                .finally(() => setLoading(false));
+            }
+          }}
+        >
+          <Text className="text-white">Tải lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!post) {
+    return null;
+  }
+
   return (
     <View className="bg-white m-4 rounded-3xl shadow-sm overflow-hidden border border-gray-100">
       {/* Header: Author info */}
@@ -22,7 +98,7 @@ export const ForumPostCard = ({ post }: { post: ForumPost }) => {
       {/* Body: Cover Image with Title Overlay */}
       <View className="px-4">
         <ImageBackground 
-          source={{ uri: post.images[0] }} 
+          source={{ uri: post.images[0] }} //lấy ảnh đầu tiên làm bìa hiển thị
           className="w-full h-52 rounded-2xl overflow-hidden justify-end"
           imageStyle={{ borderRadius: 16 }}
         >

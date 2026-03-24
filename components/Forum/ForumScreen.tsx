@@ -18,8 +18,11 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
 
   useEffect(() => {
     fetchUserName();
-    fetchPosts();
   }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [currentCategory]);
 
   const fetchUserName = async () => {
     try {
@@ -39,9 +42,21 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
         page: 1,
         limit: 20,
         sortBy: PostSortBy.LATEST,
-        category: ForumCategory.EXPERIENCE
+        category: currentCategory
       });
-      setPosts(response.data || []);
+
+      const postsData = response.data || [];
+      if (postsData.length === 0) {
+        // Nếu category hiện tại chưa có bài, thử fetch tất cả để không để trắng
+        const fallback = await ForumService.findAll({
+          page: 1,
+          limit: 20,
+          sortBy: PostSortBy.LATEST
+        });
+        setPosts(fallback.data || []);
+      } else {
+        setPosts(postsData);
+      }
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError('Không thể tải bài viết');
@@ -100,12 +115,17 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
             <Text className="text-white font-semibold">Thử lại</Text>
           </TouchableOpacity>
         </View>
+      ) : posts.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-4">
+          <Text className="text-gray-500 text-center mb-3">Hiện chưa có bài viết cho mục này.</Text>
+          <Text className="text-gray-400 text-center">Đang hiển thị nội dung từ tất cả mục để bạn tham khảo.</Text>
+        </View>
       ) : (
         <FlatList
           data={posts}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
-            <ForumPostCard post={item} />
+            <ForumPostCard postId={item._id} post={item} />
           )}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}

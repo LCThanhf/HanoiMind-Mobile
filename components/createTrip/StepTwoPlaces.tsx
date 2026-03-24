@@ -9,6 +9,7 @@ import { SelectedPlaceSummary } from './types';
 interface StepTwoPlacesProps {
   selectedPlaceIds: string[];
   selectedPlaceSummaries: SelectedPlaceSummary[];
+  onRemoveSelectedPlace: (placeId: string) => void;
   isAiSelectingPlaces: boolean;
   isProcessing: boolean;
   placesLoading: boolean;
@@ -25,6 +26,7 @@ interface StepTwoPlacesProps {
 export const StepTwoPlaces = ({
   selectedPlaceIds,
   selectedPlaceSummaries,
+  onRemoveSelectedPlace,
   isAiSelectingPlaces,
   isProcessing,
   placesLoading,
@@ -41,24 +43,54 @@ export const StepTwoPlaces = ({
     <View className="flex-row items-center mb-4">
       <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
       <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-        CHON DIA DIEM YEU THICH
+        Chọn địa điểm mong muốn
       </Text>
     </View>
 
     <View style={{ backgroundColor: '#EBF5FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}>
       <Text style={{ color: '#1E3A8A', fontSize: 13, fontWeight: '600' }}>
-        Da chon {selectedPlaceIds.length} dia diem
+        Đã chọn {selectedPlaceIds.length} địa điểm
       </Text>
       {selectedPlaceSummaries.length > 0 ? (
         <View style={{ marginTop: 8 }}>
           {selectedPlaceSummaries.map((place, index) => (
-            <Text
+            <View
               key={place.id}
-              style={{ color: '#1E3A8A', fontSize: 12, fontWeight: '500', marginTop: index === 0 ? 0 : 4 }}
-              numberOfLines={1}
+              style={{
+                marginTop: index === 0 ? 0 : 8,
+                backgroundColor: 'white',
+                borderWidth: 1,
+                borderColor: '#D1E6FF',
+                borderRadius: 10,
+                paddingHorizontal: 10,
+                paddingVertical: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+              }}
             >
-              {index + 1}. {place.name}
-            </Text>
+              <Text
+                style={{ color: '#1E3A8A', fontSize: 12, fontWeight: '600', flex: 1 }}
+                numberOfLines={1}
+              >
+                {index + 1}. {place.name}
+              </Text>
+              <TouchableOpacity
+                onPress={() => onRemoveSelectedPlace(place.id)}
+                activeOpacity={0.7}
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#FCA5A5',
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  backgroundColor: '#FEF2F2',
+                }}
+              >
+                <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700' }}>Xóa</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
       ) : null}
@@ -86,7 +118,7 @@ export const StepTwoPlaces = ({
         <>
           <SparkleIcon />
           <Text style={{ color: 'white', fontSize: 13, fontWeight: '700', marginLeft: 8 }}>
-            De AI goi y diem tiep theo
+            Để AI gợi ý địa điểm tiếp theo
           </Text>
         </>
       )}
@@ -95,7 +127,7 @@ export const StepTwoPlaces = ({
     <View className="flex-row items-center px-4 rounded-xl mb-3" style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 48 }}>
       <TextInput
         className="flex-1 text-[14px]"
-        placeholder="Tim dia diem..."
+        placeholder="Tìm địa điểm..."
         placeholderTextColor="#9CA3AF"
         value={placesSearch}
         onChangeText={onChangePlacesSearch}
@@ -183,7 +215,7 @@ export const StepTwoPlaces = ({
         {loadingMorePlaces ? (
           <ActivityIndicator color="#2B8EF0" size="small" />
         ) : (
-          <Text style={{ color: '#2B8EF0', fontSize: 13, fontWeight: '700' }}>Xem them dia diem</Text>
+          <Text style={{ color: '#2B8EF0', fontSize: 13, fontWeight: '700' }}>Xem thêm địa điểm</Text>
         )}
       </TouchableOpacity>
     ) : null}

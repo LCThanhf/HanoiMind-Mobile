@@ -53,19 +53,19 @@ export const StepOneInfo = ({
       <View className="flex-row items-center mb-4">
         <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
         <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-          NHAP THONG TIN CO BAN
+          Các thông tin cơ bản
         </Text>
       </View>
 
       <View className="mb-3">
         <Text className="text-[13px] text-gray-600 mb-2" style={{ fontWeight: '500' }}>
-          Ten chuyen di
+          Tên chuyến đi
         </Text>
         <View className="flex-row items-center px-4 rounded-xl" style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}>
           <TextInput
             className="flex-1 text-[15px]"
             style={{ fontWeight: '500', color: '#111827' }}
-            placeholder="VD: Da Lat - Suong Mo"
+            placeholder="VD: Đi chill với ny cũ"
             placeholderTextColor="#9CA3AF"
             value={tripName}
             onChangeText={onChangeTripName}
@@ -78,13 +78,13 @@ export const StepOneInfo = ({
         <View className="flex-row items-center mb-2">
           <CalendarIcon />
           <Text className="text-[13px] text-gray-600 ml-2" style={{ fontWeight: '500' }}>
-            Lua chon thoi diem
+            Thời gian di chuyển
           </Text>
         </View>
 
         <View className="flex-row" style={{ gap: 8 }}>
           <View style={{ flex: 1 }}>
-            <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Tu</Text>
+            <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Từ</Text>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('start')}
@@ -96,7 +96,7 @@ export const StepOneInfo = ({
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Den</Text>
+            <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Đến</Text>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('end')}
@@ -107,26 +107,13 @@ export const StepOneInfo = ({
             </TouchableOpacity>
           </View>
         </View>
-
-        <View
-          className="mt-2 px-3 py-2 rounded-lg"
-          style={{
-            backgroundColor: '#F8FAFC',
-            borderWidth: 1,
-            borderColor: '#E5E7EB',
-          }}
-        >
-          <Text className="text-[12px] text-gray-600" style={{ fontWeight: '500' }}>
-            Bam vao o ngay de mo lich chon ngay
-          </Text>
-        </View>
       </View>
 
       <View className="mb-1">
         <View className="flex-row items-center mb-2">
           <MoneyIcon />
           <Text className="text-[13px] text-gray-600 ml-2" style={{ fontWeight: '500' }}>
-            Tong ngan sach du kien
+            Tổng ngân sách dự kiến
           </Text>
         </View>
         <View
@@ -153,7 +140,7 @@ export const StepOneInfo = ({
         </View>
       </View>
       <Text className="text-[11px] text-gray-400 mb-6" style={{ fontWeight: '400' }}>
-        Ngan sach toi thieu tu 500.000 VND
+        Ngân sách tối thiểu từ 500.000 VND
       </Text>
     </View>
 
@@ -162,12 +149,12 @@ export const StepOneInfo = ({
         <View className="flex-row items-center">
           <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
           <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-            CHON TAM TRANG
+            Tâm trạng di chuyển
           </Text>
         </View>
         <TouchableOpacity onPress={onToggleMode} activeOpacity={0.7}>
           <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-            {isSoloMode ? 'Doi mode: Solo' : 'Doi mode: Group'}
+            {isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
           </Text>
         </TouchableOpacity>
       </View>

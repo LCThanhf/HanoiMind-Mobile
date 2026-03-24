@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -14,7 +15,7 @@ import Svg, { Path } from 'react-native-svg';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 import { JourneyService } from '../../services/journeyService/journey.service';
-import { JourneyVisibility } from '../../services/journeyService/journey.type';
+import { Journey, JourneyVisibility } from '../../services/journeyService/journey.type';
 import { PlacesService } from '../../services/placeService/place.service';
 import { Place } from '../../services/placeService/place.type';
 import { AiService } from '../../services/aiService/ai.service';
@@ -61,6 +62,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
   const [placesPage, setPlacesPage] = useState(1);
   const [hasMorePlaces, setHasMorePlaces] = useState(true);
   const [selectedPlaceIds, setSelectedPlaceIds] = useState<string[]>([]);
+  const [selectedPlaceNameMap, setSelectedPlaceNameMap] = useState<Record<string, string>>({});
   const [isAiSelectingPlaces, setIsAiSelectingPlaces] = useState(false);
 
   const [createdJourneyId, setCreatedJourneyId] = useState<string | null>(null);
@@ -101,10 +103,12 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       };
     }
 
-    const start = new Date(parsedStart);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(parsedEnd);
-    end.setHours(23, 59, 59, 999);
+    const start = new Date(
+      Date.UTC(parsedStart.getFullYear(), parsedStart.getMonth(), parsedStart.getDate(), 0, 0, 0, 0)
+    );
+    const end = new Date(
+      Date.UTC(parsedEnd.getFullYear(), parsedEnd.getMonth(), parsedEnd.getDate(), 23, 59, 59, 999)
+    );
 
     if (end < start) {
       return {
@@ -132,6 +136,23 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
     if (Number.isNaN(parsed) || parsed <= 0) return undefined;
 
     return parsed;
+  };
+
+  const resolveJourneyRangeDays = (journey: Journey | null | undefined, fallbackDays: number) => {
+    if (journey?.days?.length) {
+      return Math.max(1, journey.days.length);
+    }
+
+    const start = journey?.start_date ? new Date(journey.start_date) : null;
+    const end = journey?.end_date ? new Date(journey.end_date) : null;
+    if (start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const startUtcMidnight = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+      const endUtcMidnight = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+      const diffDays = Math.floor((endUtcMidnight - startUtcMidnight) / (24 * 60 * 60 * 1000));
+      if (diffDays > 0) return diffDays;
+    }
+
+    return Math.max(1, fallbackDays);
   };
 
   const extractUserId = (user: unknown): string | null => {
@@ -254,6 +275,22 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
   };
 
   const handleDatePickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') {
+      if (event.type === 'dismissed') {
+        setShowDatePicker(false);
+        return;
+      }
+
+      if (selected) {
+        const formatted = formatDateInput(selected);
+        if (datePickerTarget === 'start') setStartDate(formatted);
+        else setEndDate(formatted);
+      }
+
+      setShowDatePicker(false);
+      return;
+    }
+
     if (event.type === 'dismissed') {
       setShowDatePicker(false);
       return;
@@ -315,7 +352,6 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       }
 
       let finalIds: string[] = [];
-      let suggestionJourneyId: string | null = null;
       let lastSuggestError: unknown = null;
 
       for (const seed of seedCandidates) {
@@ -337,7 +373,6 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
           const aiIds = (suggestionPayload.selected_place_ids || []).slice(0, desiredCount);
           if (aiIds.length) {
             finalIds = aiIds;
-            suggestionJourneyId = suggestionPayload.journey_id || null;
             break;
           }
         } catch (error) {
@@ -369,19 +404,16 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       }
 
       if (!finalIds.length) {
-        Alert.alert('AI chua co goi y', 'AI chua tra ve dia diem phu hop cho hanh trinh nay. Ban thu lai sau nhe.');
+        Alert.alert('Ai chưa có gợi ý', 'Ai chưa trả về địa điểm phù hợp cho hành trình này. Bạn thử lại sau nhé.');
         return;
       }
 
       setSelectedPlaceIds(finalIds);
-      if (suggestionJourneyId) {
-        setCreatedJourneyId(suggestionJourneyId);
-      }
-      Alert.alert('AI da chon xong', `Da chon ${finalIds.length} dia diem goi y cho chuyen di cua ban.`);
+      Alert.alert('AI đã chọn xong', `Đã chọn ${finalIds.length} địa điểm gợi ý cho chuyến đi của bạn.`);
     } catch (error) {
       Alert.alert(
         'Khong the chon bang AI',
-        getReadableErrorMessage(error, 'He thong AI dang ban hoac chuyen di chua du du lieu. Ban thu lai sau nhe.')
+        getReadableErrorMessage(error, 'Hệ thống AI đang bận. Bạn thử lại sau nhé.')
       );
     } finally {
       setIsAiSelectingPlaces(false);
@@ -430,7 +462,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       setPlaces((prev) => (reset ? incoming : [...prev, ...incoming]));
     } catch {
       if (!silent) {
-        Alert.alert('Loi', 'Khong tai duoc danh sach dia diem tu server.');
+        Alert.alert('Lỗi', 'Không tải được danh sách địa điểm từ server.');
       }
       if (reset) {
         setPlaces([]);
@@ -455,20 +487,34 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
     return () => clearTimeout(timer);
   }, [currentStep, placesSearch, fetchPlaces]);
 
-  const selectedPlaces = useMemo(() => {
-    const ids = new Set(selectedPlaceIds);
-    return places.filter((p) => ids.has(p._id));
+  useEffect(() => {
+    if (!selectedPlaceIds.length || !places.length) return;
+
+    setSelectedPlaceNameMap((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const place of places) {
+        if (!selectedPlaceIds.includes(place._id)) continue;
+        const normalizedName = (place.name || '').trim();
+        if (!normalizedName) continue;
+        if (next[place._id] === normalizedName) continue;
+        next[place._id] = normalizedName;
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
   }, [places, selectedPlaceIds]);
 
   const selectedPlaceSummaries = useMemo(() => {
     if (!selectedPlaceIds.length) return [];
 
-    const placeNameById = new Map(places.map((place) => [place._id, place.name]));
     return selectedPlaceIds.map((id, index) => ({
       id,
-      name: placeNameById.get(id) || `Dia diem ${index + 1}`,
+      name: selectedPlaceNameMap[id] || `Dia diem ${index + 1}`,
     }));
-  }, [places, selectedPlaceIds]);
+  }, [selectedPlaceIds, selectedPlaceNameMap]);
 
   const validateStepOne = () => {
     const cleanName = tripName.trim();
@@ -496,6 +542,16 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
     setSelectedPlaceIds((prev) => {
       if (prev.includes(placeId)) return prev.filter((id) => id !== placeId);
       return [...prev, placeId];
+    });
+  };
+
+  const removeSelectedPlace = (placeId: string) => {
+    setSelectedPlaceIds((prev) => prev.filter((id) => id !== placeId));
+    setSelectedPlaceNameMap((prev) => {
+      if (!prev[placeId]) return prev;
+      const next = { ...prev };
+      delete next[placeId];
+      return next;
     });
   };
 
@@ -530,6 +586,8 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       setIsProcessing(true);
 
       let journeyId = createdJourneyId;
+      let journeyRangeDays = daysCount;
+
       if (!journeyId) {
         const created = await JourneyService.create({
           name: cleanName,
@@ -541,15 +599,25 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
           tags: [moodTagMap[selectedMood]],
         });
         journeyId = created._id;
+        journeyRangeDays = resolveJourneyRangeDays(created, daysCount);
         setCreatedJourneyId(journeyId);
+      } else {
+        try {
+          const existing = await JourneyService.findOne(journeyId);
+          journeyRangeDays = resolveJourneyRangeDays(existing, daysCount);
+        } catch {
+          journeyRangeDays = Math.max(1, daysCount);
+        }
       }
+
+      const normalizedJourneyDays = Math.max(1, journeyRangeDays);
 
       if (!seededStops && selectedPlaceIds.length) {
         for (let i = 0; i < selectedPlaceIds.length; i += 1) {
           const placeId = selectedPlaceIds[i];
           const relatedPlace = places.find((p) => p._id === placeId);
           await JourneyService.addStop(journeyId, {
-            day_index: i % daysCount,
+            day_index: i % normalizedJourneyDays,
             place_id: placeId,
             end_time: '18:00',
             estimated_cost: relatedPlace?.estimated_cost_vnd || 0,
@@ -559,11 +627,10 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
       }
 
       const safeTotalBudget = budgetLimit ?? 0;
-      const safeDailyBudget = daysCount > 0 ? Math.floor(safeTotalBudget / daysCount) : safeTotalBudget;
+      const safeDailyBudget = Math.floor(safeTotalBudget / normalizedJourneyDays);
       const selectedMoodCode = moodAiMap[selectedMood];
 
       const aiPlanPayload: {
-        total_days: number;
         mode: 'solo' | 'group';
         mood?: AiMood;
         mood_distribution?: Partial<Record<AiMood, number>>;
@@ -575,13 +642,12 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
         max_places_per_day: number;
         place_ids: string[];
       } = {
-        total_days: daysCount,
         mode: isSoloMode ? 'solo' : 'group',
         total_budget_vnd: safeTotalBudget,
         daily_budget_vnd: safeDailyBudget,
         hours_per_day: 8,
         travel_style: selectedMood === 'reset' ? 'relaxing' : selectedMood === 'explore' ? 'sightseeing' : 'balanced',
-        max_places_per_day: Math.max(3, Math.ceil(selectedPlaceIds.length / daysCount)),
+        max_places_per_day: Math.max(3, Math.ceil(selectedPlaceIds.length / normalizedJourneyDays)),
         place_ids: selectedPlaceIds,
       };
 
@@ -606,10 +672,10 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
 
   const actionLabel =
     currentStep === 1
-      ? 'TIEP THEO: CHON DIA DIEM'
+      ? 'Tiếp theo: Chọn địa điểm'
       : currentStep === 2
-        ? 'TIEP THEO: TOI UU AI'
-        : 'BAT DAU TOI UU AI';
+        ? 'Tiếp theo: Tối ưu AI'
+        : 'Bắt đầu tối ưu AI';
 
   const dateRangeSummary = `${startDate} -> ${endDate}`;
 
@@ -691,6 +757,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
             <StepTwoPlaces
               selectedPlaceIds={selectedPlaceIds}
               selectedPlaceSummaries={selectedPlaceSummaries}
+              onRemoveSelectedPlace={removeSelectedPlace}
               isAiSelectingPlaces={isAiSelectingPlaces}
               isProcessing={isProcessing}
               placesLoading={placesLoading}
@@ -712,7 +779,8 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
               isSoloMode={isSoloMode}
               selectedMoodTitle={moodOptions.find((m) => m.id === selectedMood)?.title}
               budget={budget}
-              selectedPlaces={selectedPlaces}
+              selectedPlaceIds={selectedPlaceIds}
+              selectedPlaceSummaries={selectedPlaceSummaries}
             />
           ) : null}
 
@@ -727,7 +795,7 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
             activeOpacity={0.8}
             style={{ alignItems: 'center', marginBottom: 8 }}
           >
-            <Text style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>Quay lai buoc truoc</Text>
+            <Text style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>Quay lại bước trước</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -759,42 +827,53 @@ export const CreateTripScreen = ({ onClose }: { onClose?: () => void }) => {
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={showDatePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDatePicker(false)}
-      >
-        <Pressable
-          onPress={() => setShowDatePicker(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(17,24,39,0.45)', justifyContent: 'center', paddingHorizontal: 20 }}
+      {Platform.OS === 'ios' ? (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDatePicker(false)}
         >
           <Pressable
-            onPress={(event) => event.stopPropagation()}
-            style={{ backgroundColor: 'white', borderRadius: 16, padding: 14 }}
+            onPress={() => setShowDatePicker(false)}
+            style={{ flex: 1, backgroundColor: 'rgba(17,24,39,0.45)', justifyContent: 'center', paddingHorizontal: 20 }}
           >
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 }}>
-              {datePickerTarget === 'start' ? 'Chon ngay bat dau' : 'Chon ngay ket thuc'}
-            </Text>
+            <Pressable
+              onPress={(event) => event.stopPropagation()}
+              style={{ backgroundColor: 'white', borderRadius: 16, padding: 14 }}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 }}>
+                {datePickerTarget === 'start' ? 'Chon ngay bat dau' : 'Chon ngay ket thuc'}
+              </Text>
 
-            <DateTimePicker
-              value={draftDate}
-              mode="date"
-              display="spinner"
-              onChange={handleDatePickerChange}
-            />
+              <DateTimePicker
+                value={draftDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDatePickerChange}
+              />
 
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 10 }}>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
-                <Text style={{ color: '#6B7280', fontSize: 14, fontWeight: '600' }}>Huy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={confirmDateSelection} activeOpacity={0.8}>
-                <Text style={{ color: '#2B8EF0', fontSize: 14, fontWeight: '700' }}>Chon</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 10 }}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
+                  <Text style={{ color: '#6B7280', fontSize: 14, fontWeight: '600' }}>Huy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={confirmDateSelection} activeOpacity={0.8}>
+                  <Text style={{ color: '#2B8EF0', fontSize: 14, fontWeight: '700' }}>Chon</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
+      ) : null}
+
+      {Platform.OS === 'android' && showDatePicker ? (
+        <DateTimePicker
+          value={draftDate}
+          mode="date"
+          display="default"
+          onChange={handleDatePickerChange}
+        />
+      ) : null}
     </SafeAreaView>
   );
 };

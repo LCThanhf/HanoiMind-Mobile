@@ -6,7 +6,7 @@ export const moodOptions: MoodOption[] = [
   {
     id: 'reset',
     title: 'Reset & Healing',
-    budget: '500k - 800k/ngay',
+    budget: '500k - 800k/ngày',
     icon: 'healing',
     color: '#22C55E',
     bgColor: '#ECFDF5',
@@ -14,7 +14,7 @@ export const moodOptions: MoodOption[] = [
   {
     id: 'chill',
     title: 'Chill & Cafe',
-    budget: '400k - 700k/ngay',
+    budget: '400k - 700k/ngày',
     icon: 'cafe',
     color: '#2B8EF0',
     bgColor: '#EBF5FF',
@@ -22,7 +22,7 @@ export const moodOptions: MoodOption[] = [
   {
     id: 'explore',
     title: 'Explore Nature',
-    budget: '600k - 900k/ngay',
+    budget: '600k - 900k/ngày',
     icon: 'nature',
     color: '#D4A574',
     bgColor: '#FEF3E2',
@@ -30,7 +30,7 @@ export const moodOptions: MoodOption[] = [
   {
     id: 'food',
     title: 'Food & Local',
-    budget: '800k - 1.2M/ngay',
+    budget: '800k - 1.2M/ngày',
     icon: 'food',
     color: '#EF4444',
     bgColor: '#FEE2E2',

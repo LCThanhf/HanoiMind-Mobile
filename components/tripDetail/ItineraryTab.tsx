@@ -97,7 +97,7 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                             }}
                         >
                             <Text style={{ fontSize: 13, color: '#4B5563', fontWeight: '500' }}>
-                                Nghỉ ngơi, tự do tham quan
+                                Nghỉ ngơi, tự do di chuyển
                             </Text>
                         </View>
                     ) : null}

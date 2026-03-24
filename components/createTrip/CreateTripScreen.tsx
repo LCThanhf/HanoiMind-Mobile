@@ -522,6 +522,25 @@ export const CreateTripScreen = ({
     }));
   }, [selectedPlaceIds, selectedPlaceNameMap]);
 
+  const selectedPlaceDetails = useMemo(() => {
+    if (!selectedPlaceIds.length) return [];
+
+    const placeMap = new Map(places.map((place) => [place._id, place]));
+
+    return selectedPlaceIds.map((id, index) => {
+      const place = placeMap.get(id);
+      return {
+        id,
+        name: (place?.name || selectedPlaceNameMap[id] || `Dia diem ${index + 1}`).trim(),
+        address: place?.address,
+        category: place?.category,
+        rating: typeof place?.rating === 'number' ? place.rating : undefined,
+        estimatedCostVnd: typeof place?.estimated_cost_vnd === 'number' ? place.estimated_cost_vnd : undefined,
+        thumbnail: Array.isArray(place?.images) && place.images.length ? place.images[0] : undefined,
+      };
+    });
+  }, [places, selectedPlaceIds, selectedPlaceNameMap]);
+
   const validateStepOne = () => {
     const cleanName = tripName.trim();
     if (!cleanName) {
@@ -668,12 +687,12 @@ export const CreateTripScreen = ({
 
       onJourneyCreated?.(journeyId);
       if (!onJourneyCreated) {
-        Alert.alert('Thanh cong', 'Da tao hanh trinh va chay toi uu AI.');
+        Alert.alert('Thành công', 'Đã tạo hành trình và chạy tối ưu AI.');
         onClose?.();
       }
     } catch (error) {
-      const message = getReadableErrorMessage(error, 'Khong the chay luong tao hanh trinh AI luc nay.');
-      Alert.alert('That bai', message);
+      const message = getReadableErrorMessage(error, 'Không thể chạy lượng tạo hành trình AI lúc này.');
+      Alert.alert('Thất bại', message);
     } finally {
       setIsProcessing(false);
     }
@@ -788,8 +807,7 @@ export const CreateTripScreen = ({
               isSoloMode={isSoloMode}
               selectedMoodTitle={moodOptions.find((m) => m.id === selectedMood)?.title}
               budget={budget}
-              selectedPlaceIds={selectedPlaceIds}
-              selectedPlaceSummaries={selectedPlaceSummaries}
+              selectedPlaces={selectedPlaceDetails}
             />
           ) : null}
 

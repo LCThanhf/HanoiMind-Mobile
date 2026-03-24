@@ -1,5 +1,5 @@
 {
-  "name": "my-expo-app",
+  "name": "hanoimind",
   "version": "1.0.0",
   "scripts": {
     "android": "expo run:android",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "^9.1.0",
     "axios": "^1.13.6",
     "expo": "^54.0.0",
     "expo-auth-session": "~7.0.10",

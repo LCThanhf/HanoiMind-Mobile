@@ -28,6 +28,7 @@ export default function App() {
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<MainTab>('home');
+  const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
   const renderMainContent = () => {
@@ -144,8 +145,9 @@ export default function App() {
         return (
           <PlaceDetailScreen
             placeId={selectedPlaceId}
-            onBack={() => setAppState(previousState)} // Quay về màn hình đã lưu trong state
+            onBack={() => setAppState(previousState)}
             onReview={() => setAppState('reviewPlace')}
+            refreshKey={placeDetailRefreshKey}
           />
         );
 
@@ -154,11 +156,6 @@ export default function App() {
           <ReviewScreen
             placeId={selectedPlaceId}
             onBack={() => setAppState('placeDetail')}
-            activeTab={activeTab}
-            onTabChange={(tab) => {
-              setActiveTab(tab);
-              setAppState('main');
-            }}
           />
         );
 

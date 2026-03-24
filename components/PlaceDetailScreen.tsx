@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    View, Text, ScrollView, TouchableOpacity, Image, 
-    ActivityIndicator, Alert, Linking, Share, LayoutAnimation, Platform 
+import {
+    View, Text, ScrollView, TouchableOpacity, Image,
+    ActivityIndicator, Alert, Linking, Share, LayoutAnimation, Platform
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { PlacesService } from '../services/placeService/place.service';
 import { Place } from '../services/placeService/place.type';
 import { FavoriteService } from '../services/favoriteService/favorite.service';
 import { FavoriteType } from '../services/favoriteService/favorite.type';
+import { ReviewService } from '../services/reviewService/review.service';
 
 // --- CẤU HÌNH GIÁ DỰA TRÊN BACKEND ---
 const COST_RATES = {
@@ -40,31 +41,49 @@ const MessageCircleIcon = ({ color = "#3B82F6" }) => (
     </Svg>
 );
 
-export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () => void; onReview?: () => void; placeId: string }) => {
+export const PlaceDetailScreen = ({ onBack, onReview, placeId, refreshKey = 0 }: { onBack: () => void; onReview?: () => void; placeId: string; refreshKey?: number }) => {
     const [place, setPlace] = useState<Place | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
     const [showAllHours, setShowAllHours] = useState(false);
 
-    useEffect(() => {
-        const fetchPlaceDetail = async () => {
-            try {
-                setIsLoading(true);
-                const response: any = await PlacesService.findOne(placeId);
-                const data = response.data || response;
-                setPlace(data);
+    const fetchPlaceDetail = async (showLoading = true) => {
+        try {
+            if (showLoading) setIsLoading(true);
+            const [response, reviewsRes, myFavs] = await Promise.all([
+                PlacesService.findOne(placeId),
+                ReviewService.findAllByPlace(placeId, { limit: 100, sort_order: 'DESC' }),
+                FavoriteService.getMyFavorites(FavoriteType.PLACE).catch(() => []),
+            ]);
+            const data = (response as any).data || response;
 
-                // Khởi tạo trạng thái yêu thích
-                const myFavs = await FavoriteService.getMyFavorites(FavoriteType.PLACE);
-                setIsFavorite(myFavs.some((fav: any) => (fav.target_id === placeId || fav._id === placeId)));
-            } catch (error) {
-                Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
-            } finally {
-                setIsLoading(false);
+            // Tính lại rating và reviewCount từ danh sách reviews thực tế
+            const fetchedReviews = reviewsRes.data || [];
+            const totalReviews = reviewsRes.meta?.total || fetchedReviews.length;
+            let avgRating = data.rating;
+            if (fetchedReviews.length > 0) {
+                const totalScore = fetchedReviews.reduce((sum: number, r: any) =>
+                    sum + (r.criteria?.cleanliness || r.rating || 0), 0);
+                avgRating = Number((totalScore / fetchedReviews.length).toFixed(1));
             }
-        };
-        fetchPlaceDetail();
-    }, [placeId]);
+
+            setPlace({ ...data, rating: avgRating, reviewCount: totalReviews });
+            setIsFavorite(myFavs.some((fav: any) => (fav.target_id === placeId || fav._id === placeId)));
+        } catch (error) {
+            Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
+        } finally {
+            if (showLoading) setIsLoading(false);
+        }
+    };
+
+    // refreshKey thay đổi khi quay lại từ ReviewScreen → fetch lại dữ liệu mới
+    useEffect(() => {
+        if (refreshKey === 0) {
+            fetchPlaceDetail(true);
+        } else {
+            fetchPlaceDetail(false); // Không hiện loading spinner khi refresh
+        }
+    }, [placeId, refreshKey]);
 
     const handleToggleFavorite = async () => {
         try {
@@ -167,7 +186,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () =>
 
                 {/* Nội dung chính */}
                 <View className="bg-white rounded-t-[32px] -mt-8 px-5 pt-8 pb-40 shadow-2xl">
-                    
+
                     {/* Tên địa điểm & Số sao Đánh giá */}
                     <View className="flex-row justify-between items-start mb-6">
                         <View className="flex-1 pr-4">
@@ -210,11 +229,11 @@ export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () =>
                     {/* Thông tin liên hệ */}
                     {hasContactInfo && (
                         <View className="mb-8 bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
-                            
+
                             {/* Nút Nhắn tin (Chỉ hiện khi có ownerId) */}
                             {(place.ownerId || (place as any).owner_id) && (
-                                <TouchableOpacity 
-                                    onPress={() => Alert.alert("Nhắn tin", "Tính năng chat với chủ cơ sở đang được phát triển!")} 
+                                <TouchableOpacity
+                                    onPress={() => Alert.alert("Nhắn tin", "Tính năng chat với chủ cơ sở đang được phát triển!")}
                                     className="flex-row items-center mb-4"
                                 >
                                     <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
@@ -229,8 +248,8 @@ export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () =>
 
                             {/* Nút Gọi điện */}
                             {place.phoneNumber && (
-                                <TouchableOpacity 
-                                    onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)} 
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)}
                                     className={`flex-row items-center ${place.website ? 'mb-4' : ''}`}
                                 >
                                     <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
@@ -286,7 +305,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, placeId }: { onBack: () =>
                     <StarIcon />
                     <Text className="text-slate-600 font-bold ml-2">Review</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     onPress={() => {
                         const [lng, lat] = place.location.coordinates;
                         const url = Platform.select({ ios: `maps:0,0?q=${place.name}@${lat},${lng}`, android: `geo:0,0?q=${lat},${lng}(${place.name})` });

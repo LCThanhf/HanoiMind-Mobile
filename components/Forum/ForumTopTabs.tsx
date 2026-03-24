@@ -1,34 +1,48 @@
-
+// src/components/forum/ForumTopTabs.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { ForumCategory } from '../../services/forumService/forum.type';
 
-type TabType = 'FEED' | 'CREATE' | 'BUDDY';
+// Tạo một mapping để hiển thị tên Tiếng Việt cho đẹp
+const CATEGORY_LABELS: Record<ForumCategory, string> = {
+  [ForumCategory.REVIEW]: 'Review',
+  [ForumCategory.EXPERIENCE]: 'Kinh nghiệm',
+  [ForumCategory.FIND_BUDDY]: 'Tìm bạn',
+  [ForumCategory.QNA]: 'Hỏi đáp',
+  [ForumCategory.OTHERS]: 'Khác',
+};
 
 interface Props {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
+  activeCategory: ForumCategory;
+  onCategoryChange: (category: ForumCategory) => void;
 }
 
-export const ForumTopTabs: React.FC<Props> = ({ activeTab, onTabChange }) => {
-  const tabs: { id: TabType; label: string }[] = [
-    { id: 'FEED', label: 'Diễn đàn' },
-    { id: 'CREATE', label: 'Tạo bài viết' },
-    { id: 'BUDDY', label: 'Tìm bạn' },
-  ];
+export const ForumTopTabs: React.FC<Props> = ({ activeCategory, onCategoryChange }) => {
+  // Lấy danh sách các keys từ Enum
+  const categories = Object.values(ForumCategory);
 
   return (
-    <View className="flex-row justify-around bg-white py-2 border-b border-gray-100">
-      {tabs.map((tab) => (
-        <TouchableOpacity 
-          key={tab.id} 
-          onPress={() => onTabChange(tab.id)}
-          className={`pb-2 px-4 ${activeTab === tab.id ? 'border-b-2 border-green-500' : ''}`}
-        >
-          <Text className={`font-semibold ${activeTab === tab.id ? 'text-green-600' : 'text-gray-400'}`}>
-            {tab.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+    <View className="bg-white border-b border-gray-100">
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}
+      >
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat;
+          return (
+            <TouchableOpacity 
+              key={cat} 
+              onPress={() => onCategoryChange(cat)}
+              className={`mr-6 pb-1 ${isActive ? 'border-b-2 border-green-500' : ''}`}
+            >
+              <Text className={`font-bold text-sm ${isActive ? 'text-green-600' : 'text-gray-400'}`}>
+                {CATEGORY_LABELS[cat]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 };

@@ -1,57 +1,64 @@
-// src/screens/forum/ForumScreen.tsx
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator } from 'react-native';
 import { Search, Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
 import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn component Tab
-import { ForumPost, ForumCategory, PostStatus } from '../../services/forumService/forum.type';
-
-// --- MOCK DATA (Dữ liệu giả để preview) ---
-const MOCK_POSTS: ForumPost[] = [
-  {
-    _id: '1',
-    title: 'Hành trình chinh phục cực Bắc - Lũng Cú, Hà Giang',
-    content: 'Một chuyến đi đầy cảm xúc với những cung đường đèo hiểm trở nhưng vô cùng hùng vĩ...',
-    images: ['https://images.unsplash.com/photo-1504457047772-27faf1c00561?q=80&w=800'],
-    category: ForumCategory.EXPERIENCE,
-    tag: ['HaGiang', 'Travel2024'],
-    place_ids: ['lung_cu'],
-    stats: { likes: 342, views: 1250, comments: 56 },
-    author: { id: 'u1', fullName: 'Minh Hoàng', avatar: 'https://i.pravatar.cc/150?u=1' },
-    is_pinned: true,
-    status: PostStatus.PUBLISHED,
-    created_at: '2 giờ trước',
-    updated_at: '1 giờ trước'
-  },
-  {
-    _id: '2',
-    title: 'Review quán cafe ẩn mình trong ngõ nhỏ Phố Cổ',
-    content: 'Nếu bạn muốn tìm một không gian yên tĩnh để đọc sách và ngắm nhìn phố cổ, đây chính là địa điểm...',
-    images: ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800'],
-    category: ForumCategory.REVIEW,
-    tag: ['Cafe', 'Hanoi'],
-    place_ids: ['pho_co'],
-    stats: { likes: 120, views: 890, comments: 24 },
-    author: { id: 'u2', fullName: 'Thanh Trúc', avatar: 'https://i.pravatar.cc/150?u=2' },
-    is_pinned: false,
-    status: PostStatus.PUBLISHED,
-    created_at: '5 giờ trước',
-    updated_at: '4 giờ trước'
-  }
-];
+import { ForumPost, ForumCategory, PostStatus, PostSortBy } from '../../services/forumService/forum.type';
+import { ForumService } from '../../services/forumService/forum.service';
+import { UsersService } from '../../services/userService/user.service';
 
 const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
-  const [activeTab, setActiveTab] = useState<'FEED' | 'CREATE' | 'BUDDY'>('FEED');
+  const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
+  const [userName, setUserName] = useState<string>('');
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  
+
+  useEffect(() => {
+    fetchUserName();
+    fetchPosts();
+  }, []);
+
+  const fetchUserName = async () => {
+    try {
+      const user = await UsersService.getMe();
+      setUserName(user.fullName || "USER" );
+    } catch (err) {
+      console.error('Error fetching user:', err);
+      setUserName('Bạn');
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await ForumService.findAll({
+        page: 1,
+        limit: 20,
+        sortBy: PostSortBy.LATEST,
+        category: ForumCategory.EXPERIENCE
+      });
+      setPosts(response.data || []);
+    } catch (err) {
+      console.error('Error fetching posts:', err);
+      setError('Không thể tải bài viết');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50 pt-12">
       {/* 1. HEADER: Greeting & Icons */}
       <View className="flex-row justify-between items-center px-4 py-3 bg-white">
         <TouchableOpacity onPress={onBack} className="p-1">
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <View className="flex-1 ml-3">
-          <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, Hoàng! 👋</Text>
+          <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, {userName}! 👋</Text>
           <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
         </View>
         <View className="flex-row space-x-3">
@@ -62,10 +69,14 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
       </View>
 
       {/* 2. TOP TABS */}
-      <ForumTopTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* <ForumTopTabs activeCategory={activeCategory} onCategoryChange={setActiveCategory} /> */}
+      <ForumTopTabs 
+        activeCategory={currentCategory} 
+        onCategoryChange={setCurrentCategory} 
+      />
 
       {/* 3. SEARCH & FILTER (Chỉ hiện ở tab Diễn đàn) */}
-      {activeTab === 'FEED' && (
+      {currentCategory === ForumCategory.REVIEW && (
         <View className="px-4 py-3">
           <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
             <Search size={18} color="#999" />
@@ -78,23 +89,36 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
       )}
 
       {/* 4. MAIN LIST */}
-      <FlatList
-        data={MOCK_POSTS}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <ForumPostCard post={item} />
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={
-            <View className="py-10 items-center">
-                <Text className="text-gray-400 text-xs">Bạn đã xem hết tin mới nhất rồi!</Text>
-                <TouchableOpacity className="mt-2">
-                    <Text className="text-blue-500 font-bold">Quay lại đầu trang</Text>
-                </TouchableOpacity>
-            </View>
-        }
-      />
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
+      ) : error ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-red-500 text-center px-4">{error}</Text>
+          <TouchableOpacity className="mt-4 px-4 py-2 bg-blue-500 rounded-lg" onPress={fetchPosts}>
+            <Text className="text-white font-semibold">Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <ForumPostCard post={item} />
+          )}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={
+              <View className="py-10 items-center">
+                  <Text className="text-gray-400 text-xs">Bạn đã xem hết tin mới nhất rồi!</Text>
+                  <TouchableOpacity className="mt-2">
+                      <Text className="text-blue-500 font-bold">Quay lại đầu trang</Text>
+                  </TouchableOpacity>
+              </View>
+          }
+        />
+      )}
 
       {/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
       <TouchableOpacity 

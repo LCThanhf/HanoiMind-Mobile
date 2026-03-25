@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-    View, Text, ScrollView, TouchableOpacity, Image, 
-    ActivityIndicator, Alert, Linking, Share, LayoutAnimation, Platform 
+    View, Text, ScrollView, TouchableOpacity, 
+    ActivityIndicator, Alert, Linking, Share, LayoutAnimation, Platform, StyleSheet 
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { WebView } from 'react-native-webview'; // Dùng WebView thay cho react-native-maps
+import { WebView } from 'react-native-webview';
 import { PlacesService } from '../services/placeService/place.service';
 import { Place } from '../services/placeService/place.type';
 import { FavoriteService } from '../services/favoriteService/favorite.service';
 import { FavoriteType } from '../services/favoriteService/favorite.type';
-
+import { Image } from 'expo-image';
+import { BottomTabBar } from './BottomTabBar';
 // --- CẤU HÌNH GIÁ DỰA TRÊN BACKEND ---
 const COST_RATES = {
     dining: { RESTAURANT: 150000, CAFE: 70000, STREET_FOOD: 40000 },
@@ -19,6 +20,23 @@ const COST_RATES = {
 const getPriceMultiplier = (level: number) => {
     const multipliers: Record<number, number> = { 1: 1.0, 2: 1.2, 3: 1.5, 4: 2.0 };
     return multipliers[level] || 1.0;
+};
+
+// --- XỬ LÝ ẢNH CLOUDINARY ---
+const getHighResCloudinary = (url: string | undefined) => {
+    if (!url) return 'https://via.placeholder.com/800';
+    if (url.includes('res.cloudinary.com')) {
+        return url.replace('/upload/', '/upload/f_auto,q_auto:best,w_800,dpr_3.0/');
+    }
+    return url;
+};
+
+const getAvatarUrl = (url: string | undefined) => {
+    if (!url) return 'https://via.placeholder.com/150';
+    if (url.includes('res.cloudinary.com')) {
+        return url.replace('/upload/', '/upload/f_auto,q_auto:best,w_300,dpr_3.0,c_fill,g_face/');
+    }
+    return url;
 };
 
 // --- ICONS ---
@@ -46,10 +64,22 @@ const ExternalLinkIcon = ({ color = "#3B82F6" }) => (
     </Svg>
 );
 
+const CheckCircleIcon = () => (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M20 6L9 17l-5-5" />
+    </Svg>
+);
+
+const TagIcon = () => (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><Path d="M7 7h.01" />
+    </Svg>
+);
+
 export const PlaceDetailScreen = ({ 
     onBack, 
     onReview, 
-    onOpenMap, // Prop điều hướng sang MapScreen toàn cảnh
+    onOpenMap, 
     placeId 
 }: { 
     onBack: () => void; 
@@ -136,21 +166,20 @@ export const PlaceDetailScreen = ({
         setShowAllHours(!showAllHours);
     };
 
+    const highResUrl = useMemo(() => getHighResCloudinary(place?.images?.[0]), [place?.images]);
+    const avatarUrl = useMemo(() => getAvatarUrl(place?.images?.[0]), [place?.images]);
+
     if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator size="large" color="#3B82F6" /></View>;
     if (!place) return null;
 
     const hasContactInfo = place.phoneNumber || place.website || place.ownerId || (place as any).owner_id;
 
     // --- XỬ LÝ TỌA ĐỘ VÀ TẠO BẢN ĐỒ HTML (LEAFLET) ---
-    // Log dữ liệu cho thấy [Kinh độ, Vĩ độ]
     const rawLng = place.location?.coordinates?.[0];
     const rawLat = place.location?.coordinates?.[1];
-    
-    // Ép kiểu an toàn
     const safeLat = rawLat ? parseFloat(rawLat.toString()) : 0;
     const safeLng = rawLng ? parseFloat(rawLng.toString()) : 0;
 
-    // Chuỗi HTML nhúng bản đồ OpenStreetMap
     const mapHtml = `
       <!DOCTYPE html>
       <html>
@@ -161,33 +190,17 @@ export const PlaceDetailScreen = ({
           <style>
             body { padding: 0; margin: 0; background-color: #f8fafc; }
             #map { width: 100%; height: 100vh; }
-            .leaflet-control-attribution { display: none; } /* Ẩn watermark cho đẹp */
+            .leaflet-control-attribution { display: none; }
           </style>
         </head>
         <body>
           <div id="map"></div>
           <script>
-            // Khởi tạo bản đồ, khóa các thao tác tương tác để hoạt động như một Mini Map tĩnh
             var map = L.map('map', {
-              zoomControl: false,
-              dragging: false,      
-              scrollWheelZoom: false, 
-              doubleClickZoom: false, 
-              touchZoom: false      
+              zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false 
             }).setView([${safeLat}, ${safeLng}], 15);
-
-            // Dùng style bản đồ sáng màu (tương tự Google Maps)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-              maxZoom: 19
-            }).addTo(map);
-
-            // Marker hiển thị vị trí
-            var customIcon = L.icon({
-                iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32]
-            });
-
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            var customIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] });
             L.marker([${safeLat}, ${safeLng}], {icon: customIcon}).addTo(map);
           </script>
         </body>
@@ -215,20 +228,46 @@ export const PlaceDetailScreen = ({
 
             <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
                 {/* Ảnh Bìa */}
-                <View className="relative h-[380px]">
-                    <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/800' }} className="w-full h-full" resizeMode="cover" />
-                    <View className="absolute bottom-6 left-5 bg-black/40 px-3 py-1.5 rounded-lg border border-white/20">
+                <View className="relative h-[280px] bg-slate-200">
+                    <Image 
+                        source={{ uri: highResUrl }} 
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="cover" 
+                        transition={300}
+                        cachePolicy="memory-disk"
+                        priority="high" 
+                        blurRadius={Platform.OS === 'ios' ? 2 : 1}
+                    />
+                    <View 
+                        style={{
+                            position: 'absolute',
+                            left: 0, right: 0, bottom: 0,
+                            height: '100%',
+                            backgroundColor: 'rgba(0,0,0,0.20)',
+                        }} 
+                    />
+                    <View className="absolute bottom-16 left-5 bg-black/40 px-3 py-1.5 rounded-lg border border-white/20">
                         <Text className="text-white text-xs font-semibold uppercase">{place.category}</Text>
                     </View>
                 </View>
 
                 {/* Nội dung chính */}
-                <View className="bg-white rounded-t-[32px] -mt-8 px-5 pt-8 pb-40 shadow-2xl">
+                <View className="bg-white rounded-t-[32px] -mt-10 px-5 pt-16 pb-40 shadow-2xl relative">
                     
+                    {/* AVATAR CHẾCH PHÍA TRÊN */}
+                    <View style={styles.avatarContainer} className="w-[110px] h-[110px] rounded-full border-4 border-white bg-slate-100 overflow-hidden">
+                        <Image 
+                            source={{ uri: avatarUrl }} 
+                            style={{ width: '100%', height: '100%' }}
+                            contentFit="cover"
+                            transition={300}
+                        />
+                    </View>
+
                     {/* Tên địa điểm & Đánh giá */}
-                    <View className="flex-row justify-between items-start mb-6">
+                    <View className="flex-row justify-between items-start mb-4">
                         <View className="flex-1 pr-4">
-                            <Text className="text-2xl font-bold text-slate-900 leading-tight mb-2">{place.name}</Text>
+                            <Text className="text-2xl font-bold text-slate-900 leading-tight mb-1">{place.name}</Text>
                             <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider">{place.category}</Text>
                         </View>
                         <View className="items-end">
@@ -238,6 +277,18 @@ export const PlaceDetailScreen = ({
                             <Text className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold">{place.reviewCount || 0} Đánh giá</Text>
                         </View>
                     </View>
+
+                    {/* TAGS */}
+                    {place.tags && place.tags.length > 0 && (
+                        <View className="flex-row flex-wrap gap-2 mb-6">
+                            {place.tags.map((tag, index) => (
+                                <View key={index} className="flex-row items-center bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                                    <TagIcon />
+                                    <Text className="text-slate-500 text-xs ml-1 font-medium">{tag}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
 
                     {/* Stats */}
                     <View className="flex-row justify-between bg-slate-50 rounded-3xl p-5 mb-8 border border-slate-100 items-center">
@@ -254,6 +305,21 @@ export const PlaceDetailScreen = ({
                             {renderCrowdLevel(place.crowdLevel)}
                         </View>
                     </View>
+
+                    {/* TIỆN NGHI (AMENITIES) */}
+                    {place.amenities && place.amenities.length > 0 && (
+                        <View className="mb-8">
+                            <Text className="text-lg font-bold text-slate-900 mb-3">Tiện nghi & Dịch vụ</Text>
+                            <View className="flex-row flex-wrap gap-y-2">
+                                {place.amenities.map((item, index) => (
+                                    <View key={index} className="flex-row items-center w-[50%] pr-2">
+                                        <CheckCircleIcon />
+                                        <Text className="text-slate-600 text-sm ml-2" numberOfLines={1}>{item}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
 
                     {/* Section: Vị trí (MINI MAP bằng WEBVIEW) */}
                     <View className="mb-8">
@@ -273,14 +339,13 @@ export const PlaceDetailScreen = ({
                             </TouchableOpacity>
                         </View>
 
-                        {/* Thay thế MapView cũ bằng WebView */}
                         <View className="h-48 w-full rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative bg-slate-100">
                             {safeLat !== 0 && safeLng !== 0 ? (
                                 <WebView
                                     originWhitelist={['*']}
                                     source={{ html: mapHtml }}
                                     style={{ flex: 1 }}
-                                    scrollEnabled={false} // Khóa WebView scroll để vuốt màn hình mượt hơn
+                                    scrollEnabled={false} 
                                     showsHorizontalScrollIndicator={false}
                                     showsVerticalScrollIndicator={false}
                                 />
@@ -290,7 +355,6 @@ export const PlaceDetailScreen = ({
                                 </View>
                             )}
                             
-                            {/* Overlay nút bấm xem chi tiết trên map */}
                             <TouchableOpacity 
                                 onPress={() => onOpenMap?.(place)}
                                 className="absolute bottom-3 right-3 bg-white/95 px-3 py-2 rounded-xl shadow-md flex-row items-center border border-slate-100"
@@ -344,16 +408,32 @@ export const PlaceDetailScreen = ({
                             <Text className="text-base font-bold text-slate-900">Giờ hoạt động</Text>
                             <Text className="text-blue-600 text-xs font-bold">{showAllHours ? "THU GỌN" : "XEM TẤT CẢ"}</Text>
                         </TouchableOpacity>
+
                         {!showAllHours ? (
-                            <Text className="text-slate-600 text-sm mt-2">Hôm nay: {place.openingHours?.weekday_text?.[0]?.split(': ')[1] || '09:00 - 19:00'}</Text>
+                            <Text className="text-slate-600 text-sm mt-2">
+                                Hôm nay: {
+                                    place.openingHours?.weekday_text 
+                                    ? (place.openingHours.weekday_text[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]?.split(': ')[1]) 
+                                    : 'Mở cả ngày'
+                                }
+                            </Text>
                         ) : (
                             <View className="mt-3">
-                                {place.openingHours?.weekday_text?.map((day, index) => (
-                                    <View key={index} className="flex-row justify-between py-1.5 border-b border-slate-200/50">
-                                        <Text className="text-slate-600 text-sm capitalize">{day.split(': ')[0]}</Text>
-                                        <Text className="text-slate-900 text-sm font-medium">{day.split(': ')[1]}</Text>
-                                    </View>
-                                ))}
+                                {place.openingHours?.weekday_text ? (
+                                    place.openingHours.weekday_text.map((day, index) => (
+                                        <View key={index} className="flex-row justify-between py-1.5 border-b border-slate-200/50">
+                                            <Text className="text-slate-600 text-sm capitalize">{day.split(': ')[0]}</Text>
+                                            <Text className="text-slate-900 text-sm font-medium">{day.split(': ')[1]}</Text>
+                                        </View>
+                                    ))
+                                ) : (
+                                    ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'].map((day, index) => (
+                                        <View key={index} className="flex-row justify-between py-1.5 border-b border-slate-200/50">
+                                            <Text className="text-slate-600 text-sm">{day}</Text>
+                                            <Text className="text-slate-900 text-sm font-medium">00:00 - 24:00</Text>
+                                        </View>
+                                    ))
+                                )}
                             </View>
                         )}
                     </View>
@@ -361,7 +441,7 @@ export const PlaceDetailScreen = ({
             </ScrollView>
 
             {/* Action Bar */}
-            <View className="absolute bottom-0 left-0 right-0 bg-white/95 border-t border-slate-100 p-4 pb-8 flex-row items-center gap-x-3 shadow-lg">
+            <View className="absolute bottom-0 left-0 right-0 bg-white/95 border-t border-slate-100 p-4 pb-4 flex-row items-center gap-x-3 shadow-lg">
                 <View className="flex-1 pr-2">
                     <Text className="text-slate-400 text-[9px] font-bold uppercase">Dự kiến</Text>
                     <Text className="text-lg font-black text-slate-900">{getEstimatedPrice()}<Text className="text-xs font-normal text-slate-400"> /ng</Text></Text>
@@ -378,6 +458,21 @@ export const PlaceDetailScreen = ({
                     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><Path d="M5 12h14M12 5l7 7-7 7" /></Svg>
                 </TouchableOpacity>
             </View>
+            
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    avatarContainer: {
+        position: 'absolute', 
+        top: -60, 
+        left: 20, 
+        zIndex: 20,
+        shadowColor: "#000", 
+        shadowOffset: { width: 0, height: 10 }, 
+        shadowOpacity: 0.15, 
+        shadowRadius: 15, 
+        elevation: 15
+    }
+});

@@ -30,7 +30,7 @@ export default function App() {
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
-  
+
   // State lưu ID để gọi API trong PlaceDetailScreen
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
   
@@ -69,7 +69,7 @@ export default function App() {
           onLogout={() => setAppState('starter')}
           onPlaceClick={(placeId: string) => {
             setSelectedPlaceId(placeId);
-            setPreviousState('main'); 
+            setPreviousState('main');
             setAppState('placeDetail');
           }}
         />
@@ -145,24 +145,32 @@ export default function App() {
       case 'main':
         return renderMainContent();
       case 'createTrip':
-        return <CreateTripScreen onClose={() => setAppState('main')} />;
-      case 'tripDetail':
         return (
-          <TripDetailScreen 
-            tripId={selectedTripId} 
-            onBack={() => setAppState('main')} 
-            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }} 
+          <CreateTripScreen
+            onClose={() => setAppState('main')}
+            onJourneyCreated={(journeyId) => {
+              setSelectedTripId(journeyId);
+              setAppState('tripDetail');
+            }}
           />
         );
-      
+      case 'tripDetail':
+        return (
+          <TripDetailScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('main')}
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+          />
+        );
+
       case 'placesExplore':
         return (
-          <PlacesExploreScreen 
-            onBack={() => setAppState('main')} 
-            activeTab={activeTab} 
-            onTabChange={(tab: any) => { 
-              setActiveTab(tab); 
-              setAppState('main'); 
+          <PlacesExploreScreen
+            onBack={() => setAppState('main')}
+            activeTab={activeTab}
+            onTabChange={(tab: any) => {
+              setActiveTab(tab);
+              setAppState('main');
             }}
             onPlaceClick={(placeId: string) => {
               setSelectedPlaceId(placeId);
@@ -174,9 +182,9 @@ export default function App() {
 
       case 'placeDetail':
         return (
-          <PlaceDetailScreen 
-            placeId={selectedPlaceId} 
-            onBack={() => setAppState(previousState)} 
+          <PlaceDetailScreen
+            placeId={selectedPlaceId}
+            onBack={() => setAppState(previousState)}
             onReview={() => setAppState('reviewPlace')}
             onOpenMap={(place) => {
               setSelectedPlaceData(place);

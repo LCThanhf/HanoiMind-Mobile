@@ -17,9 +17,10 @@ import { MainTab } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
+import { ForumScreen } from './components/Forum/ForumScreen';
 
 // 1. Thêm 'mapScreen' vào AppState
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -92,12 +93,13 @@ export default function App() {
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
         onLogout={() => setAppState('starter')}
-        initialTripTab={homeTripTab}
-        onTripTabChange={setHomeTripTab}
+        //initialTripTab={homeTripTab}
+        //onTripTabChange={setHomeTripTab}
         onTripClick={(tripId) => {
           setSelectedTripId(tripId);
           setAppState('tripDetail');
         }}
+        onOpenForum={() => setAppState('forum')}
       />
     );
   };
@@ -177,6 +179,9 @@ export default function App() {
             onBack={() => setAppState('placeDetail')} // Bấm back trên Map sẽ về lại PlaceDetail
           />
         );
+
+      case 'forum':
+        return <ForumScreen onBack={() => setAppState('main')} />;
 
       case 'reviewPlace':
         return (

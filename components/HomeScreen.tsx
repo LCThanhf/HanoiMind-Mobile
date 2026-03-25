@@ -139,6 +139,7 @@ export const HomeScreen = ({
     onCreateTrip,
     onTripClick,
     onLogout,
+    onOpenForum,
 }: {
     activeNavTab?: MainTab;
     onTabChange?: (tab: MainTab) => void;
@@ -146,6 +147,7 @@ export const HomeScreen = ({
     onCreateTrip?: () => void;
     onTripClick?: (tripId: string) => void;
     onLogout?: () => void;
+    onOpenForum?: () => void;
 }) => {
     const [searchText, setSearchText] = useState('');
     const [activeFilter, setActiveFilter] = useState<PlaceFilterLabel>('All');
@@ -554,6 +556,26 @@ export const HomeScreen = ({
                             </TouchableOpacity>
                         );
                     })}
+                </View>
+
+                {/* Diễn đàn Section */}
+                <View className="px-5 mb-8">
+                    <TouchableOpacity onPress={onOpenForum} className="bg-white rounded-2xl p-4 border border-gray-200" activeOpacity={0.8}>
+                        <View className="flex-row items-center">
+                            <View className="mr-3">
+                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                                    <Path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </Svg>
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-gray-900 text-[16px] font-bold">Diễn đàn</Text>
+                                <Text className="text-gray-600 text-[13px] mt-0.5">Chia sẻ kinh nghiệm và kết nối với cộng đồng</Text>
+                            </View>
+                            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
+                        </View>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Khác */}

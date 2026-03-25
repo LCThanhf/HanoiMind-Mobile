@@ -48,6 +48,16 @@ class ChatService {
     }
   }
 
+  async getPolls(roomId: string): Promise<any[]> {
+    try {
+      // Endpoint này thường trả về danh sách các tin nhắn có type là 'POLL'
+      // Hoặc một bảng Poll riêng biệt tùy theo thiết kế Backend của bạn
+      return await apiClient.get(`/chat/${roomId}/polls`);
+    } catch (error) {
+      console.error('Lỗi lấy danh sách Poll:', error);
+      return []; // Trả về mảng rỗng nếu lỗi để tránh crash UI
+    }
+  }
   // ==========================================
   // 2. SOCKET LOGIC (Thời gian thực)
   // ==========================================

@@ -1,4 +1,4 @@
-export enum ForumCategory {
+export enum ForumCategory {   //loại bài viết trong diễn đàn
   REVIEW = 'REVIEW',
   EXPERIENCE = 'EXPERIENCE', // Kinh nghiệm phượt
   FIND_BUDDY = 'FIND_BUDDY', // Tìm bạn đồng hành
@@ -6,10 +6,10 @@ export enum ForumCategory {
   OTHERS = 'OTHERS'
 }
 
-export enum PostStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  HIDDEN = 'HIDDEN'
+export enum PostStatus {  //trạng thái bài viết 
+  DRAFT = 'DRAFT', //nháp 
+  PUBLISHED = 'PUBLISHED',//công khai 
+  HIDDEN = 'HIDDEN' 
 }
 
 export enum PostSortBy {
@@ -19,12 +19,12 @@ export enum PostSortBy {
 }
 
 export enum ReportReason {
-  SPAM = 'SPAM',
-  OFFENSIVE = 'OFFENSIVE',
-  MISINFORMATION = 'MISINFORMATION',
-  HARASSMENT = 'HARASSMENT',
-  INAPPROPRIATE = 'INAPPROPRIATE',
-  SCAM = 'SCAM',
+  SPAM = 'SPAM', 
+  OFFENSIVE = 'OFFENSIVE', // xúc phạm 
+  MISINFORMATION = 'MISINFORMATION', //thông tin sai lệch 
+  HARASSMENT = 'HARASSMENT', //quấy rối 
+  INAPPROPRIATE = 'INAPPROPRIATE', //ko phù hợp 
+  SCAM = 'SCAM', //lừa đảo 
   OTHERS = 'OTHERS'
 }
 
@@ -40,7 +40,7 @@ export interface ForumPost {
   content: string;
   images: string[];
   category: ForumCategory;
-  tag_ids: string[];
+  tag: string[];
   place_ids: string[];
   journey_id?: string;
   stats: {

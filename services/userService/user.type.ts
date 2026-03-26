@@ -55,3 +55,12 @@ export interface MerchantRequestPayload {
   address: string;
   phone_number: string;
 }
+
+export interface UserSearchResult {
+  id: string;
+  fullName: string;
+  avatar?: string;
+  bio?: string;
+  travelStyle?: string;
+  role: string;
+}

@@ -17,12 +17,13 @@ import { TripsScreen } from './components/TripsScreen';
 import { MainTab, BottomTabBar } from './components/BottomTabBar'; // Thêm Import BottomTabBar
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
-import { MapScreen } from './components/MapScreen';
-import { ChatListScreen } from './components/ChatListScreen'; // Thêm import Chat
-import { ChatDetailScreen } from './components/ChatDetailScreen'; // Thêm import Chat
-import { ChatSettingsScreen } from 'components/ChatSettingScreen';
-// 1. Thêm 'chatDetail' vào AppState
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'chatDetail' | 'chatSettings';
+import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
+import { ForumScreen } from './components/Forum/ForumScreen';
+import { ChatListScreen } from './components/ChatListScreen';
+import { ChatDetailScreen } from './components/ChatDetailScreen'; // Thêm Import ChatDetailScreen
+import { ChatSettingsScreen } from './components/ChatSettingScreen'; // Thêm Import ChatSettingsScreen
+// 1. Thêm 'mapScreen' vào AppState
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum' | 'chatDetail' | 'chatSettings';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -117,12 +118,13 @@ export default function App() {
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
         onLogout={() => setAppState('starter')}
-        initialTripTab={homeTripTab}
-        onTripTabChange={setHomeTripTab}
+        //initialTripTab={homeTripTab}
+        //onTripTabChange={setHomeTripTab}
         onTripClick={(tripId) => {
           setSelectedTripId(tripId);
           setAppState('tripDetail');
         }}
+        onOpenForum={() => setAppState('forum')}
       />
     );
   };
@@ -219,6 +221,10 @@ export default function App() {
             onBack={() => setAppState('chatDetail')} // Back lại màn nhắn tin
           />
         );
+
+      case 'forum':
+        return <ForumScreen onBack={() => setAppState('main')} />;
+
       case 'reviewPlace':
         return (
           <ReviewScreen

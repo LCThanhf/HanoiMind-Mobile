@@ -7,19 +7,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatService from '../services/chatService/chat.service';
 import { UsersService } from '../services/userService/user.service';
 
+// 👉 Đảm bảo import đúng đường dẫn đến file utils của bạn
+import { processImage, upImageToCloudinary, getCdnUrl } from '../utils/uploadImage';
+
 interface ChatDetailScreenProps {
   roomId: string;
   chatName: string;
   onBack: () => void;
   onOpenSettings?: () => void;
-  isGroup?: boolean; // Cờ kiểm tra xem có phải nhóm không để hiện nút Poll
+  isGroup?: boolean;
 }
 
 const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '😡'];
-
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/berotravel/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
-const CLOUDINARY_API_KEY = '429629465612352';
 
 export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isGroup = true }: ChatDetailScreenProps) => {
   const insets = useSafeAreaInsets();
@@ -41,7 +40,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   
-  // 👉 STATE DÀNH CHO TẠO BÌNH CHỌN
   const [isCreatePollVisible, setIsCreatePollVisible] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
@@ -122,12 +120,9 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
       }));
     });
 
-    // 👉 ĐẨY POLL XUỐNG CUỐI CÙNG KHI CÓ NGƯỜI VOTE (Giống Messenger)
     ChatService.onUpdatePoll((updatedPollMsg) => {
       setMessages((prev) => {
-        // Lọc bỏ Poll cũ
         const filteredMessages = prev.filter((msg) => (msg._id || msg.id) !== updatedPollMsg._id);
-        // Đẩy Poll mới đã update xuống cuối mảng
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
         return [...filteredMessages, updatedPollMsg];
       });
@@ -147,30 +142,49 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // --- XỬ LÝ ẢNH CLOUDINARY ---
+  // --- XỬ LÝ ẢNH BẰNG CLOUDINARY UTILS ---
   const handlePickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, quality: 0.8 });
-      if (!result.canceled && result.assets && result.assets.length > 0) uploadToCloudinary(result.assets[0].uri);
-    } catch (error) { console.log('Lỗi chọn ảnh:', error); }
+      const result = await ImagePicker.launchImageLibraryAsync({ 
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        allowsEditing: true, 
+        quality: 1 // Để chất lượng cao nhất, file util sẽ lo việc nén
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        handleUploadImage(result.assets[0].uri);
+      }
+    } catch (error) { 
+      console.log('Lỗi chọn ảnh:', error); 
+    }
   };
 
-  const uploadToCloudinary = async (uri: string) => {
+  const handleUploadImage = async (originalUri: string) => {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', { uri, type: 'image/jpeg', name: 'chat_upload.jpg' } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      formData.append('api_key', CLOUDINARY_API_KEY);
+      // Bước 1: Nén và xử lý kích thước ảnh
+      const processedUri = await processImage(originalUri);
 
-      const response = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData, headers: { 'Content-Type': 'multipart/form-data' } });
-      const data = await response.json();
-      if (data.secure_url) {
-        ChatService.sendMessage({ room_id: roomId, content: 'Đã gửi một ảnh', type: 'IMAGE' as any, metadata: { url: data.secure_url } });
-      } else throw new Error('Upload failed');
+      // Bước 2: Gọi API tải lên
+      const secureUrl = await upImageToCloudinary(processedUri);
+
+      if (secureUrl) {
+        // Bước 3: Gửi tin nhắn chứa ảnh lên socket
+        ChatService.sendMessage({ 
+          room_id: roomId, 
+          content: 'Đã gửi một ảnh', 
+          type: 'IMAGE' as any, 
+          metadata: { url: secureUrl } 
+        });
+      } else {
+        throw new Error('Không nhận được URL từ Cloudinary');
+      }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải ảnh lên.');
-    } finally { setIsUploading(false); }
+      console.error('Lỗi upload ảnh:', error);
+      Alert.alert('Lỗi', 'Không thể tải ảnh lên. Vui lòng kiểm tra lại mạng hoặc cấu hình.');
+    } finally { 
+      setIsUploading(false); 
+    }
   };
 
   // --- XỬ LÝ TẠO BÌNH CHỌN ---
@@ -246,7 +260,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     const isImage = item.type === 'IMAGE';
     const isPoll = item.type === 'POLL';
 
-    // 👉 RENDER POLL (Căn giữa, nền trắng, layout riêng biệt)
+    // 👉 RENDER POLL
     if (isPoll && item.metadata) {
       return (
         <View className="w-full items-center my-4 px-4">
@@ -256,7 +270,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             className="w-full max-w-[320px] bg-white rounded-3xl p-4 border border-gray-100"
             style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
           >
-            {/* Poll Header */}
             <View className="flex-row items-start mb-4">
               <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3 mt-1">
                 <Text style={{ fontSize: 18 }}>📊</Text>
@@ -267,7 +280,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
               </View>
             </View>
 
-            {/* Poll Options */}
             {item.metadata.options?.map((opt: any) => {
               const isVoted = opt.voters?.includes(currentUserId);
               const totalVotes = opt.voters?.length || 0;
@@ -288,7 +300,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
               );
             })}
 
-            {/* Reaction Badge on Poll */}
             {hasReactions && (
               <View className="absolute -bottom-3 right-4 bg-white px-2 py-0.5 rounded-full border border-gray-100 flex-row items-center shadow-sm">
                 {uniqueEmojis.map((emoji, idx) => <Text key={idx} style={{ fontSize: 12 }}>{emoji}</Text>)}
@@ -297,7 +308,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             )}
           </TouchableOpacity>
 
-          {/* Emoji menu for Poll */}
           {isSelected && (
             <View className="flex-row bg-white rounded-full px-3 py-1.5 mt-4 z-10 shadow-sm border border-gray-50">
               {EMOJI_LIST.map((emoji) => (
@@ -309,7 +319,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
       );
     }
 
-    // 👉 RENDER TEXT & IMAGE (Bong bóng thông thường)
+    // 👉 RENDER TEXT & IMAGE
     return (
       <View className={`w-full ${showName ? 'mt-3' : 'mt-0.5'} ${isMe ? 'items-end' : 'items-start'}`}>
         
@@ -329,7 +339,15 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             style={{ opacity: isSending ? 0.7 : 1, maxWidth: isMe ? '75%' : '80%' }} 
           >
             {!isImage && <Text className={`text-[15px] leading-5 ${isMe ? 'text-white' : 'text-gray-900'}`}>{item.content || item.message}</Text>}
-            {isImage && item.metadata?.url && <Image source={{ uri: item.metadata.url }} style={{ width: 200, height: 250, borderRadius: 12 }} resizeMode="cover" />}
+            
+            {/* Sử dụng getCdnUrl để nén ảnh thumbnail trên khung chat (tối ưu list) */}
+            {isImage && item.metadata?.url && (
+              <Image 
+                source={{ uri: getCdnUrl(item.metadata.url, 'w_400,c_limit,q_auto') }} 
+                style={{ width: 200, height: 250, borderRadius: 12, backgroundColor: '#f3f4f6' }} 
+                resizeMode="cover" 
+              />
+            )}
             
             {(!nextMsg || nextMsg.sender_id !== item.sender_id) && (
               <Text className={`text-[10px] mt-1 ${isMe ? 'text-blue-100 text-right' : 'text-gray-400 text-left'}`}>{timeString} {isSending ? '...' : ''}</Text>
@@ -344,7 +362,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
           </TouchableOpacity>
         </View>
 
-        {/* Cảm xúc Menu Inline */}
         {isSelected && (
           <View className={`flex-row bg-white rounded-full px-3 py-1.5 mt-2 z-10 shadow-sm border border-gray-50 ${isMe ? 'mr-4' : 'ml-14'}`}>
             {EMOJI_LIST.map((emoji) => (
@@ -471,7 +488,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
       {isUploading && (
         <View className="absolute inset-0 bg-black/40 items-center justify-center z-50">
           <ActivityIndicator size="large" color="#ffffff" />
-          <Text className="text-white mt-2 font-bold text-base">Đang tải ảnh lên...</Text>
+          <Text className="text-white mt-2 font-bold text-base">Đang xử lý ảnh...</Text>
         </View>
       )}
 

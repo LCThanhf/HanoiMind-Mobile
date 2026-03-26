@@ -88,9 +88,10 @@ interface TripsScreenProps {
     onTripClick: (tripId: string) => void;
     onOpenProfile: () => void;
     onLogout: () => void;
+    onOpenNotifications?: () => void;
 }
 
-export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick, onOpenProfile, onLogout }: TripsScreenProps) => {
+export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick, onOpenProfile, onLogout, onOpenNotifications }: TripsScreenProps) => {
     const [myTrips, setMyTrips] = useState<Journey[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [tripTab, setTripTab] = useState<'personal' | 'group'>('personal');
@@ -143,8 +144,8 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
-            <View style={{ backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
-                <AppHeader onOpenProfile={onOpenProfile} onLogout={onLogout} />
+            <View>
+                <AppHeader variant="homeTrips" onOpenProfile={onOpenProfile} onLogout={onLogout} onOpenNotifications={onOpenNotifications} />
 
                 <View style={{ paddingHorizontal: 20, paddingBottom: 14 }}>
                     <View style={{ backgroundColor: '#F3F4F6', borderRadius: 12, padding: 3, flexDirection: 'row' }}>

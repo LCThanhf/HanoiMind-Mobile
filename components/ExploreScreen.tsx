@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, ActivityInd
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polygon } from 'react-native-svg';
 import { BottomTabBar, MainTab } from './BottomTabBar';
-import { AppHeader } from './AppHeader';
 
 // --- IMPORT SERVICE & TYPES ---
 import { PlacesService } from '../services/placeService/place.service';
@@ -71,8 +70,6 @@ interface ExploreScreenProps {
     activeTab: MainTab;
     onTabChange: (tab: MainTab) => void;
     onViewAllPlaces?: () => void;
-    onOpenProfile: () => void;
-    onLogout: () => void;
     onPlaceClick: (placeId: string) => void;
 }
 
@@ -80,8 +77,6 @@ export const ExploreScreen = ({
     activeTab, 
     onTabChange, 
     onViewAllPlaces, 
-    onOpenProfile, 
-    onLogout, 
     onPlaceClick 
 }: ExploreScreenProps) => {
     const [searchText, setSearchText] = useState('');
@@ -137,7 +132,16 @@ export const ExploreScreen = ({
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
-            <AppHeader onOpenProfile={onOpenProfile} onLogout={onLogout} />
+            <View
+                style={{
+                    paddingHorizontal: 16,
+                    paddingTop: 6,
+                    paddingBottom: 10,
+                    alignItems: 'center',
+                }}
+            >
+                <Text style={{ fontSize: 24, fontWeight: '700', color: '#2B8EF0' }}>Khám phá</Text>
+            </View>
 
             {/* Search Bar */}
             <View className="px-5 mb-4">

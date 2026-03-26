@@ -139,6 +139,7 @@ export const HomeScreen = ({
     onCreateTrip,
     onTripClick,
     onLogout,
+    onOpenNotifications,
     onOpenForum,
 }: {
     activeNavTab?: MainTab;
@@ -147,6 +148,7 @@ export const HomeScreen = ({
     onCreateTrip?: () => void;
     onTripClick?: (tripId: string) => void;
     onLogout?: () => void;
+    onOpenNotifications?: () => void;
     onOpenForum?: () => void;
 }) => {
     const [searchText, setSearchText] = useState('');
@@ -236,7 +238,7 @@ export const HomeScreen = ({
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
-            <AppHeader onOpenProfile={onOpenProfile ?? (() => { })} onLogout={onLogout ?? (() => { })} />
+            <AppHeader variant="homeTrips" onOpenProfile={onOpenProfile ?? (() => { })} onLogout={onLogout ?? (() => { })} onOpenNotifications={onOpenNotifications} />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90 }}>
                 {/* Weather Card */}

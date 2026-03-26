@@ -9,9 +9,11 @@ import { UsersService } from '../services/userService/user.service';
 interface AppHeaderProps {
     onOpenProfile: () => void;
     onLogout: () => void;
+    variant?: 'default' | 'homeTrips';
+    onOpenNotifications?: () => void;
 }
 
-export const AppHeader = ({ onOpenProfile, onLogout }: AppHeaderProps) => {
+export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpenNotifications }: AppHeaderProps) => {
     const [userAvatar, setUserAvatar] = useState('');
     const [userName, setUserName] = useState('');
 
@@ -46,22 +48,58 @@ export const AppHeader = ({ onOpenProfile, onLogout }: AppHeaderProps) => {
 
     return (
         <>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: variant === 'homeTrips' ? 6 : 32, paddingBottom: variant === 'homeTrips' ? 10 : 16 }}>
                 <View>
-                    <Text style={{ color: '#22C55E', fontSize: 28, fontWeight: '900', lineHeight: 34 }}>HanoiMind</Text>
-                    <Text style={{ color: '#111827', fontSize: 16, fontWeight: '600', marginTop: 2 }}>
-                        Chào mừng, {userName || 'bạn'}!
+                    <Text style={{ color: '#22C55E', fontSize: variant === 'homeTrips' ? 32 : 28, fontWeight: '900', lineHeight: variant === 'homeTrips' ? 46 : 34 }}>HanoiMind</Text>
+                    <Text style={{ color: '#111827', fontSize: variant === 'homeTrips' ? 20 : 16, fontWeight: variant === 'homeTrips' ? '800' : '600', marginTop: variant === 'homeTrips' ? 2 : 2, lineHeight: variant === 'homeTrips' ? 28 : 22 }}>
+                        Chào mừng, {userName || 'username'}!
                     </Text>
                 </View>
 
-                <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
-                    <View ref={avatarRef}>
-                        <Image
-                            source={{ uri: userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
-                            style={{ width: 44, height: 44, borderRadius: 22 }}
-                        />
+                {variant === 'homeTrips' ? (
+                    <View style={{ alignItems: 'center' }}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={onOpenNotifications}
+                            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}
+                        >
+                            <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                                <Path
+                                    d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"
+                                    stroke="#111827"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                                <Path
+                                    d="M13.73 21a2 2 0 0 1-3.46 0"
+                                    stroke="#111827"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </Svg>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                            <View ref={avatarRef}>
+                                <Image
+                                    source={{ uri: userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
+                                    style={{ width: 36, height: 36, borderRadius: 18 }}
+                                />
+                            </View>
+                        </TouchableOpacity>
                     </View>
-                </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                        <View ref={avatarRef}>
+                            <Image
+                                source={{ uri: userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
+                                style={{ width: 44, height: 44, borderRadius: 22 }}
+                            />
+                        </View>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <Modal visible={showDropdown} transparent animationType="none" onRequestClose={() => setShowDropdown(false)}>

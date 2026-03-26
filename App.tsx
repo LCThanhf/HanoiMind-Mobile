@@ -32,6 +32,7 @@ export default function App() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [selectedTripDayNumber, setSelectedTripDayNumber] = useState<number>(1);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
 
   // State lưu ID để gọi API trong PlaceDetailScreen
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
@@ -40,6 +41,7 @@ export default function App() {
   const [selectedPlaceData, setSelectedPlaceData] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
+  const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
   const renderMainContent = () => {
@@ -127,6 +129,12 @@ export default function App() {
         return renderMainContent();
       case 'createTrip':
         return (
+          <TripDetailScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('main')}
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+          />
+        );
           <CreateTripScreen
             onClose={() => setAppState('main')}
             onJourneyCreated={(journeyId) => {
@@ -209,6 +217,10 @@ export default function App() {
             placeId={selectedPlaceId}
             onBack={() => setAppState(previousState)}
             onReview={() => setAppState('reviewPlace')}
+            refreshKey={placeDetailRefreshKey}
+          />
+        );
+
             // 3. Xử lý sự kiện mở bản đồ
             onOpenMap={(place) => {
               setSelectedPlaceData(place); // Lưu data vào state

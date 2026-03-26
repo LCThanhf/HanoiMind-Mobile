@@ -1,7 +1,7 @@
 export default {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "hanoimind",
+    "slug": "hanoimind",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"

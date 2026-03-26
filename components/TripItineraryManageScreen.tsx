@@ -269,17 +269,28 @@ export const TripItineraryManageScreen = ({
                   </Text>
                 </View>
 
-                {day.stops.map((stop, stopIndex) => (
-                  <TripStopCard
-                    key={stop.id}
-                    stop={stop}
-                    moodLabel={moodBadgeLabel}
-                    deleting={deletingStopId === stop.id}
-                    showConnector={stopIndex < day.stops.length - 1}
-                    onDelete={() => handleDeleteStop(day.dayNumber, stop.id)}
-                    onPress={() => onOpenPlaceDetail(stop.placeId)}
-                  />
-                ))}
+                {day.stops.length ? (
+                  day.stops.map((item, idx) => (
+                    <TripStopCard
+                      key={item.id}
+                      stop={item}
+                      moodLabel={moodBadgeLabel}
+                      deleting={deletingStopId === item.id}
+                      showConnector={idx < day.stops.length - 1}
+                      onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
+                      onPress={() => onOpenPlaceDetail(item.placeId)}
+                    />
+                  ))
+                ) : (
+                  <View
+                    className="rounded-2xl px-4 py-3 mb-3"
+                    style={{ backgroundColor: '#F8FAFC' }}
+                  >
+                    <Text className="text-[13px] text-gray-500" style={{ fontWeight: '400' }}>
+                      Tự do khám phá, di chuyển.
+                    </Text>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -320,7 +331,7 @@ export const TripItineraryManageScreen = ({
               )}
             </TouchableOpacity>
             <Text className="text-[11px] text-gray-500 mt-2" style={{ fontWeight: '500' }}>
-              * Bạn có thể nhấn giữ và kéo thả các thẻ để thay đổi thứ tự tham quan.
+              * Bạn có thể sắp xếp lịch trình bằng cách thêm hoặc xóa địa điểm.
             </Text>
           </View>
 

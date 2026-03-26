@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import { DayItinerary } from './types';
 
 const TimelineDot = () => (
@@ -42,15 +42,10 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
         <>
             {itinerary.map((dayData, dayIndex) => (
                 <View key={`${dayData.day}-${dayData.date || dayIndex}`} className="px-5 mb-6">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <Text className="text-[15px] text-gray-900 flex-1 mr-3" style={{ fontWeight: '700' }}>
+                    <View className="mb-4">
+                        <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
                             Ngày {dayData.day}: {dayData.title}
                         </Text>
-                        <TouchableOpacity activeOpacity={0.7} style={{ flexShrink: 0 }}>
-                            <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                                Thêm địa điểm
-                            </Text>
-                        </TouchableOpacity>
                     </View>
 
                     {dayData.activities.map((activity, activityIndex) => (

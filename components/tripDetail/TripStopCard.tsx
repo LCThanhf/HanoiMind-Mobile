@@ -94,15 +94,17 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
               <Text className="flex-1 text-[15px] leading-5 text-gray-900 mr-2" style={{ fontWeight: '400' }} numberOfLines={2}>
                 {stop.title}
               </Text>
-              <TouchableOpacity onPress={onDelete} disabled={deleting} hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}>
-                {deleting ? (
-                  <ActivityIndicator size="small" color="#EF4444" />
-                ) : (
-                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                    <Path d="M18 6 6 18M6 6l12 12" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
-                  </Svg>
-                )}
-              </TouchableOpacity>
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={onDelete} disabled={deleting} hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}>
+                  {deleting ? (
+                    <ActivityIndicator size="small" color="#EF4444" />
+                  ) : (
+                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                      <Path d="M18 6 6 18M6 6l12 12" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
+                    </Svg>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View className="flex-row items-center mt-1.5">

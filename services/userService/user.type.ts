@@ -5,7 +5,7 @@ export enum UserRole {
 }
 
 export interface User {
-  id: string;
+  _id: string;
   email: string;
   fullName: string;
   role: UserRole;
@@ -20,7 +20,7 @@ export interface User {
 }
 
 export interface PublicProfile {
-  id: string;
+  _id: string;
   fullName: string;
   avatar?: string;
   coverImage?: string;
@@ -54,4 +54,13 @@ export interface MerchantRequestPayload {
   tax_code: string;
   address: string;
   phone_number: string;
+}
+
+export interface UserSearchResult {
+  id: string;
+  fullName: string;
+  avatar?: string;
+  bio?: string;
+  travelStyle?: string;
+  role: string;
 }

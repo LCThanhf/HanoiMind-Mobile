@@ -5,7 +5,8 @@ import {
   User, 
   PublicProfile, 
   TravelDNA, 
-  MerchantRequestPayload 
+  MerchantRequestPayload, 
+  UserSearchResult
 } from './user.type';
 
 export const UsersService = {
@@ -84,5 +85,14 @@ export const UsersService = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+
+  searchUsers: async (keyword: string): Promise<UserSearchResult[]> => {
+    try {
+      // Gửi keyword qua query params
+      return await apiClient.get('/users/search', { params: { keyword } });
+    } catch (error) {
+      throw error;
+    }
+  },
 };

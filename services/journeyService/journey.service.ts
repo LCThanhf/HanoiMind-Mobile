@@ -4,7 +4,8 @@ import {
   CreateJourneyPayload,
   UpdateJourneyPayload,
   AddStopPayload,
-  GetPublicFeedParams
+  GetPublicFeedParams,
+  UpdateStopPayload // Đã import thêm type mới
 } from './journey.type';
 
 export const JourneyService = {
@@ -58,9 +59,9 @@ export const JourneyService = {
   },
 
   /**
-   * 8. Cập nhật thông tin điểm dừng (Stop)
+   * 8. Cập nhật thông tin điểm dừng & Cập nhật thanh toán N-N
    */
-  updateStop: async (journeyId: string, dayId: string, stopId: string, payload: any): Promise<Journey> => {
+  updateStop: async (journeyId: string, dayId: string, stopId: string, payload: UpdateStopPayload): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}`, payload);
   },
 
@@ -86,12 +87,22 @@ export const JourneyService = {
     return await apiClient.patch(`/journeys/${id}/start`);
   },
 
-  checkInStop: async (journeyId: string, dayId: string, stopId: string, data: { actual_cost?: number, check_in_image?: string }): Promise<Journey> => {
+  /**
+   * Điểm danh vật lý (Đã bỏ actual_cost ra khỏi logic check-in)
+   */
+  checkInStop: async (journeyId: string, dayId: string, stopId: string, data: { check_in_image?: string }): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/check-in`, data);
   },
 
   skipStop: async (journeyId: string, dayId: string, stopId: string): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/skip`);
+  },
+
+  /**
+   * Ghi nhận chi tiêu ngoài lịch trình (Ví dụ: mua nước, đổ xăng chung)
+   */
+  addExtraExpense: async (journeyId: string, data: { title: string, amount: number }): Promise<Journey> => {
+    return await apiClient.post(`/journeys/${journeyId}/expenses`, data);
   },
 
   // ==========================================

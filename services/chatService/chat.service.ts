@@ -30,6 +30,15 @@ class ChatService {
     }
   }
 
+  /** [MỚI BỔ SUNG] Tạo hoặc lấy phòng chat 1-1 */
+  async createDirectChat(receiverId: string): Promise<ChatConversation> {
+    try {
+      return await apiClient.post('/chat/direct', { receiver_id: receiverId });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /** Lấy kho ảnh của phòng chat */
   async getRoomImages(roomId: string): Promise<ChatMessage[]> {
     try {
@@ -45,6 +54,17 @@ class ChatService {
       return await apiClient.get(`/chat/${roomId}/search`, { params: { keyword } });
     } catch (error) {
       throw error;
+    }
+  }
+
+  async getPolls(roomId: string): Promise<any[]> {
+    try {
+      // Endpoint này thường trả về danh sách các tin nhắn có type là 'POLL'
+      // Hoặc một bảng Poll riêng biệt tùy theo thiết kế Backend của bạn
+      return await apiClient.get(`/chat/${roomId}/polls`);
+    } catch (error) {
+      console.error('Lỗi lấy danh sách Poll:', error);
+      return []; // Trả về mảng rỗng nếu lỗi để tránh crash UI
     }
   }
 

@@ -1,5 +1,7 @@
-import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Image,
     ScrollView,
     Text,
@@ -8,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { NotificationService } from '../services/notificationService/notification.service';
+import { Notification as ApiNotification, NotificationType } from '../services/notificationService/notification.type';
 import { BottomTabBar, MainTab } from './BottomTabBar';
 
 type NotificationKind = 'avatar' | 'chat' | 'trip';
@@ -22,39 +26,33 @@ interface NotificationItem {
     avatar?: string;
 }
 
-const notifications: NotificationItem[] = [
-    {
-        id: '1',
-        actor: 'Quang Minh',
-        message: 'da tham gia chuyen di',
-        timeAgo: '2 phut truoc',
-        unread: true,
-        kind: 'avatar',
-        avatar: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&w=120&q=80',
-    },
-    {
-        id: '2',
-        actor: 'Minh Anh',
-        message: 'da them "Pho Thin" vao hanh trinh',
-        timeAgo: '10 phut truoc',
-        unread: true,
-        kind: 'avatar',
-        avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=120&q=80',
-    },
-    {
-        id: '3',
-        message: 'Ban co tin nhan moi trong Ha Noi chat',
-        timeAgo: '36 phut truoc',
-        unread: true,
-        kind: 'chat',
-    },
-    {
-        id: '4',
-        message: 'Trip moi da duoc cap nhat',
-        timeAgo: '36 phut truoc',
-        kind: 'trip',
-    },
-];
+function formatTimeAgo(createdAt: string): string {
+    const diffMs = Date.now() - new Date(createdAt).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    return `${Math.floor(diffHours / 24)} ngày trước`;
+}
+
+function kindFromType(type: NotificationType, hasSenderAvatar: boolean): NotificationKind {
+    if (type === NotificationType.NEW_MESSAGE) return 'chat';
+    if (type === NotificationType.JOURNEY_UPDATE) return 'trip';
+    if (type === NotificationType.PAYMENT) return 'trip';
+    return hasSenderAvatar ? 'avatar' : 'trip';
+}
+
+function mapApiToItem(notif: ApiNotification): NotificationItem {
+    return {
+        id: notif._id,
+        message: notif.message || notif.title,
+        timeAgo: formatTimeAgo(notif.created_at),
+        unread: !notif.is_read,
+        kind: kindFromType(notif.type, !!notif.sender_avatar),
+        avatar: notif.sender_avatar,
+    };
+}
 
 const NotificationLeading = ({ item }: { item: NotificationItem }) => {
     if (item.kind === 'avatar' && item.avatar) {
@@ -120,6 +118,62 @@ interface NotificationScreenProps {
 }
 
 export const NotificationScreen = ({ activeTab, onBack, onTabChange }: NotificationScreenProps) => {
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const socketConnected = useRef(false);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const fetchNotifications = async () => {
+            try {
+                const data = await NotificationService.getMyNotifications();
+                if (mounted) {
+                    const list = Array.isArray(data) ? data : [];
+                    setNotifications(list.map(mapApiToItem));
+                }
+            } catch (err: any) {
+                console.error('[Notifications] Fetch error:', err?.response?.status, err?.message);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        const connectRealtime = async () => {
+            if (socketConnected.current) return;
+            const token = await AsyncStorage.getItem('accessToken');
+            if (token) {
+                socketConnected.current = true;
+                NotificationService.connectSocket(token, (notif: ApiNotification) => {
+                    if (mounted) {
+                        setNotifications((prev) => [mapApiToItem(notif), ...prev]);
+                    }
+                });
+            }
+        };
+
+        fetchNotifications();
+        connectRealtime();
+
+        return () => {
+            mounted = false;
+            socketConnected.current = false;
+            NotificationService.disconnectSocket();
+        };
+    }, []);
+
+    const handleTap = useCallback(async (item: NotificationItem) => {
+        if (!item.unread) return;
+        try {
+            await NotificationService.markAsRead(item.id);
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
+            );
+        } catch (err) {
+            console.error('Failed to mark as read:', err);
+        }
+    }, []);
+
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
             <View
@@ -149,6 +203,15 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                 <View style={{ width: 32 }} />
             </View>
 
+            {loading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#2B8EF0" />
+                </View>
+            ) : notifications.length === 0 ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 140 }}>
+                    <Text style={{ fontSize: 15, color: '#9CA3AF' }}>Không có thông báo nào</Text>
+                </View>
+            ) : (
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
@@ -185,6 +248,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                         )}
 
                         <TouchableOpacity
+                            onPress={() => handleTap(item)}
                             activeOpacity={0.85}
                             style={{
                                 marginLeft: 2,
@@ -227,6 +291,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     </View>
                 ))}
             </ScrollView>
+            )}
 
             <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>

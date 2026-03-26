@@ -121,6 +121,9 @@ export const ReviewScreen = ({
   const [editRating, setEditRating] = useState<number>(0);
   const [editComment, setEditComment] = useState<string>('');
 
+  // reactions: { [reviewId]: 'LIKE' | 'DISLIKE' | null }
+  const [reactions, setReactions] = useState<Record<string, 'LIKE' | 'DISLIKE' | null>>({});
+
   useEffect(() => {
     fetchInitialData();
   }, [placeId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -601,9 +604,41 @@ export const ReviewScreen = ({
                     >
                       {review.content}
                     </Text>
-                    <Text style={{ color: '#94A3B8', fontSize: 11 }}>
-                      {formatRelativeTime(review.created_at)}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>
+                        {formatRelativeTime(review.created_at)}
+                      </Text>
+                      {!mine && (
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity
+                            onPress={() => handleReact(review, 'LIKE')}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 20,
+                              backgroundColor: reactions[getReviewId(review)] === 'LIKE' ? '#DBEAFE' : '#F1F5F9',
+                            }}
+                          >
+                            <Text style={{ fontSize: 14 }}>👍</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleReact(review, 'DISLIKE')}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: 20,
+                              backgroundColor: reactions[getReviewId(review)] === 'DISLIKE' ? '#FEE2E2' : '#F1F5F9',
+                            }}
+                          >
+                            <Text style={{ fontSize: 14 }}>👎</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </TouchableOpacity>
               );

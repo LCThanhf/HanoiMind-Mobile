@@ -68,7 +68,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                 await AsyncStorage.removeItem('savedLoginCredentials');
             }
 
-            Alert.alert('Thành công', `Chào mừng ${response.fullName} quay trở lại!`);
+            // Alert.alert('Thành công', `Chào mừng ${response.fullName} quay trở lại!`);
 
             // 4. Kích hoạt logic điều hướng của code cũ thông qua prop
             if (onLogin) {

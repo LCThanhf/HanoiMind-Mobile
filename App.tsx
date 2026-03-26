@@ -18,9 +18,12 @@ import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
 import { ForumScreen } from './components/Forum/ForumScreen';
+import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
+import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
+import { TripRouteScreen } from './components/TripRouteScreen';
 
 // 1. Thêm 'mapScreen' vào AppState
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'tripManageDetail' | 'tripAddPlace' | 'tripRoute' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -28,6 +31,7 @@ export default function App() {
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  const [selectedTripDayNumber, setSelectedTripDayNumber] = useState<number>(1);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
 
   // State lưu ID để gọi API trong PlaceDetailScreen
@@ -145,6 +149,48 @@ export default function App() {
             tripId={selectedTripId}
             onBack={() => setAppState('main')}
             onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+            onViewDetail={() => setAppState('tripManageDetail')}
+          />
+        );
+
+      case 'tripManageDetail':
+        return (
+          <TripItineraryManageScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripDetail')}
+            onOpenTripRoute={() => setAppState('tripRoute')}
+            onAddPlace={(dayNumber) => {
+              setSelectedTripDayNumber(dayNumber);
+              setAppState('tripAddPlace');
+            }}
+            onOpenPlaceDetail={(placeId) => {
+              setSelectedPlaceId(placeId);
+              setPreviousState('tripManageDetail');
+              setAppState('placeDetail');
+            }}
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setAppState('main');
+            }}
+          />
+        );
+
+      case 'tripAddPlace':
+        return (
+          <TripAddPlaceScreen
+            tripId={selectedTripId}
+            dayNumber={selectedTripDayNumber}
+            onBack={() => setAppState('tripManageDetail')}
+            onPlaceAdded={() => setAppState('tripManageDetail')}
+          />
+        );
+
+      case 'tripRoute':
+        return (
+          <TripRouteScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripManageDetail')}
           />
         );
 

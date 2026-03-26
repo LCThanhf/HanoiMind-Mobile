@@ -53,3 +53,77 @@ export interface SuggestNextParams {
   seed_place_id?: string;
   max_places?: number;
 }
+
+export type AiMood = 'RESET_HEALING' | 'CHILL_CAFE' | 'NATURE_EXPLORE' | 'FOOD_LOCAL';
+
+export interface CreateJourneyFromRelatedRequest {
+  name: string;
+  owner_id: string;
+  start_date: string;
+  end_date: string;
+  seed_place_id?: string;
+  max_places?: number;
+  hours_per_day?: number;
+  travel_style?: 'sightseeing' | 'relaxing' | 'balanced';
+  total_budget_vnd?: number;
+  daily_budget_vnd?: number;
+  mode?: 'solo' | 'group';
+  mood?: AiMood;
+  auto_plan?: boolean;
+  members?: string[];
+  start_location?: Record<string, number>;
+  must_include_categories?: string[];
+  exclude_categories?: string[];
+}
+
+export interface CreateJourneyFromRelatedResponse {
+  journey_id: string;
+  journey_name: string;
+  selected_places_count: number;
+  selected_place_ids: string[];
+  auto_planned: boolean;
+  total_days: number;
+  planning_notes?: string[];
+  candidate_pool?: any[] | null;
+  days?: AiDayPlan[] | null;
+  candidate_pool_size?: number | null;
+  generation_time_ms?: number | null;
+}
+
+export interface AIPlanRequest {
+  total_days?: number;
+  total_budget_vnd: number;
+  daily_budget_vnd: number;
+  mode?: 'solo' | 'group';
+  requester_user_id?: string;
+  mood?: AiMood;
+  mood_distribution?: Partial<Record<AiMood, number>>;
+  start_location?: Record<string, number>;
+  max_places_per_day?: number;
+  must_include_categories?: string[];
+  exclude_categories?: string[];
+  hours_per_day?: number;
+  travel_style?: 'sightseeing' | 'relaxing' | 'balanced';
+  place_ids?: string[];
+}
+
+export interface AIPlanResponse {
+  journey_id: string;
+  journey_name: string;
+  total_days: number;
+  mode: 'solo' | 'group';
+  mood_used?: AiMood | null;
+  mood_distribution_used?: Record<AiMood, number> | null;
+  total_budget_vnd: number;
+  daily_budget_vnd: number;
+  generated_at: string;
+  candidate_pool_size: number;
+  generation_time_ms: number;
+  hotel_name?: string | null;
+  accommodation_cost_vnd?: number;
+  num_nights?: number;
+  days: AiDayPlan[];
+  candidate_pool?: any[];
+  planning_notes: string[];
+  algorithm_version?: string;
+}

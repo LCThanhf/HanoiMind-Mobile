@@ -114,7 +114,7 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSi
                         className="text-gray-400 text-[11px] tracking-widest"
                         style={{ fontFamily: 'Georgia', textTransform: 'uppercase' }}
                     >
-                        Ready for Adventure?
+                         Bạn đã sẵn sàng khám phá chưa?
                     </Text>
                 </View>
             </View>

@@ -98,7 +98,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
             <View className="flex-1 px-6 pt-8">
                 <Text className="text-gray-900 text-[28px] font-bold mb-3">Chào mừng trở lại!</Text>
                 <Text className="text-gray-500 text-[15px] mb-8">
-                    Hãy đăng nhập để tiếp tục những chuyến phiêu lưu tuyệt vời cùng BeroTravel.
+                    Hãy đăng nhập để tiếp tục những chuyến phiêu lưu tuyệt vời cùng HanoiMind.
                 </Text>
 
                 <Text className="text-gray-900 text-[15px] font-semibold mb-2">Email</Text>

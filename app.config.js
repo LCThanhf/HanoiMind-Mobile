@@ -1,7 +1,7 @@
-{
+export default {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "hanoimind",
+    "slug": "hanoimind",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -22,14 +22,28 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        // Sử dụng biến môi trường hợp lệ trong file .js
+        "googleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.myexpoapp"
+      "package": "com.anonymous.myexpoapp",
+      "config": {
+        "googleMaps": {
+          // Sử dụng biến môi trường hợp lệ trong file .js
+          "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     }
   }
-}
+};

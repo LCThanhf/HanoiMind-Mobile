@@ -19,9 +19,9 @@ import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen vào đây
 import { ForumScreen } from './components/Forum/ForumScreen';
-import { ChatListScreen } from './components/ChatListScreen';
-import { ChatDetailScreen } from './components/ChatDetailScreen'; // Thêm Import ChatDetailScreen
-import { ChatSettingsScreen } from './components/ChatSettingScreen'; // Thêm Import ChatSettingsScreen
+import { ChatListScreen } from './components/chat/ChatListScreen';
+import { ChatDetailScreen } from './components/chat/ChatDetailScreen'; // Thêm Import ChatDetailScreen
+import { ChatSettingsScreen } from './components/chat/ChatSettingScreen'; // Thêm Import ChatSettingsScreen
 // 1. Thêm 'mapScreen' vào AppState
 type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum' | 'chatDetail' | 'chatSettings';
 

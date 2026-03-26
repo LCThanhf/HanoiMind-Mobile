@@ -30,6 +30,15 @@ class ChatService {
     }
   }
 
+  /** [MỚI BỔ SUNG] Tạo hoặc lấy phòng chat 1-1 */
+  async createDirectChat(receiverId: string): Promise<ChatConversation> {
+    try {
+      return await apiClient.post('/chat/direct', { receiver_id: receiverId });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   /** Lấy kho ảnh của phòng chat */
   async getRoomImages(roomId: string): Promise<ChatMessage[]> {
     try {
@@ -58,6 +67,7 @@ class ChatService {
       return []; // Trả về mảng rỗng nếu lỗi để tránh crash UI
     }
   }
+
   // ==========================================
   // 2. SOCKET LOGIC (Thời gian thực)
   // ==========================================

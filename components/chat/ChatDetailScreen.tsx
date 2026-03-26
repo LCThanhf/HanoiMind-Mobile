@@ -4,11 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ChatService from '../services/chatService/chat.service';
-import { UsersService } from '../services/userService/user.service';
+import ChatService from '../../services/chatService/chat.service';
+import { UsersService } from '../../services/userService/user.service';
 
 // 👉 Đảm bảo import đúng đường dẫn đến file utils của bạn
-import { processImage, upImageToCloudinary, getCdnUrl } from '../utils/uploadImage';
+import { processImage, upImageToCloudinary, getCdnUrl } from '../../utils/uploadImage';
 
 interface ChatDetailScreenProps {
   roomId: string;
@@ -492,7 +492,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         </View>
       )}
 
-      {Platform.OS === 'android' && isKeyboardVisible && <View style={{ height: keyboardHeight * 1.2 }} />}
     </KeyboardAvoidingView>
   );
 };

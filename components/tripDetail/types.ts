@@ -4,6 +4,14 @@ export interface Activity {
     title: string;
     description: string;
     status?: string;
+    stopId?: string;
+    placeId?: string;
+    dayNumber?: number;
+    endTime?: string;
+    estimatedCost?: number;
+    image?: string;
+    address?: string;
+    rating?: number;
 }
 
 export interface DayItinerary {

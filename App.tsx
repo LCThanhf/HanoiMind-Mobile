@@ -24,6 +24,12 @@ import { ChatDetailScreen } from './components/chat/ChatDetailScreen'; // Thêm 
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen'; // Thêm Import ChatSettingsScreen
 // 1. Thêm 'mapScreen' vào AppState
 type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum' | 'chatDetail' | 'chatSettings';
+import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
+import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
+import { TripRouteScreen } from './components/TripRouteScreen';
+
+// 1. Thêm 'mapScreen' vào AppState
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'tripManageDetail' | 'tripAddPlace' | 'tripRoute' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -31,6 +37,8 @@ export default function App() {
 
   const [isSignIn, setIsSignIn] = useState(true);
   const [selectedTripId, setSelectedTripId] = useState<string>('');
+  const [selectedTripDayNumber, setSelectedTripDayNumber] = useState<number>(1);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
 
   // State lưu ID để gọi API trong PlaceDetailScreen
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(''); 
@@ -43,6 +51,7 @@ export default function App() {
   const [selectedChatName, setSelectedChatName] = useState<string>('');
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
+  const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [homeTripTab, setHomeTripTab] = useState<'personal' | 'group'>('personal');
 
   const renderMainContent = () => {
@@ -148,6 +157,12 @@ export default function App() {
         return renderMainContent();
       case 'createTrip':
         return (
+          <TripDetailScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('main')}
+            onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+          />
+        );
           <CreateTripScreen
             onClose={() => setAppState('main')}
             onJourneyCreated={(journeyId) => {
@@ -162,6 +177,48 @@ export default function App() {
             tripId={selectedTripId}
             onBack={() => setAppState('main')}
             onOpenProfile={() => { setActiveTab('profile'); setAppState('main'); }}
+            onViewDetail={() => setAppState('tripManageDetail')}
+          />
+        );
+
+      case 'tripManageDetail':
+        return (
+          <TripItineraryManageScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripDetail')}
+            onOpenTripRoute={() => setAppState('tripRoute')}
+            onAddPlace={(dayNumber) => {
+              setSelectedTripDayNumber(dayNumber);
+              setAppState('tripAddPlace');
+            }}
+            onOpenPlaceDetail={(placeId) => {
+              setSelectedPlaceId(placeId);
+              setPreviousState('tripManageDetail');
+              setAppState('placeDetail');
+            }}
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setAppState('main');
+            }}
+          />
+        );
+
+      case 'tripAddPlace':
+        return (
+          <TripAddPlaceScreen
+            tripId={selectedTripId}
+            dayNumber={selectedTripDayNumber}
+            onBack={() => setAppState('tripManageDetail')}
+            onPlaceAdded={() => setAppState('tripManageDetail')}
+          />
+        );
+
+      case 'tripRoute':
+        return (
+          <TripRouteScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripManageDetail')}
           />
         );
 
@@ -188,6 +245,11 @@ export default function App() {
             placeId={selectedPlaceId}
             onBack={() => setAppState(previousState)}
             onReview={() => setAppState('reviewPlace')}
+            refreshKey={placeDetailRefreshKey}
+          />
+        );
+
+            // 3. Xử lý sự kiện mở bản đồ
             onOpenMap={(place) => {
               setSelectedPlaceData(place);
               setAppState('mapScreen');
@@ -221,6 +283,9 @@ export default function App() {
             onBack={() => setAppState('chatDetail')} // Back lại màn nhắn tin
           />
         );
+
+      case 'forum':
+        return <ForumScreen onBack={() => setAppState('main')} />;
 
       case 'forum':
         return <ForumScreen onBack={() => setAppState('main')} />;

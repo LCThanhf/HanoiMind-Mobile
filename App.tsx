@@ -20,9 +20,10 @@ import { MapScreen } from './components/MapScreen'; // Thêm Import MapScreen v�
 import { ForumScreen } from './components/Forum/ForumScreen';
 import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
 import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
+import { TripRouteScreen } from './components/TripRouteScreen';
 
 // 1. Thêm 'mapScreen' vào AppState
-type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'tripManageDetail' | 'tripAddPlace' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
+type AppState = 'starter' | 'auth' | 'main' | 'createTrip' | 'tripDetail' | 'tripManageDetail' | 'tripAddPlace' | 'tripRoute' | 'placesExplore' | 'placeDetail' | 'reviewPlace' | 'mapScreen' | 'forum';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
@@ -149,6 +150,7 @@ export default function App() {
           <TripItineraryManageScreen
             tripId={selectedTripId}
             onBack={() => setAppState('tripDetail')}
+            onOpenTripRoute={() => setAppState('tripRoute')}
             onAddPlace={(dayNumber) => {
               setSelectedTripDayNumber(dayNumber);
               setAppState('tripAddPlace');
@@ -173,6 +175,14 @@ export default function App() {
             dayNumber={selectedTripDayNumber}
             onBack={() => setAppState('tripManageDetail')}
             onPlaceAdded={() => setAppState('tripManageDetail')}
+          />
+        );
+
+      case 'tripRoute':
+        return (
+          <TripRouteScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripManageDetail')}
           />
         );
 

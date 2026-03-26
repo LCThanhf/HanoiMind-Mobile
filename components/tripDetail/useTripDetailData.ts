@@ -18,6 +18,8 @@ export interface TripManageStop {
   address?: string;
   image?: string;
   rating?: number;
+  lat?: number | null;
+  lng?: number | null;
   estimatedCost: number;
   startTimeLabel: string;
   endTimeLabel?: string;
@@ -130,6 +132,21 @@ const formatTimeLabel = (time: string | null | undefined, fallbackHour: number) 
   const parsed = new Date(time);
   if (Number.isNaN(parsed.getTime())) return `${String(8 + fallbackHour).padStart(2, '0')}:00`;
   return `${String(parsed.getHours()).padStart(2, '0')}:${String(parsed.getMinutes()).padStart(2, '0')}`;
+};
+
+const toCoordinates = (place: any) => {
+  const coords = place?.location?.coordinates;
+  if (!Array.isArray(coords) || coords.length < 2) {
+    return { lat: null, lng: null };
+  }
+
+  const lng = Number(coords[0]);
+  const lat = Number(coords[1]);
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return { lat: null, lng: null };
+  }
+
+  return { lat, lng };
 };
 
 const safeNameFromId = (id: string) => `User ${id.slice(-4).toUpperCase()}`;
@@ -278,19 +295,26 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
       const builtDayPlans: TripManageDay[] = (loadedJourney.days || []).map((day) => ({
         dayNumber: day.day_number,
         date: day.date,
-        stops: (day.stops || []).map((stop, index) => ({
-          id: stop._id,
-          placeId: stop.place_id,
-          title: placeMap.get(stop.place_id)?.name || `Địa điểm ${index + 1}`,
-          address: placeMap.get(stop.place_id)?.address,
-          image: placeMap.get(stop.place_id)?.images?.[0],
-          rating: placeMap.get(stop.place_id)?.rating,
-          estimatedCost: stop.estimated_cost || 0,
-          startTimeLabel: formatTimeLabel(stop.start_time, index),
-          endTimeLabel: formatTimeLabel(stop.end_time, index + 1),
-          durationLabel: toDurationLabel(stop.start_time, stop.end_time),
-          status: stop.status,
-        })),
+        stops: (day.stops || []).map((stop, index) => {
+          const place = placeMap.get(stop.place_id);
+          const { lat, lng } = toCoordinates(place);
+
+          return {
+            id: stop._id,
+            placeId: stop.place_id,
+            title: place?.name || `Địa điểm ${index + 1}`,
+            address: place?.address,
+            image: place?.images?.[0],
+            rating: place?.rating,
+            lat,
+            lng,
+            estimatedCost: stop.estimated_cost || 0,
+            startTimeLabel: formatTimeLabel(stop.start_time, index),
+            endTimeLabel: formatTimeLabel(stop.end_time, index + 1),
+            durationLabel: toDurationLabel(stop.start_time, stop.end_time),
+            status: stop.status,
+          };
+        }),
       }));
 
       const memberCount = Math.max(mappedMembers.length, loadedJourney.planned_members_count || 0, 1);

@@ -21,6 +21,7 @@ import { BottomTabBar, MainTab } from './BottomTabBar';
 interface TripItineraryManageScreenProps {
   tripId: string;
   onBack: () => void;
+  onOpenTripRoute: () => void;
   onAddPlace: (dayNumber: number) => void;
   onOpenPlaceDetail: (placeId: string) => void;
   activeTab: MainTab;
@@ -45,6 +46,7 @@ const moodBadgeLabelMap: Partial<Record<JourneyTag, string>> = {
 export const TripItineraryManageScreen = ({
   tripId,
   onBack,
+  onOpenTripRoute,
   onAddPlace,
   onOpenPlaceDetail,
   activeTab,
@@ -248,6 +250,22 @@ export const TripItineraryManageScreen = ({
                   <Text className="text-[12px] text-gray-600">Còn lại</Text>
                 </View>
               </View>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onOpenTripRoute}
+                className="items-center justify-center rounded-xl mt-3"
+                style={{
+                  height: 46,
+                  backgroundColor: '#EEF6FF',
+                  borderWidth: 1,
+                  borderColor: '#BFDBFE',
+                }}
+              >
+                <Text className="text-[14px]" style={{ color: '#1D4ED8', fontWeight: '700' }}>
+                  Xem lộ trình tham quan
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {!!error && (
@@ -260,12 +278,9 @@ export const TripItineraryManageScreen = ({
 
             {dayPlans.map((day) => (
               <View key={day.dayNumber} className="px-5 mb-5">
-                <View className="flex-row items-center justify-between mb-3">
+                <View className="mb-3">
                   <Text className="text-[26px] text-gray-900" style={{ fontWeight: '700' }}>
                     NGÀY {day.dayNumber}
-                  </Text>
-                  <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                    Xem lộ trình tham quan
                   </Text>
                 </View>
 

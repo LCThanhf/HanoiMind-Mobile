@@ -199,7 +199,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     </Svg>
                 </TouchableOpacity>
 
-                <Text style={{ fontSize: 24, fontWeight: '700', color: '#F472B6' }}>Notifications</Text>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: '#F472B6' }}>Thông báo</Text>
                 <View style={{ width: 32 }} />
             </View>
 

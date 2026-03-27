@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Path } from 'react-native-svg';
 
 import ChatService from '../../services/chatService/chat.service';
 import { JourneyService } from '../../services/journeyService/journey.service';
@@ -281,15 +282,36 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top, paddingBottom: 70 }}>
-      <View className="px-5 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-gray-900 mb-4 text-center">Chat</Text>
-        
-        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5 mb-2">
+    <View className="flex-1 bg-[#F5F6FA]" style={{ paddingTop: insets.top, paddingBottom: 70 }}>
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingTop: 6,
+          paddingBottom: 10,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ fontSize: 24, fontWeight: '700', color: '#16A34A' }}>Tin nhắn</Text>
+      </View>
+
+      <View className="px-5 mb-4">
+        <View
+          className="flex-row items-center px-4 rounded-2xl"
+          style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 46 }}
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 10 }}>
+            <Path
+              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+              stroke="#9CA3AF"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
           <TextInput
             placeholder="Tìm kiếm người dùng..."
             placeholderTextColor="#9CA3AF"
-            className="flex-1 ml-2 text-base text-gray-800 p-0"
+            style={{ flex: 1, fontSize: 14, color: '#111827' }}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"

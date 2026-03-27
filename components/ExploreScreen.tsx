@@ -135,40 +135,18 @@ export const ExploreScreen = ({
             <View
                 style={{
                     paddingHorizontal: 16,
-                    paddingTop: 6,
-                    paddingBottom: 10,
+                    paddingTop: 8,
+                    paddingBottom: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E7EB',
+                    backgroundColor: '#F5F6FA',
                     alignItems: 'center',
                 }}
             >
                 <Text style={{ fontSize: 24, fontWeight: '700', color: '#2B8EF0' }}>Khám phá</Text>
             </View>
 
-            {/* Search Bar */}
-            <View className="px-5 mb-4">
-                <View
-                    className="flex-row items-center px-4 rounded-2xl"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 46 }}
-                >
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 10 }}>
-                        <Path
-                            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-                            stroke="#9CA3AF"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                    <TextInput
-                        value={searchText}
-                        onChangeText={setSearchText}
-                        placeholder="Tìm địa điểm..."
-                        placeholderTextColor="#9CA3AF"
-                        style={{ flex: 1, fontSize: 14, color: '#111827' }}
-                    />
-                </View>
-            </View>
-
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90 }}>
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90, paddingTop: 16 }}>
 
                 {/* ================= KHÁM PHÁ ĐỊA ĐIỂM ================= */}
                 <View

@@ -347,8 +347,11 @@ export const HomeScreen = ({
                 <View className="mb-6">
                     <View className="flex-row items-center justify-between px-5 mb-3">
                         <Text className="text-gray-900 text-[18px] font-bold">Khám phá địa điểm</Text>
-                        <TouchableOpacity className="bg-[#2B8EF0] px-3 py-1.5 rounded-lg">
-                            <Text className="text-white text-[13px] font-semibold">Xem thêm</Text>
+                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
+                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
+                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
+                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
                         </TouchableOpacity>
                     </View>
 
@@ -423,8 +426,11 @@ export const HomeScreen = ({
                 <View className="mb-6">
                     <View className="flex-row items-center justify-between px-5 mb-3">
                         <Text className="text-gray-900 text-[18px] font-bold">Tham gia tour</Text>
-                        <TouchableOpacity className="bg-[#2B8EF0] px-3 py-1.5 rounded-lg">
-                            <Text className="text-white text-[13px] font-semibold">Xem thêm</Text>
+                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
+                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
+                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
+                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
                         </TouchableOpacity>
                     </View>
 
@@ -451,7 +457,7 @@ export const HomeScreen = ({
                             <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" className="mr-2">
                                 <Path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </Svg>
-                            <Text className="flex-1 text-[14px] text-gray-500 py-1">Nhập tên hoặc Mã mời...</Text>
+                            <Text className="flex-1 text-[14px] text-gray-500 py-1 ml-2">Nhập tên hoặc Mã mời...</Text>
                         </View>
                     </View>
 
@@ -496,8 +502,11 @@ export const HomeScreen = ({
                 <View className="px-5 mb-8">
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-gray-900 text-[18px] font-bold">Chuyến đi của bạn</Text>
-                        <TouchableOpacity className="bg-[#2B8EF0] px-3 py-1.5 rounded-lg">
-                            <Text className="text-white text-[13px] font-semibold">Xem thêm</Text>
+                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
+                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
+                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
+                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
                         </TouchableOpacity>
                     </View>
 
@@ -592,8 +601,11 @@ export const HomeScreen = ({
                             <View className="p-3 items-center">
                                 <Text className="text-gray-800 text-[16px] font-bold text-center">Đánh giá địa điểm</Text>
                                 <Text className="text-gray-500 text-[12px] text-center mt-1">Để lại đánh giá của bạn sau mỗi chuyến đi</Text>
-                                <TouchableOpacity className="mt-3 bg-[#2B8EF0] px-5 py-2 rounded-lg">
-                                    <Text className="text-white text-[13px] font-bold">Xem thêm</Text>
+                                <TouchableOpacity activeOpacity={0.7} className="mt-3 flex-row items-center">
+                                    <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
+                                    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
+                                        <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </Svg>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -606,8 +618,11 @@ export const HomeScreen = ({
                             <View className="p-3 items-center">
                                 <Text className="text-gray-800 text-[16px] font-bold text-center">Cộng đồng</Text>
                                 <Text className="text-gray-500 text-[12px] text-center mt-1">Tham gia cộng đồng những người yêu thích du lịch</Text>
-                                <TouchableOpacity className="mt-3 bg-[#2B8EF0] px-5 py-2 rounded-lg">
-                                    <Text className="text-white text-[13px] font-bold">Xem thêm</Text>
+                                <TouchableOpacity activeOpacity={0.7} className="mt-3 flex-row items-center">
+                                    <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
+                                    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
+                                        <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </Svg>
                                 </TouchableOpacity>
                             </View>
                         </View>

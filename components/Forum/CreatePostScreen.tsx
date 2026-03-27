@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, ScrollView } from 'react-native';
 import { Plus, Globe, Users, Lock } from 'lucide-react-native';
 import { Button, ScreenHeader, SelectableCard } from '../shared';
 
@@ -21,14 +21,14 @@ export const CreatePostScreen = () => {
         <View className="mt-6">
           <Text className="font-bold mb-3"># Hashtags</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-            <TouchableOpacity className="bg-primary-soft px-4 py-2 rounded-full mr-2 flex-row items-center border border-primary-border">
+            <Button className="bg-primary-soft px-4 py-2 rounded-full mr-2 flex-row items-center border border-primary-border">
               <Text className="text-primary-strong mr-1">#Hanoi</Text>
               <Text className="text-primary-strong">×</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="bg-gray-100 px-4 py-2 rounded-full flex-row items-center">
+            </Button>
+            <Button className="bg-gray-100 px-4 py-2 rounded-full flex-row items-center">
               <Plus size={16} color="#666" />
               <Text className="ml-1 text-gray-600">Thêm</Text>
-            </TouchableOpacity>
+            </Button>
           </ScrollView>
         </View>
 

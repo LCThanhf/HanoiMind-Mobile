@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
   ActivityIndicator,
   Alert
@@ -10,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
-import { AvatarCircle, ListActionRow } from './shared';
+import { Button, AvatarCircle, ListActionRow } from './shared';
 
 // Import Service và Type
 import { UsersService } from '../services/userService/user.service';
@@ -125,7 +124,7 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
           </Text>
           <Text className="mt-1 text-[16px] text-gray-500">{user?.email}</Text>
 
-          <TouchableOpacity
+          <Button
             activeOpacity={0.8}
             className="mt-4 px-8 py-3 rounded-xl"
             style={{ backgroundColor: '#D7E9F7' }}
@@ -133,7 +132,7 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
             <Text className="text-[15px] font-bold" style={{ color: '#2B8EF0' }}>
               Chỉnh sửa hồ sơ
             </Text>
-          </TouchableOpacity>
+          </Button>
         </View>
 
         {/* Cụm chức năng */}
@@ -159,7 +158,7 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
 
         {/* Nút Đăng xuất */}
         <View className="px-5 mt-16">
-          <TouchableOpacity
+          <Button
             onPress={handleLogoutPress}
             activeOpacity={0.85}
             className="items-center justify-center rounded-2xl py-4"
@@ -168,7 +167,7 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
             <Text className="text-[#EF4444] font-bold text-[16px]">
               Đăng xuất
             </Text>
-          </TouchableOpacity>
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>

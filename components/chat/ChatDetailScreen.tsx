@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator, Keyboard, Image, Alert, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator, Keyboard, Image, Alert, Modal, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatService from '../../services/chatService/chat.service';
 import { UsersService } from '../../services/userService/user.service';
-import { AvatarCircle } from '../shared';
+import { Button, AvatarCircle } from '../shared';
 
 // 👉 Đảm bảo import đúng đường dẫn đến file utils của bạn
 import { processImage, upImageToCloudinary, getCdnUrl } from '../../utils/uploadImage';
@@ -265,7 +265,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     if (isPoll && item.metadata) {
       return (
         <View className="w-full items-center my-4 px-4">
-          <TouchableOpacity
+          <Button
             activeOpacity={0.9}
             onLongPress={() => !isSending && setSelectedMessageId(isSelected ? null : msgId)}
             className="w-full max-w-[320px] bg-white rounded-3xl p-4 border border-gray-100"
@@ -285,7 +285,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
               const isVoted = opt.voters?.includes(currentUserId);
               const totalVotes = opt.voters?.length || 0;
               return (
-                <TouchableOpacity
+                <Button
                   key={opt.id}
                   onPress={() => handleVotePoll(msgId, opt.id)}
                   className={`flex-row items-center px-4 py-3.5 mb-2 rounded-2xl border ${isVoted ? 'bg-primary-soft border-primary-border' : 'bg-gray-50 border-gray-100'
@@ -296,7 +296,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                   </View>
                   <Text className={`flex-1 text-[14px] ${isVoted ? 'font-semibold text-info-strong' : 'text-gray-700'}`}>{opt.text}</Text>
                   {totalVotes > 0 && <Text className="text-[12px] font-bold text-gray-500 ml-2">{totalVotes}</Text>}
-                </TouchableOpacity>
+                </Button>
               );
             })}
 
@@ -306,12 +306,12 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                 {item.reactions.length > 1 && <Text className="text-[10px] font-bold text-gray-500 ml-1">{item.reactions.length}</Text>}
               </View>
             )}
-          </TouchableOpacity>
+          </Button>
 
           {isSelected && (
             <View className="flex-row bg-white rounded-full px-3 py-1.5 mt-4 z-10 shadow-sm border border-gray-50">
               {EMOJI_LIST.map((emoji) => (
-                <TouchableOpacity key={emoji} onPress={() => handleReact(emoji, msgId)} className="mx-1.5"><Text style={{ fontSize: 26 }}>{emoji}</Text></TouchableOpacity>
+                <Button key={emoji} onPress={() => handleReact(emoji, msgId)} className="mx-1.5"><Text style={{ fontSize: 26 }}>{emoji}</Text></Button>
               ))}
             </View>
           )}
@@ -336,7 +336,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             </View>
           )}
 
-          <TouchableOpacity
+          <Button
             activeOpacity={0.8}
             onLongPress={() => { if (!isSending) setSelectedMessageId(isSelected ? null : msgId); }}
             className={`relative ${isImage ? 'p-1' : 'px-4 py-2.5'} rounded-2xl ${isMe ? 'bg-[#2B8EF0]' : 'bg-gray-100'}`}
@@ -363,13 +363,13 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                 {item.reactions.length > 1 && <Text className="text-[10px] font-bold text-gray-500 ml-1">{item.reactions.length}</Text>}
               </View>
             )}
-          </TouchableOpacity>
+          </Button>
         </View>
 
         {isSelected && (
           <View className={`flex-row bg-white rounded-full px-3 py-1.5 mt-2 z-10 shadow-sm border border-gray-50 ${isMe ? 'mr-4' : 'ml-14'}`}>
             {EMOJI_LIST.map((emoji) => (
-              <TouchableOpacity key={emoji} onPress={() => handleReact(emoji, msgId)} className="mx-1.5"><Text style={{ fontSize: 26 }}>{emoji}</Text></TouchableOpacity>
+              <Button key={emoji} onPress={() => handleReact(emoji, msgId)} className="mx-1.5"><Text style={{ fontSize: 26 }}>{emoji}</Text></Button>
             ))}
           </View>
         )}
@@ -382,16 +382,16 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
       {/* Header */}
       <View style={{ paddingTop: insets.top }} className="bg-white border-b border-gray-100 flex-row items-center justify-between px-2 pb-3 shadow-sm z-10">
         <View className="flex-row items-center flex-1">
-          <TouchableOpacity onPress={onBack} className="p-2">
+          <Button onPress={onBack} className="p-2">
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none"><Path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg>
-          </TouchableOpacity>
+          </Button>
           <Text className="text-lg font-bold ml-2 text-gray-900" numberOfLines={1}>{chatName}</Text>
         </View>
 
         {onOpenSettings && (
-          <TouchableOpacity onPress={onOpenSettings} className="p-2 mr-1">
+          <Button onPress={onOpenSettings} className="p-2 mr-1">
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#2B8EF0" strokeWidth="2"><Circle cx="12" cy="12" r="10" /><Path d="M12 16v-4" /><Path d="M12 8h.01" /></Svg>
-          </TouchableOpacity>
+          </Button>
         )}
       </View>
 
@@ -418,20 +418,20 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
         {/* Nút Tools: Image & Poll */}
         <View className="flex-row mr-2 items-center">
-          <TouchableOpacity onPress={handlePickImage} className="p-1.5 mr-1 rounded-full">
+          <Button onPress={handlePickImage} className="p-1.5 mr-1 rounded-full">
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <Rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
               <Circle cx="8.5" cy="8.5" r="1.5" />
               <Path d="M21 15l-5-5L5 21" />
             </Svg>
-          </TouchableOpacity>
+          </Button>
 
           {isGroup && (
-            <TouchableOpacity onPress={() => setIsCreatePollVisible(true)} className="p-1.5 rounded-full">
+            <Button onPress={() => setIsCreatePollVisible(true)} className="p-1.5 rounded-full">
               <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <Path d="M18 20V10" /><Path d="M12 20V4" /><Path d="M6 20v-6" />
               </Svg>
-            </TouchableOpacity>
+            </Button>
           )}
         </View>
 
@@ -440,22 +440,22 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
           <TextInput value={inputText} onChangeText={setInputText} onFocus={() => setSelectedMessageId(null)} placeholder="Nhắn tin..." placeholderTextColor="#9CA3AF" className="flex-1 text-[16px] text-gray-900 py-2.5" multiline maxLength={500} />
         </View>
 
-        <TouchableOpacity onPress={handleSend} disabled={!inputText.trim()} className={`ml-2 w-10 h-10 rounded-full items-center justify-center ${inputText.trim() ? 'bg-[#2B8EF0]' : 'bg-gray-200'}`}>
+        <Button onPress={handleSend} disabled={!inputText.trim()} className={`ml-2 w-10 h-10 rounded-full items-center justify-center ${inputText.trim() ? 'bg-[#2B8EF0]' : 'bg-gray-200'}`}>
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none"><Path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke={inputText.trim() ? 'white' : '#9CA3AF'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg>
-        </TouchableOpacity>
+        </Button>
       </View>
 
       {/* 👉 MODAL TẠO POLL */}
       <Modal visible={isCreatePollVisible} transparent={true} animationType="slide" onRequestClose={() => setIsCreatePollVisible(false)}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <TouchableOpacity activeOpacity={1} onPress={() => Keyboard.dismiss()} className="flex-1 bg-black/40 justify-end">
+          <Button activeOpacity={1} onPress={() => Keyboard.dismiss()} className="flex-1 bg-black/40 justify-end">
             <View className="bg-white rounded-t-3xl pt-5 px-5" style={{ paddingBottom: safeBottom + 20, maxHeight: '85%' }}>
 
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900">Tạo bình chọn</Text>
-                <TouchableOpacity onPress={() => setIsCreatePollVisible(false)} className="p-1.5 bg-gray-100 rounded-full">
+                <Button onPress={() => setIsCreatePollVisible(false)} className="p-1.5 bg-gray-100 rounded-full">
                   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><Line x1="18" y1="6" x2="6" y2="18" /><Line x1="6" y1="6" x2="18" y2="18" /></Svg>
-                </TouchableOpacity>
+                </Button>
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -466,25 +466,25 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                 {pollOptions.map((opt, index) => (
                   <View key={index} className="flex-row items-center bg-white border border-gray-200 rounded-xl mb-3 pr-2 overflow-hidden shadow-sm">
                     <TextInput value={opt} onChangeText={(txt) => handleUpdatePollOption(txt, index)} placeholder={`Lựa chọn ${index + 1}`} className="flex-1 py-3.5 px-4 text-[16px] text-gray-900" />
-                    <TouchableOpacity onPress={() => handleRemovePollOption(index)} className="p-3">
+                    <Button onPress={() => handleRemovePollOption(index)} className="p-3">
                       <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></Svg>
-                    </TouchableOpacity>
+                    </Button>
                   </View>
                 ))}
 
-                <TouchableOpacity onPress={handleAddPollOption} className="flex-row items-center py-3 mb-6 mt-1">
+                <Button onPress={handleAddPollOption} className="flex-row items-center py-3 mb-6 mt-1">
                   <View className="w-8 h-8 rounded-full bg-primary-soft items-center justify-center mr-3">
                     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#2B8EF0" strokeWidth="2.5"><Line x1="12" y1="5" x2="12" y2="19" /><Line x1="5" y1="12" x2="19" y2="12" /></Svg>
                   </View>
                   <Text className="text-[#2B8EF0] font-bold text-[15px]">Thêm lựa chọn</Text>
-                </TouchableOpacity>
+                </Button>
 
-                <TouchableOpacity onPress={handleSendPoll} className="bg-[#2B8EF0] rounded-xl py-4 items-center shadow-sm">
+                <Button onPress={handleSendPoll} className="bg-[#2B8EF0] rounded-xl py-4 items-center shadow-sm">
                   <Text className="text-white font-bold text-[16px]">Gửi bình chọn</Text>
-                </TouchableOpacity>
+                </Button>
               </ScrollView>
             </View>
-          </TouchableOpacity>
+          </Button>
         </KeyboardAvoidingView>
       </Modal>
 

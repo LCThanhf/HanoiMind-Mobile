@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
 import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn component Tab
@@ -128,17 +128,17 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
     <SafeAreaView className="flex-1 bg-gray-50 pt-12">
       {/* 1. HEADER: Greeting & Icons */}
       <View className="flex-row justify-between items-center px-4 py-3 bg-white">
-        <TouchableOpacity onPress={onBack} className="p-1">
+        <Button onPress={onBack} className="p-1">
           <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
+        </Button>
         <View className="flex-1 ml-3">
           <Text className="text-primary font-bold text-xl">Chào buổi sáng, {userName}!👋</Text>
           <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
         </View>
         <View className="flex-row space-x-3">
-          <TouchableOpacity className="p-2 bg-gray-100 rounded-full">
+          <Button className="p-2 bg-gray-100 rounded-full">
             <Bell size={20} color="#333" />
-          </TouchableOpacity>
+          </Button>
         </View>
       </View>
 
@@ -193,21 +193,21 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
           ListFooterComponent={
             <View className="py-10 items-center">
               <Text className="text-gray-400 text-xs">Bạn đã xem hết tin mới nhất rồi!</Text>
-              <TouchableOpacity className="mt-2">
+              <Button className="mt-2">
                 <Text className="text-primary font-bold">Quay lại đầu trang</Text>
-              </TouchableOpacity>
+              </Button>
             </View>
           }
         />
       )}
 
       {/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
-      <TouchableOpacity
+      <Button
         className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
         onPress={handleAddPostWithImage}
       >
         <Plus size={28} color="white" />
-      </TouchableOpacity>
+      </Button>
 
       {/* 6. Modal chờ đợi khi đang upload ảnh */}
       <Modal transparent visible={isUploading} animationType="fade">

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, TextInput, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
 import { AppHeader } from './AppHeader';
-import { SectionHeader } from './shared';
+import { Button, SectionHeader } from './shared';
 import { PlaceCard, TripCard, getStatusBadge } from './cards';
 
 // API Imports
@@ -272,7 +272,7 @@ export const HomeScreen = ({
 
                 {/* Tao ke hoach moi */}
                 <View className="px-5 mb-8">
-                    <TouchableOpacity
+                    <Button
                         className="bg-[#EBF5FF] rounded-2xl p-4 flex-row items-center"
                         activeOpacity={0.8}
                         onPress={onCreateTrip}
@@ -312,7 +312,7 @@ export const HomeScreen = ({
                                 strokeLinejoin="round"
                             />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
 
                 {/* Khám phá địa điểm Section */}
@@ -333,7 +333,7 @@ export const HomeScreen = ({
                         {PLACE_FILTERS.map(chip => {
                             const isActive = activeFilter === chip;
                             return (
-                                <TouchableOpacity
+                                <Button
                                     key={chip}
                                     activeOpacity={0.8}
                                     onPress={() => setActiveFilter(chip)}
@@ -342,7 +342,7 @@ export const HomeScreen = ({
                                     <Text className={`text-[13px] ${isActive ? 'text-[#16A34A] font-bold' : 'text-gray-600 font-medium'}`}>
                                         {chip}
                                     </Text>
-                                </TouchableOpacity>
+                                </Button>
                             );
                         })}
                     </ScrollView>
@@ -390,7 +390,7 @@ export const HomeScreen = ({
                         {TOUR_FILTERS.map((chip) => {
                             const isActive = chip === activeTourFilter;
                             return (
-                                <TouchableOpacity
+                                <Button
                                     key={chip}
                                     activeOpacity={0.8}
                                     onPress={() => setActiveTourFilter(chip)}
@@ -399,7 +399,7 @@ export const HomeScreen = ({
                                     <Text className={`text-[13px] ${isActive ? 'text-[#16A34A] font-bold' : 'text-gray-600 font-medium'}`}>
                                         {chip}
                                     </Text>
-                                </TouchableOpacity>
+                                </Button>
                             );
                         })}
                     </ScrollView>
@@ -415,7 +415,7 @@ export const HomeScreen = ({
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pl-5" contentContainerStyle={{ paddingRight: 20 }}>
                         {joinTours.map((tour) => (
-                            <TouchableOpacity key={tour._id} activeOpacity={0.85} className="w-[210px] mr-3 bg-white rounded-[20px] p-2.5 border border-gray-200">
+                            <Button key={tour._id} activeOpacity={0.85} className="w-[210px] mr-3 bg-white rounded-[20px] p-2.5 border border-gray-200">
                                 <Image source={{ uri: tour.avatar || 'https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=400&q=80' }} className="w-full h-[110px] rounded-xl" />
                                 <Text className="text-gray-900 text-[18px] font-bold mt-2" numberOfLines={1}>{tour.name}</Text>
                                 <View className="flex-row items-center mt-1 justify-between">
@@ -436,11 +436,15 @@ export const HomeScreen = ({
 
                                 <View className="mt-2 flex-row items-center justify-between">
                                     <Text className="text-[#F59E0B] text-[18px] font-bold">{(tour.cost_per_person || 0).toLocaleString('vi-VN')}đ/người</Text>
-                                    <TouchableOpacity className="bg-[#2B8EF0] rounded-lg px-4 py-2" activeOpacity={0.85}>
-                                        <Text className="text-white text-[13px] font-bold">Tham gia</Text>
-                                    </TouchableOpacity>
+                                    <Button
+                                        label="Tham gia"
+                                        size="sm"
+                                        fullWidth={false}
+                                        onPress={() => onTripClick?.(tour._id)}
+                                        style={{ borderRadius: 8 }}
+                                    />
                                 </View>
-                            </TouchableOpacity>
+                            </Button>
                         ))}
                         {joinTours.length === 0 && (
                             <View className="w-[220px] bg-white rounded-2xl p-4 border border-gray-200">
@@ -475,7 +479,7 @@ export const HomeScreen = ({
 
                 {/* Diễn đàn Section */}
                 <View className="px-5 mb-8">
-                    <TouchableOpacity onPress={onOpenForum} className="bg-white rounded-2xl p-4 border border-gray-200" activeOpacity={0.8}>
+                    <Button onPress={onOpenForum} className="bg-white rounded-2xl p-4 border border-gray-200" activeOpacity={0.8}>
                         <View className="flex-row items-center">
                             <View className="mr-3">
                                 <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -490,7 +494,7 @@ export const HomeScreen = ({
                                 <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </Svg>
                         </View>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
 
                 {/* Khác */}
@@ -513,12 +517,15 @@ export const HomeScreen = ({
                             <View className="p-3 items-center">
                                 <Text className="text-gray-800 text-[16px] font-bold text-center">Đánh giá địa điểm</Text>
                                 <Text className="text-gray-500 text-[12px] text-center mt-1">Để lại đánh giá của bạn sau mỗi chuyến đi</Text>
-                                <TouchableOpacity activeOpacity={0.7} className="mt-3 flex-row items-center">
-                                    <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
-                                    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
-                                        <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </Svg>
-                                </TouchableOpacity>
+                                <View className="mt-3">
+                                    <Button
+                                        label="Xem thêm"
+                                        variant="link"
+                                        size="sm"
+                                        onPress={() => onTabChange?.('explore')}
+                                        showChevron
+                                    />
+                                </View>
                             </View>
                         </View>
 
@@ -530,12 +537,15 @@ export const HomeScreen = ({
                             <View className="p-3 items-center">
                                 <Text className="text-gray-800 text-[16px] font-bold text-center">Cộng đồng</Text>
                                 <Text className="text-gray-500 text-[12px] text-center mt-1">Tham gia cộng đồng những người yêu thích du lịch</Text>
-                                <TouchableOpacity activeOpacity={0.7} className="mt-3 flex-row items-center">
-                                    <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem thêm</Text>
-                                    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
-                                        <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </Svg>
-                                </TouchableOpacity>
+                                <View className="mt-3">
+                                    <Button
+                                        label="Xem thêm"
+                                        variant="link"
+                                        size="sm"
+                                        onPress={onOpenForum || (() => { })}
+                                        showChevron
+                                    />
+                                </View>
                             </View>
                         </View>
                     </View>

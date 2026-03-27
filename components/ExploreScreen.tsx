@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
-import { CardContainer, SectionHeader, StarRating, StatItemView } from './shared';
+import { Button, CardContainer, SectionHeader, StarRating, StatItemView } from './shared';
 
 // --- IMPORT SERVICE & TYPES ---
 import { PlacesService } from '../services/placeService/place.service';
@@ -150,7 +150,7 @@ export const ExploreScreen = ({
                             </View>
                         ) : (
                             places.map((place) => (
-                                <TouchableOpacity
+                                <Button
                                     key={place._id}
                                     activeOpacity={0.8}
                                     onPress={() => onPlaceClick(place._id)}
@@ -187,7 +187,7 @@ export const ExploreScreen = ({
                                             </View>
                                         </View>
                                     </View>
-                                </TouchableOpacity>
+                                </Button>
                             ))
                         )}
                     </View>
@@ -202,7 +202,7 @@ export const ExploreScreen = ({
                             <ActivityIndicator size="small" color="#2B8EF0" />
                         </View>
                     ) : forumPosts.length === 0 ? (
-                        <TouchableOpacity
+                        <Button
                             activeOpacity={0.75}
                             onPress={onViewForum}
                             style={{ paddingHorizontal: 16, paddingVertical: 12 }}
@@ -210,10 +210,10 @@ export const ExploreScreen = ({
                             <Text style={{ fontSize: 13, color: '#6B7280' }}>
                                 Chưa có bài viết gần đây. Chạm để vào diễn đàn.
                             </Text>
-                        </TouchableOpacity>
+                        </Button>
                     ) : (
                         forumPosts.map((post, index) => (
-                            <TouchableOpacity
+                            <Button
                                 key={post._id}
                                 activeOpacity={0.75}
                                 onPress={onViewForum}
@@ -272,7 +272,7 @@ export const ExploreScreen = ({
                                         valueStyle={{ fontSize: 13 }}
                                     />
                                 </View>
-                            </TouchableOpacity>
+                            </Button>
                         ))
                     )}
                 </CardContainer>
@@ -282,7 +282,7 @@ export const ExploreScreen = ({
                     <SectionHeader title="Đánh giá địa điểm" actionLabel="Xem tất cả" />
 
                     {reviews.map((review, index) => (
-                        <TouchableOpacity
+                        <Button
                             key={review.id}
                             activeOpacity={0.75}
                             style={{
@@ -306,7 +306,7 @@ export const ExploreScreen = ({
                             <Text style={{ fontSize: 13, color: '#374151', fontWeight: '400', lineHeight: 19 }}>
                                 {review.content}
                             </Text>
-                        </TouchableOpacity>
+                        </Button>
                     ))}
                 </CardContainer>
 

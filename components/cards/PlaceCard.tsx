@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Place } from '../../services/placeService/place.type';
-import { StarRating, PillBadge, CardContainer } from '../shared';
+import { Button, StarRating, PillBadge, CardContainer } from '../shared';
 
 interface PlaceCardProps {
   place: Place;
@@ -18,7 +18,7 @@ export const PlaceCard = ({ place, layout = 'vertical', onPress, style }: PlaceC
 
   if (layout === 'horizontal') {
     return (
-      <TouchableOpacity onPress={() => onPress?.(place._id)} style={[styles.cardPress, style]} activeOpacity={0.8}>
+      <Button onPress={() => onPress?.(place._id)} style={[styles.cardPress, style]} activeOpacity={0.8}>
         <CardContainer style={styles.cardContainerHorizontal}>
           <Image source={{ uri: imageUrl }} style={styles.imageHorizontal} />
           <View style={styles.contentHorizontal}>
@@ -36,12 +36,12 @@ export const PlaceCard = ({ place, layout = 'vertical', onPress, style }: PlaceC
             />
           </View>
         </CardContainer>
-      </TouchableOpacity>
+      </Button>
     );
   }
 
   return (
-    <TouchableOpacity
+    <Button
       style={[styles.cardVertical, style]}
       activeOpacity={0.85}
       onPress={() => onPress?.(place._id)}
@@ -65,7 +65,7 @@ export const PlaceCard = ({ place, layout = 'vertical', onPress, style }: PlaceC
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 };
 

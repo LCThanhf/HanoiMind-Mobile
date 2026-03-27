@@ -1,10 +1,10 @@
 // src/components/forum/ForumPostCard.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, Image, ImageBackground, ActivityIndicator } from 'react-native';
 import { MapPin, MessageCircle, Eye, Heart, Navigation } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
-import { StatItemView } from '../shared';
+import { Button, StatItemView } from '../shared';
 
 interface ForumPostCardProps {
   post?: ForumPost;
@@ -56,7 +56,7 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
     return (
       <View className="m-4 p-6 bg-white rounded-3xl border border-red-100 items-center">
         <Text className="text-red-500 mb-2">{error}</Text>
-        <TouchableOpacity
+        <Button
           className="px-4 py-2 bg-primary rounded-full"
           onPress={() => {
             setError('');
@@ -73,7 +73,7 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
           }}
         >
           <Text className="text-white">Tải lại</Text>
-        </TouchableOpacity>
+        </Button>
       </View>
     );
   }
@@ -133,9 +133,9 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
             <StatItemView icon={<MessageCircle size={16} color="#666" />} value={post.stats.comments} />
             <StatItemView icon={<Eye size={16} color="#666" />} value={post.stats.views} />
           </View>
-          <TouchableOpacity>
+          <Button>
             <Text className="text-primary font-bold text-xs">Chi tiết</Text>
-          </TouchableOpacity>
+          </Button>
         </View>
       </View>
     </View>

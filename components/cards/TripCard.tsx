@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Journey } from '../../services/journeyService/journey.type';
+import { Button } from '../shared';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -76,7 +77,7 @@ export const TripCard = ({ trip, onPress, style, variant = 'detailed' }: TripCar
   if (variant === 'compact') {
     // Used in HomeScreen
     return (
-      <TouchableOpacity
+      <Button
         key={trip._id}
         style={[styles.containerCompact, style]}
         activeOpacity={0.88}
@@ -91,13 +92,13 @@ export const TripCard = ({ trip, onPress, style, variant = 'detailed' }: TripCar
         <View style={styles.contentCompact}>
           <View style={styles.rowBetween}>
             <Text style={styles.titleCompact} numberOfLines={2}>{trip.name}</Text>
-            <TouchableOpacity>
+            <Button>
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Circle cx="5" cy="12" r="1.5" fill="#9CA3AF" />
                 <Circle cx="12" cy="12" r="1.5" fill="#9CA3AF" />
                 <Circle cx="19" cy="12" r="1.5" fill="#9CA3AF" />
               </Svg>
-            </TouchableOpacity>
+            </Button>
           </View>
           <View>
             <View style={styles.rowCenter}>
@@ -121,13 +122,13 @@ export const TripCard = ({ trip, onPress, style, variant = 'detailed' }: TripCar
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Button>
     );
   }
 
   // Used in TripsScreen (detailed variant)
   return (
-    <TouchableOpacity
+    <Button
       key={trip._id}
       activeOpacity={0.88}
       onPress={() => onPress?.(trip._id)}
@@ -178,7 +179,7 @@ export const TripCard = ({ trip, onPress, style, variant = 'detailed' }: TripCar
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 };
 

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
-import { AvatarCircle } from '../shared';
+import { Button, AvatarCircle } from '../shared';
 
 import ChatService from '../../services/chatService/chat.service';
 import { JourneyService } from '../../services/journeyService/journey.service';
@@ -36,7 +36,7 @@ const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any
           const displayName = item.fullName || item.name || 'User';
 
           return (
-            <TouchableOpacity
+            <Button
               className="items-center mr-6"
               activeOpacity={0.8}
               onPress={() => {
@@ -64,7 +64,7 @@ const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any
               <Text className="text-xs font-medium text-gray-800 mt-2" numberOfLines={1} style={{ maxWidth: 64 }}>
                 {displayName.split(' ')[displayName.split(' ').length - 1]}
               </Text>
-            </TouchableOpacity>
+            </Button>
           );
         }}
       />
@@ -120,7 +120,7 @@ const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUser
   const timeString = item.updated_at ? new Date(item.updated_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
 
   return (
-    <TouchableOpacity
+    <Button
       activeOpacity={0.7}
       onPress={() => roomId && onChatClick(roomId, chatName)}
       className="flex-row items-center p-4 border-b border-gray-50 bg-white mx-2 rounded-2xl mb-1"
@@ -135,7 +135,7 @@ const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUser
         </View>
         <Text className="text-sm text-gray-500" numberOfLines={1}>{lastMessage}</Text>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 };
 
@@ -146,7 +146,7 @@ const SearchUserItem = ({ user, onStartChat }: { user: any, onStartChat: Functio
   const avatarUrl = user.avatar || user.profile_picture;
 
   return (
-    <TouchableOpacity
+    <Button
       activeOpacity={0.7}
       onPress={() => onStartChat(user)}
       className="flex-row items-center p-4 border-b border-gray-100 bg-white"
@@ -160,7 +160,7 @@ const SearchUserItem = ({ user, onStartChat }: { user: any, onStartChat: Functio
           <Text className="text-sm text-gray-500 mt-1" numberOfLines={1}>{user.bio}</Text>
         ) : null}
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 };
 
@@ -324,9 +324,9 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
             autoCorrect={false}
           />
           {isSearching && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} className="p-1">
+            <Button onPress={() => setSearchQuery('')} className="p-1">
               <Text className="text-gray-400 text-base font-bold">✕</Text>
-            </TouchableOpacity>
+            </Button>
           )}
         </View>
       </View>

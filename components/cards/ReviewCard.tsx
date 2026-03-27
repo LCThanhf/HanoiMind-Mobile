@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Review } from '../../services/reviewService/review.type';
+import { Button } from '../shared';
 
 export const formatRelativeTime = (dateString: string) => {
   if (!dateString) return '';
@@ -64,7 +65,7 @@ export const ReviewCard = ({
   const reviewId = (review as any)._id || (review as any).id || '';
 
   return (
-    <TouchableOpacity
+    <Button
       key={reviewId}
       activeOpacity={isMine ? 0.7 : 1}
       onPress={() => { if (isMine && onPress) onPress(review); }}
@@ -143,7 +144,7 @@ export const ReviewCard = ({
           </Text>
           {!isMine && onReact && (
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity
+              <Button
                 onPress={() => onReact(review, 'LIKE')}
                 style={{
                   flexDirection: 'row',
@@ -155,8 +156,8 @@ export const ReviewCard = ({
                 }}
               >
                 <Text style={{ fontSize: 14 }}>👍</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Button>
+              <Button
                 onPress={() => onReact(review, 'DISLIKE')}
                 style={{
                   flexDirection: 'row',
@@ -168,11 +169,11 @@ export const ReviewCard = ({
                 }}
               >
                 <Text style={{ fontSize: 14 }}>👎</Text>
-              </TouchableOpacity>
+              </Button>
             </View>
           )}
         </View>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 };

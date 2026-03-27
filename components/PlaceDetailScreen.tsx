@@ -3,7 +3,6 @@ import {
     View,
     Text,
     ScrollView,
-    TouchableOpacity,
     ActivityIndicator,
     Alert,
     Linking,
@@ -283,22 +282,22 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
     return (
         <View className="flex-1 bg-slate-50">
             <View className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 pt-12 pb-4">
-                <TouchableOpacity onPress={onBack} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
+                <Button onPress={onBack} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
                     <BackChevronIcon size={20} color="#111827" strokeWidth={2.5} />
-                </TouchableOpacity>
+                </Button>
 
                 <View className="flex-row gap-x-2">
-                    <TouchableOpacity onPress={handleShare} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
+                    <Button onPress={handleShare} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2">
                             <Path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
 
-                    <TouchableOpacity onPress={handleToggleFavorite} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
+                    <Button onPress={handleToggleFavorite} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
                         <Svg width={22} height={22} viewBox="0 0 24 24" fill={isFavorite ? '#EF4444' : 'none'} stroke={isFavorite ? '#EF4444' : '#111827'} strokeWidth="2">
                             <Path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             </View>
 
@@ -410,9 +409,9 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                                     </Text>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={handleOpenMap} className="bg-primary-soft px-3 py-1.5 rounded-full">
+                            <Button onPress={handleOpenMap} className="bg-primary-soft px-3 py-1.5 rounded-full">
                                 <Text className="text-primary-strong text-xs font-bold">Mở bản đồ</Text>
-                            </TouchableOpacity>
+                            </Button>
                         </View>
 
                         <View className="h-48 w-full rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative bg-slate-100">
@@ -431,10 +430,10 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                                 </View>
                             )}
 
-                            <TouchableOpacity onPress={handleOpenMap} className="absolute bottom-3 right-3 bg-white/95 px-3 py-2 rounded-xl shadow-md flex-row items-center border border-slate-100">
+                            <Button onPress={handleOpenMap} className="absolute bottom-3 right-3 bg-white/95 px-3 py-2 rounded-xl shadow-md flex-row items-center border border-slate-100">
                                 <ExternalLinkIcon />
                                 <Text className="text-[11px] font-bold text-primary-strong ml-1.5 uppercase">Xem chi tiết</Text>
-                            </TouchableOpacity>
+                            </Button>
                         </View>
                     </View>
 
@@ -487,10 +486,10 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     )}
 
                     <View className="bg-slate-50 p-5 rounded-3xl border border-slate-100 mb-6">
-                        <TouchableOpacity onPress={toggleHours} className="flex-row justify-between items-center">
+                        <Button onPress={toggleHours} className="flex-row justify-between items-center">
                             <Text className="text-base font-bold text-slate-900">Giờ hoạt động</Text>
                             <Text className="text-primary-strong text-xs font-bold">{showAllHours ? 'THU GỌN' : 'XEM TẤT CẢ'}</Text>
-                        </TouchableOpacity>
+                        </Button>
 
                         {!showAllHours ? (
                             <Text className="text-slate-600 text-sm mt-2">

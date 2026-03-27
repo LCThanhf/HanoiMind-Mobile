@@ -1,10 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Place } from '../../services/placeService/place.type';
 import { SparkleIcon } from './icons';
-import { SectionHeader } from '../shared';
+import { Button, SectionHeader } from '../shared';
 import { SelectedPlaceSummary } from './types';
 
 interface StepTwoPlacesProps {
@@ -72,7 +72,7 @@ export const StepTwoPlaces = ({
               >
                 {index + 1}. {place.name}
               </Text>
-              <TouchableOpacity
+              <Button
                 onPress={() => onRemoveSelectedPlace(place.id)}
                 activeOpacity={0.7}
                 style={{
@@ -85,14 +85,14 @@ export const StepTwoPlaces = ({
                 }}
               >
                 <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700' }}>Xóa</Text>
-              </TouchableOpacity>
+              </Button>
             </View>
           ))}
         </View>
       ) : null}
     </View>
 
-    <TouchableOpacity
+    <Button
       activeOpacity={0.85}
       onPress={onAiSelectPlaces}
       disabled={isAiSelectingPlaces || isProcessing || placesLoading}
@@ -118,7 +118,7 @@ export const StepTwoPlaces = ({
           </Text>
         </>
       )}
-    </TouchableOpacity>
+    </Button>
 
     <View className="flex-row items-center px-4 rounded-xl mb-3" style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 48 }}>
       <TextInput
@@ -138,7 +138,7 @@ export const StepTwoPlaces = ({
       filteredPlaces.map((place) => {
         const selected = selectedPlaceIds.includes(place._id);
         return (
-          <TouchableOpacity
+          <Button
             key={place._id}
             activeOpacity={0.8}
             onPress={() => onTogglePlace(place._id)}
@@ -181,7 +181,7 @@ export const StepTwoPlaces = ({
               </Text>
             </View>
             <Text style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.round(place.rating || 0)}★</Text>
-          </TouchableOpacity>
+          </Button>
         );
       })
     )}
@@ -193,7 +193,7 @@ export const StepTwoPlaces = ({
     ) : null}
 
     {!placesLoading && filteredPlaces.length > 0 && hasMorePlaces ? (
-      <TouchableOpacity
+      <Button
         activeOpacity={0.8}
         onPress={onLoadMorePlaces}
         disabled={loadingMorePlaces}
@@ -213,7 +213,7 @@ export const StepTwoPlaces = ({
         ) : (
           <Text style={{ color: '#2B8EF0', fontSize: 13, fontWeight: '700' }}>Xem thêm địa điểm</Text>
         )}
-      </TouchableOpacity>
+      </Button>
     ) : null}
   </View>
 );

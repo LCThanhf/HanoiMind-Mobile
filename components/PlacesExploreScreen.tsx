@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    View, Text, ScrollView, TouchableOpacity, SafeAreaView,
+    View, Text, ScrollView, SafeAreaView,
     Image, ActivityIndicator, Alert, StyleSheet
 } from 'react-native';
 import * as Location from 'expo-location';
@@ -173,18 +173,18 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0 }}>
                 <View style={styles.sortGroup}>
                     {SORT_OPTIONS.map((opt) => (
-                        <TouchableOpacity key={opt.value} onPress={() => setSortBy(opt.value as any)} style={[styles.pill, sortBy === opt.value && styles.pillSortActive]}>
+                        <Button key={opt.value} onPress={() => setSortBy(opt.value as any)} style={[styles.pill, sortBy === opt.value && styles.pillSortActive]}>
                             <Text style={[styles.pillText, sortBy === opt.value && styles.pillTextActive]}>{opt.label}</Text>
-                        </TouchableOpacity>
+                        </Button>
                     ))}
                 </View>
                 <View style={styles.divider} />
                 {CATEGORY_LIST.map((cat) => (
-                    <TouchableOpacity key={cat} onPress={() => setActiveCategory(cat)} style={[styles.pill, activeCategory === cat && styles.pillCatActive]}>
+                    <Button key={cat} onPress={() => setActiveCategory(cat)} style={[styles.pill, activeCategory === cat && styles.pillCatActive]}>
                         <Text style={[styles.pillText, activeCategory === cat && styles.pillTextActive]}>
                             {CategoryVi[cat] || cat}
                         </Text>
-                    </TouchableOpacity>
+                    </Button>
                 ))}
             </ScrollView>
 
@@ -192,9 +192,9 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow} style={{ flexGrow: 0, marginTop: 8, marginBottom: 10 }}>
                 <Text style={styles.filterLabel}>Lọc:</Text>
                 {CROWD_FILTERS.map((f) => (
-                    <TouchableOpacity key={String(f.value)} onPress={() => setMaxCrowd(f.value)} style={[styles.filterPill, maxCrowd === f.value && styles.filterPillActive]}>
+                    <Button key={String(f.value)} onPress={() => setMaxCrowd(f.value)} style={[styles.filterPill, maxCrowd === f.value && styles.filterPillActive]}>
                         <Text style={[styles.filterPillText, maxCrowd === f.value && styles.pillTextActive]}>{f.label}</Text>
-                    </TouchableOpacity>
+                    </Button>
                 ))}
             </ScrollView>
 

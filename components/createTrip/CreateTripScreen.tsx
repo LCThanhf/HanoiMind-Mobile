@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -672,11 +671,11 @@ export const CreateTripScreen = ({
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row items-center justify-between px-5 pt-12 pb-4">
-        <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+        <Button onPress={onClose} activeOpacity={0.7}>
           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
             <Path d="M18 6L6 18M6 6l12 12" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
-        </TouchableOpacity>
+        </Button>
         <Text className="text-[17px] text-gray-900" style={{ fontWeight: '600' }}>
           Tao chuyen di moi
         </Text>
@@ -782,13 +781,13 @@ export const CreateTripScreen = ({
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
       >
         {currentStep > 1 ? (
-          <TouchableOpacity
+          <Button
             onPress={() => setCurrentStep((prev) => (prev === 3 ? 2 : 1))}
             activeOpacity={0.8}
             style={{ alignItems: 'center', marginBottom: 8 }}
           >
             <Text style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>Quay lại bước trước</Text>
-          </TouchableOpacity>
+          </Button>
         ) : null}
 
         <Button
@@ -835,12 +834,12 @@ export const CreateTripScreen = ({
               />
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 10 }}>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
+                <Button onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
                   <Text style={{ color: '#6B7280', fontSize: 14, fontWeight: '600' }}>Huy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={confirmDateSelection} activeOpacity={0.8}>
+                </Button>
+                <Button onPress={confirmDateSelection} activeOpacity={0.8}>
                   <Text style={{ color: '#2B8EF0', fontSize: 14, fontWeight: '700' }}>Chon</Text>
-                </TouchableOpacity>
+                </Button>
               </View>
             </Pressable>
           </Pressable>

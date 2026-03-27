@@ -4,14 +4,13 @@ import {
     ScrollView,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
 import { AppHeader } from './AppHeader';
-import { ActionCard } from './shared';
+import { Button, ActionCard } from './shared';
 import { TripCard } from './cards';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { Journey } from '../services/journeyService/journey.type';
@@ -99,7 +98,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
 
                 <View style={{ paddingHorizontal: 20, paddingBottom: 14 }}>
                     <View style={{ backgroundColor: '#F3F4F6', borderRadius: 12, padding: 3, flexDirection: 'row' }}>
-                        <TouchableOpacity
+                        <Button
                             onPress={() => setTripTab('personal')}
                             activeOpacity={0.8}
                             style={{
@@ -111,8 +110,8 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                             }}
                         >
                             <Text style={{ color: tripTab === 'personal' ? '#2B8EF0' : '#374151', fontWeight: '800', fontSize: 15 }}>CÁ NHÂN</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </Button>
+                        <Button
                             onPress={() => setTripTab('group')}
                             activeOpacity={0.8}
                             style={{
@@ -124,7 +123,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                             }}
                         >
                             <Text style={{ color: tripTab === 'group' ? '#2B8EF0' : '#374151', fontWeight: '800', fontSize: 15 }}>CÙNG NHÓM</Text>
-                        </TouchableOpacity>
+                        </Button>
                     </View>
                 </View>
             </View>
@@ -244,7 +243,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 autoCapitalize="characters"
                                 style={{ flex: 1, paddingVertical: 6, fontSize: 14, color: '#111827' }}
                             />
-                            <TouchableOpacity
+                            <Button
                                 onPress={handleJoinByCode}
                                 disabled={!inviteCode.trim() || isJoining}
                                 style={{
@@ -260,7 +259,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 ) : (
                                     <Text style={{ color: 'white', fontSize: 13, fontWeight: '700' }}>Tham gia</Text>
                                 )}
-                            </TouchableOpacity>
+                            </Button>
                         </View>
                     )}
                 </View>

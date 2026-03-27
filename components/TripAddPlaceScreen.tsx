@@ -5,7 +5,6 @@ import {
   Image,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +12,7 @@ import { PlacesService } from '../services/placeService/place.service';
 import { Place, PlaceCategory } from '../services/placeService/place.type';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
-import { ScreenHeader, SearchInput } from './shared';
+import { Button, ScreenHeader, SearchInput } from './shared';
 
 interface TripAddPlaceScreenProps {
   tripId: string;
@@ -139,7 +138,7 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
                       <Text className="text-[12px]" style={{ color: '#16A34A', fontWeight: '600' }}>
                         ~{formatCurrencyVnd(place.estimated_cost_vnd || 0)}
                       </Text>
-                      <TouchableOpacity
+                      <Button
                         className="rounded-lg px-3"
                         style={{ height: 32, backgroundColor: '#2B8EF0', justifyContent: 'center' }}
                         onPress={() => handleAddPlace(place)}
@@ -152,7 +151,7 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
                             Thêm vào ngày {dayNumber}
                           </Text>
                         )}
-                      </TouchableOpacity>
+                      </Button>
                     </View>
                   </View>
                 </View>

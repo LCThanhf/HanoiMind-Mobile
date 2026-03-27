@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
-    View, Text, TouchableOpacity, ActivityIndicator, Alert,
+    View, Text, ActivityIndicator, Alert,
     Platform, Linking, LayoutAnimation, StyleSheet, ScrollView,
     Animated, PanResponder, Dimensions
 } from 'react-native';
@@ -12,7 +12,7 @@ import {
     ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowLeft as LeftIcon, ArrowRight as RightIcon,
     CornerUpLeft, CornerUpRight, CircleDot
 } from 'lucide-react-native';
-import { ScreenHeader } from './shared';
+import { Button, ScreenHeader } from './shared';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -199,7 +199,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                 titleSize={17}
                 titleWeight="700"
                 containerStyle={{ zIndex: 10 }}
-                rightSlot={<TouchableOpacity style={styles.headerBtn}><MoreVertical color="#111827" size={24} /></TouchableOpacity>}
+                rightSlot={<Button style={styles.headerBtn}><MoreVertical color="#111827" size={24} /></Button>}
             />
 
             <View style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -219,7 +219,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                                     </>
                                 );
                             })()}
-                            <TouchableOpacity onPress={() => { locationSubscription.current?.remove(); setRouteState('READY'); }}><X color="#fff" size={24} /></TouchableOpacity>
+                            <Button onPress={() => { locationSubscription.current?.remove(); setRouteState('READY'); }}><X color="#fff" size={24} /></Button>
                         </View>
                     </View>
                 )}
@@ -244,7 +244,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                         {routeState === 'IDLE' || routeState === 'LOADING' ? (
                             <View style={styles.idleContent}>
                                 <View style={{ flex: 1 }}><Text style={styles.placeName}>{place?.name || "Địa điểm"}</Text><Text style={styles.placeSub}>Bắt đầu tìm đường đi</Text></View>
-                                <TouchableOpacity onPress={() => fetchRoute()} style={styles.mainNavBtn}>{routeState === 'LOADING' ? <ActivityIndicator color="#fff" /> : <Navigation color="#fff" size={28} />}</TouchableOpacity>
+                                <Button onPress={() => fetchRoute()} style={styles.mainNavBtn}>{routeState === 'LOADING' ? <ActivityIndicator color="#fff" /> : <Navigation color="#fff" size={28} />}</Button>
                             </View>
                         ) : (
                             <View style={{ paddingHorizontal: 20 }}>
@@ -288,14 +288,14 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
 
             {(routeState === 'READY' || routeState === 'NAVIGATING') && (
                 <View style={styles.fixedActionBar}>
-                    <TouchableOpacity style={routeState === 'NAVIGATING' ? styles.stopBtn : styles.startBtn} onPress={routeState === 'NAVIGATING' ? () => { locationSubscription.current?.remove(); setRouteState('READY'); } : startNavigation}>
+                    <Button style={routeState === 'NAVIGATING' ? styles.stopBtn : styles.startBtn} onPress={routeState === 'NAVIGATING' ? () => { locationSubscription.current?.remove(); setRouteState('READY'); } : startNavigation}>
                         <Navigation color="#fff" size={20} style={{ transform: [{ rotate: '45deg' }], marginRight: 10 }} />
                         <Text style={styles.btnText}>{routeState === 'NAVIGATING' ? "DỪNG DẪN ĐƯỜNG" : "BẮT ĐẦU CHỈ ĐƯỜNG"}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.googleBtn} onPress={() => Linking.openURL(`google.navigation:q=${destLocation.latitude},${destLocation.longitude}`)}>
+                    </Button>
+                    <Button style={styles.googleBtn} onPress={() => Linking.openURL(`google.navigation:q=${destLocation.latitude},${destLocation.longitude}`)}>
                         <ExternalLink color="#111827" size={18} style={{ marginRight: 8 }} />
                         <Text style={styles.googleBtnText}>MỞ TRONG GOOGLE MAPS</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             )}
         </View>
@@ -311,10 +311,10 @@ const StatItem = ({ icon, label, value, border }: any) => (
 );
 
 const ModeTab = ({ active, icon, label, onPress }: any) => (
-    <TouchableOpacity onPress={onPress} style={[styles.modeTab, active && styles.modeTabActive]}>
+    <Button onPress={onPress} style={[styles.modeTab, active && styles.modeTabActive]}>
         {React.cloneElement(icon, { color: active ? '#3B82F6' : '#94A3B8' })}
         <Text style={[styles.modeLabel, active && styles.modeLabelActive]}>{label}</Text>
-    </TouchableOpacity>
+    </Button>
 );
 
 const styles = StyleSheet.create({

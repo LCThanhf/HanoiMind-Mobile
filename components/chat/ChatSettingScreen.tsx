@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Switch, FlatList } from 'react-native';
+import { View, Text, ScrollView, Image, Switch, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { AvatarCircle, ListActionRow, ScreenHeader, SectionLabel } from '../shared';
+import { Button, AvatarCircle, ListActionRow, ScreenHeader, SectionLabel } from '../shared';
 
 interface ChatSettingsScreenProps {
   roomId: string;
@@ -42,7 +42,7 @@ export const ChatSettingsScreen = ({ roomId, chatName, onBack, isGroup = false, 
         <View className="bg-white p-4">
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-sm font-semibold text-gray-700">Ảnh & Video đã gửi</Text>
-            <TouchableOpacity><Text className="text-primary text-xs">Xem tất cả</Text></TouchableOpacity>
+            <Button><Text className="text-primary text-xs">Xem tất cả</Text></Button>
           </View>
 
           {mediaFiles.length > 0 ? (

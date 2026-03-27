@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -339,7 +338,7 @@ export const ReviewScreen = ({
   ) => (
     <View style={{ flexDirection: 'row', gap: 4, marginBottom: 12 }}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <TouchableOpacity
+        <Button
           key={`star-sel-${star}`}
           onPress={() => onChange(star)}
         >
@@ -355,7 +354,7 @@ export const ReviewScreen = ({
           >
             <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
           </Svg>
-        </TouchableOpacity>
+        </Button>
       ))}
     </View>
   );
@@ -481,7 +480,7 @@ export const ReviewScreen = ({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <TouchableOpacity
+        <Button
           style={{
             flex: 1,
             alignItems: 'center',
@@ -491,7 +490,7 @@ export const ReviewScreen = ({
           activeOpacity={1}
           onPress={closeModal}
         >
-          <TouchableOpacity
+          <Button
             activeOpacity={1}
             onPress={() => { }}
             style={{
@@ -556,45 +555,27 @@ export const ReviewScreen = ({
                   </Text>
                 </View>
                 <View style={{ height: 1, backgroundColor: '#F1F5F9' }} />
-                <View style={{ flexDirection: 'row' }}>
-                  <TouchableOpacity
-                    onPress={handleStartEdit}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 15,
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: '#F1F5F9',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#2B8EF0',
-                        fontWeight: '600',
-                        fontSize: 15,
-                      }}
-                    >
-                      Sửa
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleConfirmDelete}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 15,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#EF4444',
-                        fontWeight: '600',
-                        fontSize: 15,
-                      }}
-                    >
-                      Xóa
-                    </Text>
-                  </TouchableOpacity>
+                <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12 }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Button
+                      label="Sửa"
+                      variant="secondary"
+                      onPress={handleStartEdit}
+                      fullWidth
+                      style={{ minHeight: 44, borderRadius: 10, borderColor: '#DBEAFE' }}
+                      textColor="#2563EB"
+                    />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 8 }}>
+                    <Button
+                      label="Xóa"
+                      variant="ghost"
+                      onPress={handleConfirmDelete}
+                      fullWidth
+                      style={{ minHeight: 44, borderRadius: 10, backgroundColor: '#FEF2F2' }}
+                      textColor="#EF4444"
+                    />
+                  </View>
                 </View>
               </>
             )}
@@ -621,17 +602,13 @@ export const ReviewScreen = ({
                   >
                     Sửa đánh giá
                   </Text>
-                  <TouchableOpacity onPress={closeModal}>
-                    <Text
-                      style={{
-                        color: '#94A3B8',
-                        fontWeight: '600',
-                        fontSize: 14,
-                      }}
-                    >
-                      Hủy
-                    </Text>
-                  </TouchableOpacity>
+                  <Button
+                    label="Hủy"
+                    variant="link"
+                    size="sm"
+                    onPress={closeModal}
+                    textColor="#94A3B8"
+                  />
                 </View>
                 <View
                   style={{
@@ -667,22 +644,17 @@ export const ReviewScreen = ({
                       onChangeText={setEditComment}
                     />
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={() => { }}
-                  >
-                    <Button
-                      label="Cập nhật đánh giá"
-                      onPress={handleSubmitEdit}
-                      loading={isSubmitting}
-                      style={{ borderRadius: 12, minHeight: 52 }}
-                    />
-                  </TouchableOpacity>
+                  <Button
+                    label="Cập nhật đánh giá"
+                    onPress={handleSubmitEdit}
+                    loading={isSubmitting}
+                    style={{ borderRadius: 12, minHeight: 52 }}
+                  />
                 </View>
               </>
             )}
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Button>
+        </Button>
       </Modal>
     </SafeAreaView>
   );

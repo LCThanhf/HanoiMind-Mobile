@@ -5,7 +5,6 @@ import {
     Image,
     ScrollView,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +12,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { NotificationService } from '../services/notificationService/notification.service';
 import { Notification as ApiNotification, NotificationType } from '../services/notificationService/notification.type';
 import { MainTab } from './BottomTabBar';
-import { AvatarCircle } from './shared';
+import { Button, AvatarCircle } from './shared';
 
 type NotificationKind = 'avatar' | 'chat' | 'trip';
 
@@ -189,7 +188,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     justifyContent: 'space-between',
                 }}
             >
-                <TouchableOpacity
+                <Button
                     onPress={onBack}
                     activeOpacity={0.8}
                     style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}
@@ -197,7 +196,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     <Svg width={21} height={21} viewBox="0 0 24 24" fill="none">
                         <Path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </Svg>
-                </TouchableOpacity>
+                </Button>
 
                 <Text style={{ fontSize: 24, fontWeight: '700', color: '#F472B6' }}>Thông báo</Text>
                 <View style={{ width: 32 }} />
@@ -247,7 +246,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                 </View>
                             )}
 
-                            <TouchableOpacity
+                            <Button
                                 onPress={() => handleTap(item)}
                                 activeOpacity={0.85}
                                 style={{
@@ -287,7 +286,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                 <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                                     <Path d="M9 6l6 6-6 6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </Svg>
-                            </TouchableOpacity>
+                            </Button>
                         </View>
                     ))}
                 </ScrollView>

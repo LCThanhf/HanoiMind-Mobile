@@ -1,7 +1,8 @@
 import React from 'react';
-import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { TripManageStop } from './useTripDetailData';
+import { Button } from '../shared';
 
 interface TripStopCardProps {
   stop: TripManageStop;
@@ -42,7 +43,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
         />
       </View>
 
-      <TouchableOpacity
+      <Button
         activeOpacity={0.9}
         onPress={onPress}
         className="flex-1 rounded-2xl p-3"
@@ -95,7 +96,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
                 {stop.title}
               </Text>
               <View className="flex-row items-center">
-                <TouchableOpacity onPress={onDelete} disabled={deleting} hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}>
+                <Button onPress={onDelete} disabled={deleting} hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}>
                   {deleting ? (
                     <ActivityIndicator size="small" color="#EF4444" />
                   ) : (
@@ -103,7 +104,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
                       <Path d="M18 6 6 18M6 6l12 12" stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" />
                     </Svg>
                   )}
-                </TouchableOpacity>
+                </Button>
               </View>
             </View>
 
@@ -148,7 +149,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Button>
     </View>
   );
 };

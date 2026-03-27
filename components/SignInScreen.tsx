@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, SafeAreaView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button, CheckIcon, FormInputRow, ScreenHeader } from './shared';
 
@@ -113,13 +113,13 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                     editable={!loading}
                     marginBottom={32}
                     rightSlot={
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Button onPress={() => setShowPassword(!showPassword)}>
                             <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
-                        </TouchableOpacity>
+                        </Button>
                     }
                 />
 
-                <TouchableOpacity
+                <Button
                     className="flex-row items-center mb-6"
                     activeOpacity={0.75}
                     onPress={() => setRememberLogin((prev) => !prev)}
@@ -145,7 +145,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                     <Text className="text-[13px] text-gray-600" style={{ fontWeight: '500' }}>
                         Ghi nhớ tài khoản và mật khẩu trên thiết bị này
                     </Text>
-                </TouchableOpacity>
+                </Button>
 
                 <Button
                     label="Đăng nhập"
@@ -157,9 +157,9 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
 
                 <View className="flex-row items-center justify-center">
                     <Text className="text-gray-600 text-[15px]">Bạn chưa có tài khoản? </Text>
-                    <TouchableOpacity onPress={onNavigateToSignUp}>
+                    <Button onPress={onNavigateToSignUp}>
                         <Text className="text-[#2B8EF0] text-[15px] font-semibold">Đăng ký ngay</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             </View>
         </SafeAreaView>

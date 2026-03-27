@@ -1,10 +1,10 @@
 import React from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { moodOptions } from './constants';
 import { CafeIcon, CalendarIcon, FoodIcon, HealingIcon, MoneyIcon, NatureIcon } from './icons';
-import { SectionHeader } from '../shared';
+import { Button, SectionHeader } from '../shared';
 import { MoodId } from './types';
 
 interface StepOneInfoProps {
@@ -81,26 +81,26 @@ export const StepOneInfo = ({
         <View className="flex-row" style={{ gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Từ</Text>
-            <TouchableOpacity
+            <Button
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('start')}
               className="flex-row items-center px-4 rounded-xl"
               style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}
             >
               <Text style={{ fontSize: 15, fontWeight: '500', color: '#111827' }}>{startDate}</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
 
           <View style={{ flex: 1 }}>
             <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Đến</Text>
-            <TouchableOpacity
+            <Button
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('end')}
               className="flex-row items-center px-4 rounded-xl"
               style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}
             >
               <Text style={{ fontSize: 15, fontWeight: '500', color: '#111827' }}>{endDate}</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
         </View>
       </View>
@@ -156,7 +156,7 @@ export const StepOneInfo = ({
         {moodOptions.map((mood) => {
           const isSelected = selectedMood === mood.id;
           return (
-            <TouchableOpacity
+            <Button
               key={mood.id}
               style={{ width: '50%', paddingHorizontal: 6, marginBottom: 12 }}
               onPress={() => onSelectMood(mood.id)}
@@ -180,7 +180,7 @@ export const StepOneInfo = ({
                   {mood.budget}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </Button>
           );
         })}
       </View>

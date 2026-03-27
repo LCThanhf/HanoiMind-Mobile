@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, SafeAreaView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button, FormInputRow, ScreenHeader } from './shared';
 
@@ -107,9 +107,9 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
                     editable={!loading}
                     marginBottom={4}
                     rightSlot={
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Button onPress={() => setShowPassword(!showPassword)}>
                             <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
-                        </TouchableOpacity>
+                        </Button>
                     }
                 />
 
@@ -128,9 +128,9 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
                     editable={!loading}
                     marginBottom={32}
                     rightSlot={
-                        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                        <Button onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                             <Text>{showConfirmPassword ? 'Hiện' : 'Ẩn'}</Text>
-                        </TouchableOpacity>
+                        </Button>
                     }
                 />
 

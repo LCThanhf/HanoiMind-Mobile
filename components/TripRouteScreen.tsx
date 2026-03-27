@@ -4,7 +4,6 @@ import {
   Linking,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -12,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Map as MapIcon, Clock, MapPin } from 'lucide-react-native';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
-import { CharacteristicBadge, ScreenHeader, TimelineConnector } from './shared';
+import { Button, CharacteristicBadge, ScreenHeader, TimelineConnector } from './shared';
 
 interface TripRouteScreenProps {
   tripId: string;
@@ -204,7 +203,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               {routeDays.map((day) => {
                 const selected = day.dayNumber === selectedDay?.dayNumber;
                 return (
-                  <TouchableOpacity
+                  <Button
                     key={day.dayNumber}
                     activeOpacity={0.8}
                     onPress={() => setSelectedDayNumber(day.dayNumber)}
@@ -231,7 +230,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                         Ngày {day.dayNumber}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </Button>
                 );
               })}
             </View>
@@ -399,16 +398,12 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
           </View>
 
           <View className="px-5 pt-5">
-            <TouchableOpacity
-              className="items-center justify-center rounded-xl"
-              style={{ height: 48, backgroundColor: '#2B8EF0', opacity: selectedDay && selectedDay.stops.length >= 2 ? 1 : 0.5 }}
-              disabled={!selectedDay || selectedDay.stops.length < 2}
+            <Button
+              label="Mở trong Google Maps"
               onPress={handleOpenGoogleMaps}
-            >
-              <Text className="text-white text-[15px]" style={{ fontWeight: '700' }}>
-                Mở trong Google Maps
-              </Text>
-            </TouchableOpacity>
+              disabled={!selectedDay || selectedDay.stops.length < 2}
+              style={{ borderRadius: 12 }}
+            />
           </View>
         </ScrollView>
       )}

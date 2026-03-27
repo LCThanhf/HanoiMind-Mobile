@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert, Share, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, Share, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
-import { AvatarCircle } from '../shared';
+import { Button, AvatarCircle } from '../shared';
 
 interface MembersTabProps {
     members: TripMemberView[];
@@ -134,7 +134,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                     <Text className="flex-1 text-[13px] text-gray-700" style={{ fontWeight: '400' }}>
                         {inviteLink}
                     </Text>
-                    <TouchableOpacity
+                    <Button
                         activeOpacity={0.7}
                         onPress={handleCopyInvite}
                     >
@@ -147,11 +147,11 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                                 strokeLinecap="round"
                             />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
                 {/* Action Buttons */}
                 <View className="flex-row" style={{ gap: 10 }}>
-                    <TouchableOpacity
+                    <Button
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
@@ -167,8 +167,8 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                             />
                         </Svg>
                         <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Copy link</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Button>
+                    <Button
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
@@ -186,7 +186,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                             />
                         </Svg>
                         <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Share</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             </View>
 
@@ -197,7 +197,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
             </Text>
 
             {/* Leave Trip */}
-            <TouchableOpacity
+            <Button
                 className="items-center justify-center py-4 rounded-2xl mb-4"
                 style={{ backgroundColor: '#FEE2E2' }}
                 activeOpacity={0.8}
@@ -214,7 +214,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                 ) : (
                     <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
                 )}
-            </TouchableOpacity>
+            </Button>
         </View>
     );
 };

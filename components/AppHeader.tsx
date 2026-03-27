@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated, Dimensions, Modal, Text,
-    TouchableOpacity, TouchableWithoutFeedback, View,
+    Animated, Dimensions, Modal, Text, TouchableWithoutFeedback, View,
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { UsersService } from '../services/userService/user.service';
-import { AvatarCircle, ListActionRow } from './shared';
+import { Button, AvatarCircle, ListActionRow } from './shared';
 
 interface AppHeaderProps {
     onOpenProfile: () => void;
@@ -74,7 +73,7 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
 
                 {variant === 'homeTrips' ? (
                     <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity
+                        <Button
                             activeOpacity={0.8}
                             onPress={onOpenNotifications}
                             style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}
@@ -95,9 +94,9 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
                                     strokeLinejoin="round"
                                 />
                             </Svg>
-                        </TouchableOpacity>
+                        </Button>
 
-                        <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                        <Button activeOpacity={0.8} onPress={openDropdown}>
                             <View ref={avatarRef}>
                                 <AvatarCircle
                                     uri={userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'}
@@ -105,10 +104,10 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
                                     size={36}
                                 />
                             </View>
-                        </TouchableOpacity>
+                        </Button>
                     </View>
                 ) : (
-                    <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                    <Button activeOpacity={0.8} onPress={openDropdown}>
                         <View ref={avatarRef}>
                             <AvatarCircle
                                 uri={userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'}
@@ -116,7 +115,7 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
                                 size={44}
                             />
                         </View>
-                    </TouchableOpacity>
+                    </Button>
                 )}
             </View>
 

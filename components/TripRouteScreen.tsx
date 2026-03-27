@@ -240,7 +240,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                       </Svg>
                       <Text
                         style={{
-                          color: selected ? '#2B8EF0' : '#4B5563',
+                          color: selected ? '#2B8EF0' : '#374151',
                           fontWeight: '800',
                           fontSize: 14,
                         }}
@@ -277,7 +277,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                 longitudeDelta: 0.08,
               }}
             >
-              {coordinates.length >= 2 && <Polyline coordinates={coordinates} strokeColor="#2563EB" strokeWidth={5} />}
+              {coordinates.length >= 2 && <Polyline coordinates={coordinates} strokeColor="#3B82F6" strokeWidth={5} />}
 
               {(selectedDay?.stops || []).map((stop, index) => (
                 <Marker
@@ -290,7 +290,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                       width: 24,
                       height: 24,
                       borderRadius: 12,
-                      backgroundColor: '#2563EB',
+                      backgroundColor: '#3B82F6',
                       borderWidth: 2,
                       borderColor: '#FFFFFF',
                       alignItems: 'center',
@@ -309,7 +309,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               className="bg-white border border-gray-100 rounded-2xl shadow-sm"
               style={{
                 elevation: 4,
-                shadowColor: '#1e293b',
+                shadowColor: '#111827',
                 shadowOpacity: 0.05,
                 shadowRadius: 10,
                 shadowOffset: { width: 0, height: 4 },
@@ -317,7 +317,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
             >
               <View className="flex-row items-center py-4 px-3">
                 <View className="flex-1 items-center space-y-2 border-r border-gray-100">
-                  <View className="w-10 h-10 rounded-full bg-blue-50/50 items-center justify-center mb-1">
+                  <View className="w-10 h-10 rounded-full bg-primary-soft/50 items-center justify-center mb-1">
                     <MapPin size={22} color="#0EA5E9" strokeWidth={2.5} />
                   </View>
                   <Text className="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">

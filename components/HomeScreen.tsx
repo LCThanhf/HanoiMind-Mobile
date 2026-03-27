@@ -237,7 +237,7 @@ export const HomeScreen = ({
 
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <AppHeader variant="homeTrips" onOpenProfile={onOpenProfile ?? (() => { })} onLogout={onLogout ?? (() => { })} onOpenNotifications={onOpenNotifications} />
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90 }}>
@@ -633,3 +633,4 @@ export const HomeScreen = ({
         </SafeAreaView>
     );
 };
+

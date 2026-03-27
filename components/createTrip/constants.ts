@@ -1,5 +1,6 @@
 import { JourneyTag } from '../../services/journeyService/journey.type';
 import { AiMood } from '../../services/aiService/ai.type';
+import { AppColors } from '../../utils/theme';
 import { MoodId, MoodOption } from './types';
 
 export const moodOptions: MoodOption[] = [
@@ -8,7 +9,7 @@ export const moodOptions: MoodOption[] = [
     title: 'Reset & Healing',
     budget: '500k - 800k/ngày',
     icon: 'healing',
-    color: '#22C55E',
+    color: AppColors.status.success,
     bgColor: '#ECFDF5',
   },
   {
@@ -16,8 +17,8 @@ export const moodOptions: MoodOption[] = [
     title: 'Chill & Cafe',
     budget: '400k - 700k/ngày',
     icon: 'cafe',
-    color: '#2B8EF0',
-    bgColor: '#EBF5FF',
+    color: AppColors.brand.primary,
+    bgColor: AppColors.brand.primarySoft,
   },
   {
     id: 'explore',
@@ -32,8 +33,8 @@ export const moodOptions: MoodOption[] = [
     title: 'Food & Local',
     budget: '800k - 1.2M/ngày',
     icon: 'food',
-    color: '#EF4444',
-    bgColor: '#FEE2E2',
+    color: AppColors.status.danger,
+    bgColor: AppColors.status.dangerSoft,
   },
 ];
 

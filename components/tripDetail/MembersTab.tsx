@@ -161,7 +161,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                 <View
                     className="flex-row items-center px-3 rounded-xl mb-3"
                     style={{
-                        backgroundColor: '#F9FAFB',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1,
                         borderColor: '#E5E7EB',
                         height: 44,
@@ -254,3 +254,4 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
         </View>
     );
 };
+

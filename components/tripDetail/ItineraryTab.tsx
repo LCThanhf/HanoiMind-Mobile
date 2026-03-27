@@ -25,7 +25,7 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
             <View className="px-5 pb-6">
                 <View
                     className="rounded-2xl p-5"
-                    style={{ backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+                    style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
                     <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
                         Chưa có lịch trình chi tiết.
@@ -83,7 +83,7 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                     {!dayData.activities.length ? (
                         <View
                             style={{
-                                backgroundColor: '#F9FAFB',
+                                backgroundColor: '#F8FAFC',
                                 borderWidth: 1,
                                 borderColor: '#E5E7EB',
                                 borderRadius: 12,
@@ -91,7 +91,7 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                                 paddingVertical: 12,
                             }}
                         >
-                            <Text style={{ fontSize: 13, color: '#4B5563', fontWeight: '500' }}>
+                            <Text style={{ fontSize: 13, color: '#374151', fontWeight: '500' }}>
                                 Nghỉ ngơi, tự do di chuyển
                             </Text>
                         </View>
@@ -101,3 +101,4 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
         </>
     );
 };
+

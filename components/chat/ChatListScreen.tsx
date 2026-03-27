@@ -50,13 +50,13 @@ const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any
                 />
                 
                 {item.isYou && (
-                  <View className="absolute bottom-0 right-0 bg-blue-500 w-5 h-5 rounded-full border-2 border-white items-center justify-center">
+                  <View className="absolute bottom-0 right-0 bg-primary w-5 h-5 rounded-full border-2 border-white items-center justify-center">
                     <Text className="text-white font-bold" style={{ fontSize: 14, lineHeight: 15 }}>+</Text>
                   </View>
                 )}
 
                 {!item.isYou && (
-                  <View className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white bg-green-500" />
+                  <View className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white bg-success" />
                 )}
               </View>
               <Text className="text-xs font-medium text-gray-800 mt-2" numberOfLines={1} style={{ maxWidth: 64 }}>
@@ -282,7 +282,7 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <View className="flex-1 bg-[#F5F6FA]" style={{ paddingTop: insets.top, paddingBottom: 70 }}>
+    <View className="flex-1 bg-[#F8FAFC]" style={{ paddingTop: insets.top, paddingBottom: 70 }}>
       <View
         style={{
           paddingHorizontal: 16,

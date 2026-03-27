@@ -16,9 +16,9 @@ export const CreatePostScreen = () => {
       <View className="mt-6">
         <Text className="font-bold mb-3"># Hashtags</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-          <TouchableOpacity className="bg-blue-100 px-4 py-2 rounded-full mr-2 flex-row items-center border border-blue-200">
-            <Text className="text-blue-600 mr-1">#Hanoi</Text>
-            <Text className="text-blue-600">×</Text>
+          <TouchableOpacity className="bg-primary-soft px-4 py-2 rounded-full mr-2 flex-row items-center border border-primary-border">
+            <Text className="text-primary-strong mr-1">#Hanoi</Text>
+            <Text className="text-primary-strong">×</Text>
           </TouchableOpacity>
           <TouchableOpacity className="bg-gray-100 px-4 py-2 rounded-full flex-row items-center">
             <Plus size={16} color="#666" />
@@ -37,7 +37,7 @@ export const CreatePostScreen = () => {
         </View>
       </View>
 
-      <TouchableOpacity className="bg-blue-500 rounded-xl py-4 mt-10 items-center">
+      <TouchableOpacity className="bg-primary rounded-xl py-4 mt-10 items-center">
         <Text className="text-white font-bold text-lg">Đăng bài viết</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -45,8 +45,8 @@ export const CreatePostScreen = () => {
 };
 
 const PrivacyOption = ({ icon, label, active = false }: any) => (
-  <TouchableOpacity className={`items-center p-4 rounded-2xl w-[30%] border ${active ? 'border-blue-500 bg-blue-50' : 'border-gray-100'}`}>
+  <TouchableOpacity className={`items-center p-4 rounded-2xl w-[30%] border ${active ? 'border-primary bg-primary-soft' : 'border-gray-100'}`}>
     {icon}
-    <Text className={`mt-2 text-xs ${active ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>{label}</Text>
+    <Text className={`mt-2 text-xs ${active ? 'text-primary-strong font-bold' : 'text-gray-500'}`}>{label}</Text>
   </TouchableOpacity>
 );

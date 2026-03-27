@@ -139,7 +139,7 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
               <View
                 key={place._id}
                 className="rounded-2xl p-3 mb-3"
-                style={{ backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB' }}
+                style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E5E7EB' }}
               >
                 <View className="flex-row">
                   <Image
@@ -161,7 +161,7 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
                     </View>
 
                     <View className="flex-row items-center justify-between mt-2">
-                      <Text className="text-[12px]" style={{ color: '#059669', fontWeight: '600' }}>
+                      <Text className="text-[12px]" style={{ color: '#16A34A', fontWeight: '600' }}>
                         ~{formatCurrencyVnd(place.estimated_cost_vnd || 0)}
                       </Text>
                       <TouchableOpacity

@@ -60,7 +60,7 @@ export const StepTwoPlaces = ({
                 marginTop: index === 0 ? 0 : 8,
                 backgroundColor: 'white',
                 borderWidth: 1,
-                borderColor: '#D1E6FF',
+                borderColor: '#EBF5FF',
                 borderRadius: 10,
                 paddingHorizontal: 10,
                 paddingVertical: 8,
@@ -205,7 +205,7 @@ export const StepTwoPlaces = ({
           height: 44,
           borderRadius: 10,
           borderWidth: 1,
-          borderColor: '#D1E6FF',
+          borderColor: '#EBF5FF',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#F8FBFF',
@@ -221,3 +221,4 @@ export const StepTwoPlaces = ({
     ) : null}
   </View>
 );
+

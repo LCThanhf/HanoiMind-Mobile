@@ -146,7 +146,7 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F6FA' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onBack}>
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     filterLabel: { fontSize: 12, fontWeight: '700', color: '#374151', marginRight: 4 },
     filterPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#F3F4F6' },
     filterPillActive: { backgroundColor: '#10B981' },
-    filterPillText: { fontSize: 11, color: '#4B5563' },
+    filterPillText: { fontSize: 11, color: '#374151' },
     placeCard: { flexDirection: 'row', backgroundColor: 'white', borderRadius: 16, padding: 12, marginBottom: 12, gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
     placeImage: { width: 100, height: 80, borderRadius: 10, backgroundColor: '#E5E7EB' },
     placeName: { fontSize: 15, fontWeight: '700', marginBottom: 4, color: '#111827' },

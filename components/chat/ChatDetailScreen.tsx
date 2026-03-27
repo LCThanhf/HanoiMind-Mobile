@@ -271,7 +271,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
           >
             <View className="flex-row items-start mb-4">
-              <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3 mt-1">
+              <View className="w-10 h-10 rounded-full bg-primary-soft items-center justify-center mr-3 mt-1">
                 <Text style={{ fontSize: 18 }}>📊</Text>
               </View>
               <View className="flex-1">
@@ -288,13 +288,13 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                   key={opt.id} 
                   onPress={() => handleVotePoll(msgId, opt.id)}
                   className={`flex-row items-center px-4 py-3.5 mb-2 rounded-2xl border ${
-                    isVoted ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'
+                    isVoted ? 'bg-primary-soft border-primary-border' : 'bg-gray-50 border-gray-100'
                   }`}
                 >
-                  <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isVoted ? 'border-blue-500' : 'border-gray-300'}`}>
-                    {isVoted && <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
+                  <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isVoted ? 'border-primary' : 'border-gray-300'}`}>
+                    {isVoted && <View className="w-2.5 h-2.5 rounded-full bg-primary" />}
                   </View>
-                  <Text className={`flex-1 text-[14px] ${isVoted ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>{opt.text}</Text>
+                  <Text className={`flex-1 text-[14px] ${isVoted ? 'font-semibold text-info-strong' : 'text-gray-700'}`}>{opt.text}</Text>
                   {totalVotes > 0 && <Text className="text-[12px] font-bold text-gray-500 ml-2">{totalVotes}</Text>}
                 </TouchableOpacity>
               );
@@ -350,7 +350,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
             )}
             
             {(!nextMsg || nextMsg.sender_id !== item.sender_id) && (
-              <Text className={`text-[10px] mt-1 ${isMe ? 'text-blue-100 text-right' : 'text-gray-400 text-left'}`}>{timeString} {isSending ? '...' : ''}</Text>
+              <Text className={`text-[10px] mt-1 ${isMe ? 'text-primary-soft text-right' : 'text-gray-400 text-left'}`}>{timeString} {isSending ? '...' : ''}</Text>
             )}
 
             {hasReactions && (
@@ -469,7 +469,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                 ))}
 
                 <TouchableOpacity onPress={handleAddPollOption} className="flex-row items-center py-3 mb-6 mt-1">
-                  <View className="w-8 h-8 rounded-full bg-blue-50 items-center justify-center mr-3">
+                  <View className="w-8 h-8 rounded-full bg-primary-soft items-center justify-center mr-3">
                     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#2B8EF0" strokeWidth="2.5"><Line x1="12" y1="5" x2="12" y2="19"/><Line x1="5" y1="12" x2="19" y2="12"/></Svg>
                   </View>
                   <Text className="text-[#2B8EF0] font-bold text-[15px]">Thêm lựa chọn</Text>

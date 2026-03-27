@@ -98,7 +98,7 @@ const NotificationLeading = ({ item }: { item: NotificationItem }) => {
                 width: 52,
                 height: 52,
                 borderRadius: 26,
-                backgroundColor: '#FDE7B0',
+                backgroundColor: '#FEF3C7',
                 alignItems: 'center',
                 justifyContent: 'center',
             }}
@@ -175,7 +175,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
     }, []);
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <View
                 style={{
                     paddingHorizontal: 16,
@@ -183,7 +183,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     paddingBottom: 12,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E5E7EB',
-                    backgroundColor: '#F5F6FA',
+                    backgroundColor: '#F8FAFC',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -271,7 +271,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                 <NotificationLeading item={item} />
 
                                 <View style={{ flex: 1, marginLeft: 14, marginRight: 8 }}>
-                                    <Text style={{ fontSize: 15, color: '#1F2937', fontWeight: '400' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 15, color: '#111827', fontWeight: '400' }} numberOfLines={1}>
                                         {item.actor ? (
                                             <>
                                                 <Text style={{ fontWeight: '700' }}>{item.actor}</Text>
@@ -281,7 +281,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                             item.message
                                         )}
                                     </Text>
-                                    <Text style={{ fontSize: 13, color: '#4B5563', marginTop: 4 }}>{item.timeAgo}</Text>
+                                    <Text style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>{item.timeAgo}</Text>
                                 </View>
 
                                 <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
@@ -295,3 +295,4 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
         </SafeAreaView>
     );
 };
+

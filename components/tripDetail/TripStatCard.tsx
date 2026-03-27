@@ -12,7 +12,7 @@ export const TripStatCard = ({ icon, label, value, iconBgColor }: TripStatCardPr
   return (
     <View
       className="flex-1 p-4 rounded-2xl"
-      style={{ backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+      style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F3F4F6' }}
     >
       <View
         className="items-center justify-center mb-2"

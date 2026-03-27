@@ -121,7 +121,7 @@ const handleAddPostWithImage = async () => {
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <View className="flex-1 ml-3">
-          <Text className="text-blue-500 font-bold text-xl">Chào buổi sáng, {userName}!👋</Text>
+          <Text className="text-primary font-bold text-xl">Chào buổi sáng, {userName}!👋</Text>
           <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
         </View>
         <View className="flex-row space-x-3">
@@ -159,7 +159,7 @@ const handleAddPostWithImage = async () => {
       ) : error ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-red-500 text-center px-4">{error}</Text>
-          <TouchableOpacity className="mt-4 px-4 py-2 bg-blue-500 rounded-lg" onPress={fetchPosts}>
+          <TouchableOpacity className="mt-4 px-4 py-2 bg-primary rounded-lg" onPress={fetchPosts}>
             <Text className="text-white font-semibold">Thử lại</Text>
           </TouchableOpacity>
         </View>
@@ -181,7 +181,7 @@ const handleAddPostWithImage = async () => {
               <View className="py-10 items-center">
                   <Text className="text-gray-400 text-xs">Bạn đã xem hết tin mới nhất rồi!</Text>
                   <TouchableOpacity className="mt-2">
-                      <Text className="text-blue-500 font-bold">Quay lại đầu trang</Text>
+                      <Text className="text-primary font-bold">Quay lại đầu trang</Text>
                   </TouchableOpacity>
               </View>
           }
@@ -190,7 +190,7 @@ const handleAddPostWithImage = async () => {
 
 {/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
       <TouchableOpacity 
-        className="absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full items-center justify-center shadow-lg"
+        className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
         onPress={handleAddPostWithImage}
       >
         <Plus size={28} color="white" />

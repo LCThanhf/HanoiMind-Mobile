@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polygon } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
@@ -79,8 +79,6 @@ export const ExploreScreen = ({
     onViewAllPlaces,
     onPlaceClick
 }: ExploreScreenProps) => {
-    const [searchText, setSearchText] = useState('');
-
     // State quản lý dữ liệu từ API
     const [places, setPlaces] = useState<Place[]>([]);
     const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
@@ -131,7 +129,7 @@ export const ExploreScreen = ({
     };
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <View
                 style={{
                     paddingHorizontal: 16,
@@ -139,7 +137,7 @@ export const ExploreScreen = ({
                     paddingBottom: 12,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E5E7EB',
-                    backgroundColor: '#F5F6FA',
+                    backgroundColor: '#F8FAFC',
                     alignItems: 'center',
                 }}
             >
@@ -180,7 +178,7 @@ export const ExploreScreen = ({
                                     key={place._id}
                                     activeOpacity={0.8}
                                     onPress={() => onPlaceClick(place._id)}
-                                    style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+                                    style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F3F4F6' }}
                                 >
                                     <Image
                                         source={{ uri: place.images && place.images.length > 0 ? place.images[0] : 'https://via.placeholder.com/400' }}

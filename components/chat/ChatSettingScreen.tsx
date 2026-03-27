@@ -61,7 +61,7 @@ export const ChatSettingsScreen = ({ roomId, chatName, onBack, isGroup = false, 
         <View className="bg-white p-4">
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-sm font-semibold text-gray-700">Ảnh & Video đã gửi</Text>
-            <TouchableOpacity><Text className="text-blue-500 text-xs">Xem tất cả</Text></TouchableOpacity>
+            <TouchableOpacity><Text className="text-primary text-xs">Xem tất cả</Text></TouchableOpacity>
           </View>
           
           {mediaFiles.length > 0 ? (

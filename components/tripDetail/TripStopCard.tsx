@@ -47,7 +47,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
         onPress={onPress}
         className="flex-1 rounded-2xl p-3"
         style={{
-          backgroundColor: '#F9FAFB',
+          backgroundColor: '#F8FAFC',
           shadowColor: '#0F172A',
           shadowOpacity: 0.1,
           shadowRadius: 8,
@@ -136,7 +136,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
 
             <View className="flex-row items-center mt-1.5">
               <View className="rounded-full px-3 py-1" style={{ backgroundColor: '#DBEAFE' }}>
-                <Text className="text-[10px]" style={{ color: '#2563EB', fontWeight: '400' }}>
+                <Text className="text-[10px]" style={{ color: '#3B82F6', fontWeight: '400' }}>
                   {stop.startTimeLabel} - {stop.endTimeLabel || '--:--'}
                 </Text>
               </View>

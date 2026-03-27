@@ -38,10 +38,10 @@ export const StepThreeConfirm = ({
 
     <View style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, padding: 14, marginBottom: 14 }}>
       <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 6 }}>{tripName || 'Chua dat ten'}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Ngày đi: {dateRangeSummary}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Mode: {isSoloMode ? 'Solo' : 'Group'}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Mood: {selectedMoodTitle}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563' }}>Ngân sách: {budget || 'Chua nhap'}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Ngày đi: {dateRangeSummary}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Mode: {isSoloMode ? 'Solo' : 'Group'}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Mood: {selectedMoodTitle}</Text>
+      <Text style={{ fontSize: 13, color: '#374151' }}>Ngân sách: {budget || 'Chua nhap'}</Text>
     </View>
 
     <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827', marginBottom: 8 }}>
@@ -116,3 +116,4 @@ export const StepThreeConfirm = ({
     ))}
   </View>
 );
+

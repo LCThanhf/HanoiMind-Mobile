@@ -199,7 +199,7 @@ export const TripItineraryManageScreen = ({
               <View
                 className="rounded-2xl p-4"
                 style={{
-                  backgroundColor: '#F9FAFB',
+                  backgroundColor: '#F8FAFC',
                   shadowColor: '#0F172A',
                   shadowOpacity: 0.1,
                   shadowRadius: 10,
@@ -314,13 +314,13 @@ export const TripItineraryManageScreen = ({
                   className="items-center justify-center rounded-xl"
                   style={{
                     borderWidth: 1,
-                    borderColor: '#93C5FD',
+                    borderColor: '#BFDBFE',
                     borderStyle: 'dashed',
                     height: 48,
                     backgroundColor: '#EFF6FF',
                   }}
                 >
-                  <Text className="text-[14px]" style={{ color: '#2563EB', fontWeight: '600' }}>
+                  <Text className="text-[14px]" style={{ color: '#3B82F6', fontWeight: '600' }}>
                     + Thêm địa điểm mới
                   </Text>
                 </TouchableOpacity>

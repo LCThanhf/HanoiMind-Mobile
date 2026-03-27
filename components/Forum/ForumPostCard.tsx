@@ -56,7 +56,7 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
       <View className="m-4 p-6 bg-white rounded-3xl border border-red-100 items-center">
         <Text className="text-red-500 mb-2">{error}</Text>
         <TouchableOpacity
-          className="px-4 py-2 bg-blue-500 rounded-full"
+          className="px-4 py-2 bg-primary rounded-full"
           onPress={() => {
             setError('');
             setLoading(true);
@@ -90,8 +90,8 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
           <Text className="font-bold text-gray-800">{post.author.fullName}</Text>
           <Text className="text-xs text-gray-400">2 giờ trước</Text> 
         </View>
-        <View className="bg-green-100 px-2 py-1 rounded-md">
-          <Text className="text-[10px] text-green-700 font-bold">CÔNG KHAI</Text>
+        <View className="bg-success-soft px-2 py-1 rounded-md">
+          <Text className="text-[10px] text-success-strong font-bold">CÔNG KHAI</Text>
         </View>
       </View>
 
@@ -115,13 +115,13 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
         <Text className="text-gray-600 text-sm mb-3" numberOfLines={2}>{post.content}</Text>
         
         <View className="flex-row flex-wrap gap-2 mb-4">
-          <View className="flex-row items-center bg-blue-50 px-2 py-1 rounded-full">
+          <View className="flex-row items-center bg-primary-soft px-2 py-1 rounded-full">
             <MapPin size={12} color="#3b82f6" />
-            <Text className="text-[10px] text-blue-600 ml-1">Lũng Cú, Hà Giang</Text>
+            <Text className="text-[10px] text-primary-strong ml-1">Lũng Cú, Hà Giang</Text>
           </View>
           <View className="flex-row items-center bg-green-50 px-2 py-1 rounded-full">
             <Navigation size={12} color="#10b981" />
-            <Text className="text-[10px] text-green-600 ml-1">Chuyến đi Hà Giang...</Text>
+            <Text className="text-[10px] text-success-strong ml-1">Chuyến đi Hà Giang...</Text>
           </View>
         </View>
 
@@ -133,7 +133,7 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
             <StatItem icon={<Eye size={16} color="#666" />} count={post.stats.views} />
           </View>
           <TouchableOpacity>
-            <Text className="text-blue-500 font-bold text-xs">Chi tiết</Text>
+            <Text className="text-primary font-bold text-xs">Chi tiết</Text>
           </TouchableOpacity>
         </View>
       </View>

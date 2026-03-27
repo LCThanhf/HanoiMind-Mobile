@@ -180,7 +180,7 @@ export const StepOneInfo = ({
                 <View className="items-center justify-center mb-3" style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'white' }}>
                   {getMoodIcon(mood.icon, mood.color)}
                 </View>
-                <Text className="text-[14px] mb-1" style={{ color: '#1F2937', fontWeight: '600' }}>
+                <Text className="text-[14px] mb-1" style={{ color: '#111827', fontWeight: '600' }}>
                   {mood.title}
                 </Text>
                 <Text className="text-[11px]" style={{ color: '#6B7280', fontWeight: '400' }}>
@@ -194,3 +194,4 @@ export const StepOneInfo = ({
     </View>
   </>
 );
+

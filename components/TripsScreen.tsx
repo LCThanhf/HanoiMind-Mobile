@@ -55,10 +55,10 @@ const getStatusBadge = (journey: Journey): { label: string; bg: string; text: st
     const now = Date.now();
     const start = new Date(journey.start_date).getTime();
     const end = new Date(journey.end_date).getTime();
-    if (!Number.isNaN(end) && end < now) return { label: 'Hoàn thành', bg: '#D1FAE5', text: '#059669' };
+    if (!Number.isNaN(end) && end < now) return { label: 'Hoàn thành', bg: '#D1FAE5', text: '#16A34A' };
     if (!Number.isNaN(start) && start <= now) return { label: 'Đang diễn ra', bg: '#FEF3C7', text: '#D97706' };
     const daysLeft = Math.ceil((start - now) / DAY_MS);
-    return { label: `Còn ${daysLeft} ngày`, bg: '#EFF6FF', text: '#2563EB' };
+    return { label: `Còn ${daysLeft} ngày`, bg: '#EFF6FF', text: '#3B82F6' };
 };
 
 const getMoodLabel = (journey: Journey): string => {
@@ -143,7 +143,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
     const sectionTripCount = filteredTrips.length;
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <View>
                 <AppHeader variant="homeTrips" onOpenProfile={onOpenProfile} onLogout={onLogout} onOpenNotifications={onOpenNotifications} />
 
@@ -160,7 +160,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 alignItems: 'center',
                             }}
                         >
-                            <Text style={{ color: tripTab === 'personal' ? '#2B8EF0' : '#4B5563', fontWeight: '800', fontSize: 15 }}>CÁ NHÂN</Text>
+                            <Text style={{ color: tripTab === 'personal' ? '#2B8EF0' : '#374151', fontWeight: '800', fontSize: 15 }}>CÁ NHÂN</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => setTripTab('group')}
@@ -173,7 +173,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 alignItems: 'center',
                             }}
                         >
-                            <Text style={{ color: tripTab === 'group' ? '#2B8EF0' : '#4B5563', fontWeight: '800', fontSize: 15 }}>CÙNG NHÓM</Text>
+                            <Text style={{ color: tripTab === 'group' ? '#2B8EF0' : '#374151', fontWeight: '800', fontSize: 15 }}>CÙNG NHÓM</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -182,8 +182,8 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 <View style={{ paddingHorizontal: 20, paddingTop: 14 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#1F2937' }}>Chuyến Đi Của Bạn</Text>
-                        <View style={{ backgroundColor: '#E7F3FF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 }}>
+                        <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827' }}>Chuyến Đi Của Bạn</Text>
+                        <View style={{ backgroundColor: '#EBF5FF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 2 }}>
                             <Text style={{ color: '#2B8EF0', fontSize: 14, fontWeight: '700' }}>{sectionTripCount} Trips</Text>
                         </View>
                     </View>
@@ -244,7 +244,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                                 paddingHorizontal: 8,
                                                 paddingVertical: 2,
                                                 borderRadius: 999,
-                                                backgroundColor: '#2396EC',
+                                                backgroundColor: '#2B8EF0',
                                             }}
                                         >
                                             <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>{tripMode}</Text>
@@ -264,7 +264,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                                 <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 4 }}>
                                                     <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" fill="#6B7280" />
                                                 </Svg>
-                                                <Text style={{ fontSize: 12, color: '#4B5563' }} numberOfLines={1}>
+                                                <Text style={{ fontSize: 12, color: '#374151' }} numberOfLines={1}>
                                                     {getLocationLabel(trip)}
                                                 </Text>
                                             </View>
@@ -275,7 +275,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                                 <Rect x="3" y="4" width="18" height="18" rx="2" stroke="#3B82F6" strokeWidth="1.8" />
                                                 <Path d="M16 2v4M8 2v4M3 10h18" stroke="#3B82F6" strokeWidth="1.8" strokeLinecap="round" />
                                             </Svg>
-                                            <Text style={{ fontSize: 12, color: '#1F2937', marginLeft: 4 }}>{getTripDuration(trip)}</Text>
+                                            <Text style={{ fontSize: 12, color: '#111827', marginLeft: 4 }}>{getTripDuration(trip)}</Text>
 
                                             <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 14 }}>
                                                 <Path d="M12 21s-6.716-4.298-9-8.076C1.4 10.2 2.565 6.98 5.3 5.79c1.808-.789 3.635-.31 4.7.743.734.723 1.264.723 2 0 1.064-1.052 2.89-1.532 4.7-.743 2.735 1.19 3.9 4.409 2.3 7.133C18.716 16.702 12 21 12 21Z" stroke="#22C55E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -298,10 +298,10 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                         activeOpacity={0.88}
                         onPress={onCreateTrip}
                         style={{
-                            backgroundColor: '#E9F4FF',
+                            backgroundColor: '#EBF5FF',
                             borderRadius: 14,
                             borderWidth: 1,
-                            borderColor: '#C7DEFF',
+                            borderColor: '#BFDBFE',
                             padding: 12,
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -313,7 +313,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 width: 40,
                                 height: 40,
                                 borderRadius: 10,
-                                backgroundColor: '#1F9CFF',
+                                backgroundColor: '#2B8EF0',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginRight: 10,
@@ -324,22 +324,22 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                             </Svg>
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#0369A1', fontSize: 15, fontWeight: '800' }}>Tạo kế hoạch mới</Text>
+                            <Text style={{ color: '#1D4ED8', fontSize: 15, fontWeight: '800' }}>Tạo kế hoạch mới</Text>
                             <Text style={{ color: '#3B82F6', fontSize: 12, marginTop: 1 }}>
                                 Sử dụng AI để tối ưu lịch trình của bạn ngay!
                             </Text>
                         </View>
-                        <Text style={{ color: '#60A5FA', fontSize: 20, lineHeight: 20 }}>›</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 20, lineHeight: 20 }}>›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         activeOpacity={0.88}
                         onPress={() => setInviteCode(inviteCode ? '' : ' ')}
                         style={{
-                            backgroundColor: '#E9F4FF',
+                            backgroundColor: '#EBF5FF',
                             borderRadius: 14,
                             borderWidth: 1,
-                            borderColor: '#C7DEFF',
+                            borderColor: '#BFDBFE',
                             padding: 12,
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -351,7 +351,7 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                                 width: 40,
                                 height: 40,
                                 borderRadius: 10,
-                                backgroundColor: '#1F9CFF',
+                                backgroundColor: '#2B8EF0',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginRight: 10,
@@ -363,12 +363,12 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                             </Svg>
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={{ color: '#0369A1', fontSize: 15, fontWeight: '800' }}>Nhập mã để tham gia</Text>
+                            <Text style={{ color: '#1D4ED8', fontSize: 15, fontWeight: '800' }}>Nhập mã để tham gia</Text>
                             <Text style={{ color: '#3B82F6', fontSize: 12, marginTop: 1 }}>
                                 Nhập mã mời để tham gia chuyến đi có sẵn
                             </Text>
                         </View>
-                        <Text style={{ color: '#60A5FA', fontSize: 20, lineHeight: 20 }}>›</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 20, lineHeight: 20 }}>›</Text>
                     </TouchableOpacity>
 
                     {inviteCode !== '' && (
@@ -418,3 +418,4 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
         </SafeAreaView>
     );
 };
+

@@ -25,7 +25,7 @@ import { User } from '../services/userService/user.type';
 import { MainTab } from './BottomTabBar';
 
 // --- ICONS ---
-const ArrowLeftIcon = ({ color = '#1F2937' }) => (
+const ArrowLeftIcon = ({ color = '#111827' }) => (
   <Svg
     width={24}
     height={24}
@@ -515,7 +515,7 @@ export const ReviewScreen = ({
           <TouchableOpacity
             onPress={handleSubmitReview}
             disabled={isSubmitting}
-            className={`w-full py-3.5 rounded-xl items-center justify-center ${isSubmitting ? 'bg-blue-300' : 'bg-blue-500'}`}
+            className={`w-full py-3.5 rounded-xl items-center justify-center ${isSubmitting ? 'bg-info' : 'bg-primary'}`}
           >
             {isSubmitting ? (
               <ActivityIndicator color="white" />
@@ -591,7 +591,7 @@ export const ReviewScreen = ({
                       >
                         {review.user?.fullName || 'Người dùng ẩn danh'}
                         {mine && (
-                          <Text style={{ color: '#93C5FD', fontSize: 11 }}>
+                          <Text style={{ color: '#BFDBFE', fontSize: 11 }}>
                             {' '}
                             (bạn)
                           </Text>
@@ -833,12 +833,12 @@ export const ReviewScreen = ({
                       marginBottom: 16,
                       minHeight: 100,
                       borderWidth: 1,
-                      borderColor: '#E2E8F0',
+                      borderColor: '#E5E7EB',
                     }}
                   >
                     <TextInput
                       style={{
-                        color: '#1e293b',
+                        color: '#111827',
                         fontSize: 14,
                         textAlignVertical: 'top',
                         flex: 1,
@@ -854,7 +854,7 @@ export const ReviewScreen = ({
                     onPress={handleSubmitEdit}
                     disabled={isSubmitting}
                     style={{
-                      backgroundColor: isSubmitting ? '#93C5FD' : '#2B8EF0',
+                      backgroundColor: isSubmitting ? '#BFDBFE' : '#2B8EF0',
                       borderRadius: 12,
                       paddingVertical: 14,
                       alignItems: 'center',
@@ -883,3 +883,4 @@ export const ReviewScreen = ({
     </SafeAreaView>
   );
 };
+

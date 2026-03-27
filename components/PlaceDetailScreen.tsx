@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -80,7 +80,7 @@ const CheckCircleIcon = () => (
 );
 
 const TagIcon = () => (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <Path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
         <Path d="M7 7h.01" />
     </Svg>
@@ -101,7 +101,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
     const [isFavorite, setIsFavorite] = useState(false);
     const [showAllHours, setShowAllHours] = useState(false);
 
-    const fetchPlaceDetail = async (showLoading = true) => {
+    const fetchPlaceDetail = useCallback(async (showLoading = true) => {
         try {
             if (showLoading) setIsLoading(true);
 
@@ -125,12 +125,12 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
 
             setPlace({ ...data, rating: avgRating, reviewCount: totalReviews });
             setIsFavorite(myFavs.some((fav: any) => fav.target_id === placeId || fav._id === placeId));
-        } catch (error) {
+        } catch {
             Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
         } finally {
             if (showLoading) setIsLoading(false);
         }
-    };
+    }, [placeId]);
 
     useEffect(() => {
         if (refreshKey === 0) {
@@ -138,7 +138,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
         } else {
             fetchPlaceDetail(false);
         }
-    }, [placeId, refreshKey]);
+    }, [fetchPlaceDetail, refreshKey]);
 
     const handleToggleFavorite = async () => {
         const previousState = isFavorite;
@@ -146,7 +146,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
             setIsFavorite(!previousState);
             const result = await FavoriteService.toggle({ target_id: placeId, type: FavoriteType.PLACE });
             setIsFavorite(result.status === 'LIKED');
-        } catch (error) {
+        } catch {
             setIsFavorite(previousState);
             Alert.alert('Lỗi', 'Không thể cập nhật trạng thái yêu thích.');
         }
@@ -183,7 +183,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
 
     const renderCrowdLevel = (level: number = 1) => {
         const percentage = (level / 5) * 100;
-        let colorClass = 'bg-green-500';
+        let colorClass = 'bg-success';
         let label = 'Thưa thớt';
 
         if (level >= 4) {
@@ -283,20 +283,20 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
         <View className="flex-1 bg-slate-50">
             <View className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 pt-12 pb-4">
                 <TouchableOpacity onPress={onBack} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
-                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#1F2937" strokeWidth="2.5">
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5">
                         <Path d="M15 18l-6-6 6-6" />
                     </Svg>
                 </TouchableOpacity>
 
                 <View className="flex-row gap-x-2">
                     <TouchableOpacity onPress={handleShare} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
-                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1F2937" strokeWidth="2">
+                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2">
                             <Path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                         </Svg>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={handleToggleFavorite} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
-                        <Svg width={22} height={22} viewBox="0 0 24 24" fill={isFavorite ? '#EF4444' : 'none'} stroke={isFavorite ? '#EF4444' : '#1F2937'} strokeWidth="2">
+                        <Svg width={22} height={22} viewBox="0 0 24 24" fill={isFavorite ? '#EF4444' : 'none'} stroke={isFavorite ? '#EF4444' : '#111827'} strokeWidth="2">
                             <Path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78v0z" />
                         </Svg>
                     </TouchableOpacity>
@@ -340,7 +340,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                             <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider">{place.category}</Text>
                         </View>
                         <View className="items-end">
-                            <View className="bg-blue-600 px-3 py-1.5 rounded-xl flex-row items-center shadow-sm">
+                            <View className="bg-primary-strong px-3 py-1.5 rounded-xl flex-row items-center shadow-sm">
                                 <Text className="text-white font-bold text-lg">{place.rating || 'N/A'}</Text>
                             </View>
                             <Text className="text-[10px] text-slate-400 mt-1.5 uppercase font-bold">{place.reviewCount || 0} Đánh giá</Text>
@@ -361,7 +361,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     <View className="flex-row justify-between bg-slate-50 rounded-3xl p-5 mb-8 border border-slate-100 items-center">
                         <View className="items-center border-r border-slate-200 pr-3 flex-1">
                             <Text className="text-[9px] text-slate-400 uppercase font-bold mb-1">Trạng thái</Text>
-                            <Text className="text-sm font-bold text-green-600">Đang mở</Text>
+                            <Text className="text-sm font-bold text-success-strong">Đang mở</Text>
                         </View>
                         <View className="items-center px-3 flex-1">
                             <Text className="text-[9px] text-slate-400 uppercase font-bold mb-1">Mức giá</Text>
@@ -400,8 +400,8 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                                     </Text>
                                 </View>
                             </View>
-                            <TouchableOpacity onPress={handleOpenMap} className="bg-blue-50 px-3 py-1.5 rounded-full">
-                                <Text className="text-blue-600 text-xs font-bold">Mở bản đồ</Text>
+                            <TouchableOpacity onPress={handleOpenMap} className="bg-primary-soft px-3 py-1.5 rounded-full">
+                                <Text className="text-primary-strong text-xs font-bold">Mở bản đồ</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -423,7 +423,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
 
                             <TouchableOpacity onPress={handleOpenMap} className="absolute bottom-3 right-3 bg-white/95 px-3 py-2 rounded-xl shadow-md flex-row items-center border border-slate-100">
                                 <ExternalLinkIcon />
-                                <Text className="text-[11px] font-bold text-blue-600 ml-1.5 uppercase">Xem chi tiết</Text>
+                                <Text className="text-[11px] font-bold text-primary-strong ml-1.5 uppercase">Xem chi tiết</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -434,34 +434,34 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     </View>
 
                     {hasContactInfo && (
-                        <View className="mb-8 bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
+                        <View className="mb-8 bg-primary-soft/30 p-5 rounded-2xl border border-primary-border/50">
                             {(place.ownerId || (place as any).owner_id) && (
                                 <TouchableOpacity onPress={() => Alert.alert('Nhắn tin', 'Tính năng chat với chủ cơ sở đang được phát triển!')} className="flex-row items-center mb-4">
-                                    <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
                                         <MessageCircleIcon />
                                     </View>
                                     <View className="flex-1">
                                         <Text className="text-slate-900 font-semibold">Chat với chủ cơ sở</Text>
                                     </View>
-                                    <Text className="text-blue-600 text-xs font-bold uppercase">Nhắn tin</Text>
+                                    <Text className="text-primary-strong text-xs font-bold uppercase">Nhắn tin</Text>
                                 </TouchableOpacity>
                             )}
 
                             {place.phoneNumber && (
                                 <TouchableOpacity onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)} className={`flex-row items-center ${place.website ? 'mb-4' : ''}`}>
-                                    <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
                                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
                                             <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                                         </Svg>
                                     </View>
                                     <Text className="text-slate-900 font-semibold flex-1">{place.phoneNumber}</Text>
-                                    <Text className="text-blue-600 text-xs font-bold uppercase">Gọi điện</Text>
+                                    <Text className="text-primary-strong text-xs font-bold uppercase">Gọi điện</Text>
                                 </TouchableOpacity>
                             )}
 
                             {place.website && (
                                 <TouchableOpacity onPress={() => Linking.openURL(place.website || '')} className="flex-row items-center">
-                                    <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
                                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
                                             <Path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                         </Svg>
@@ -469,7 +469,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                                     <Text className="text-slate-900 font-semibold flex-1" numberOfLines={1}>
                                         {place.website.replace('https://', '')}
                                     </Text>
-                                    <Text className="text-blue-600 text-xs font-bold uppercase">Website</Text>
+                                    <Text className="text-primary-strong text-xs font-bold uppercase">Website</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -478,7 +478,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     <View className="bg-slate-50 p-5 rounded-3xl border border-slate-100 mb-6">
                         <TouchableOpacity onPress={toggleHours} className="flex-row justify-between items-center">
                             <Text className="text-base font-bold text-slate-900">Giờ hoạt động</Text>
-                            <Text className="text-blue-600 text-xs font-bold">{showAllHours ? 'THU GỌN' : 'XEM TẤT CẢ'}</Text>
+                            <Text className="text-primary-strong text-xs font-bold">{showAllHours ? 'THU GỌN' : 'XEM TẤT CẢ'}</Text>
                         </TouchableOpacity>
 
                         {!showAllHours ? (
@@ -526,7 +526,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     <Text className="text-slate-600 font-bold ml-2">Review</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleOpenMap} className="flex-[1.2] bg-blue-600 h-14 rounded-2xl items-center justify-center flex-row shadow-md">
+                <TouchableOpacity onPress={handleOpenMap} className="flex-[1.2] bg-primary-strong h-14 rounded-2xl items-center justify-center flex-row shadow-md">
                     <Text className="text-white font-bold mr-2 text-sm">Bản đồ</Text>
                     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                         <Path d="M5 12h14M12 5l7 7-7 7" />

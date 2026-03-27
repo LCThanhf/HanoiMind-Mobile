@@ -340,57 +340,21 @@ export const CreateTripScreen = ({
 
       const resolvedOwnerId = await resolveOwnerId();
 
-      let fallbackSeedId: string | undefined = selectedPlaceIds[0] || places[0]?._id;
-      if (!fallbackSeedId) {
-        try {
-          const seedSource = await PlacesService.findAll({ page: 1, limit: 1 });
-          fallbackSeedId = seedSource.data?.[0]?._id;
-        } catch {
-          // Ignore seed lookup failure and let AI try without seed.
-        }
-      }
+      const suggestionPayload = await AiService.createJourneyFromRelated({
+        name: tripName.trim() || 'AI goi y dia diem',
+        owner_id: resolvedOwnerId,
+        start_date,
+        end_date,
+        max_places: desiredCount,
+        hours_per_day: 8,
+        mode: isSoloMode ? 'solo' : 'group',
+        mood: moodAiMap[selectedMood],
+        auto_plan: false,
+        total_budget_vnd: parseBudgetValue(budget) ?? 0,
+        daily_budget_vnd: Math.max(0, Math.floor((parseBudgetValue(budget) ?? 0) / Math.max(1, daysCount))),
+      });
 
-      const seedCandidates: string[] = [];
-      if (selectedPlaceIds[0]) seedCandidates.push(selectedPlaceIds[0]);
-      if (fallbackSeedId && fallbackSeedId !== selectedPlaceIds[0]) seedCandidates.push(fallbackSeedId);
-
-      if (!seedCandidates.length) {
-        Alert.alert('AI chua co diem moc', 'Khong tim thay diem moc de goi y. Ban hay chon it nhat 1 dia diem truoc khi dung AI.');
-        return;
-      }
-
-      let finalIds: string[] = [];
-      let lastSuggestError: unknown = null;
-
-      for (const seed of seedCandidates) {
-        try {
-          const suggestionPayload = await AiService.createJourneyFromRelated({
-            name: tripName.trim() || 'AI goi y dia diem',
-            owner_id: resolvedOwnerId,
-            start_date,
-            end_date,
-            seed_place_id: seed,
-            max_places: desiredCount,
-            mode: isSoloMode ? 'solo' : 'group',
-            mood: moodAiMap[selectedMood],
-            auto_plan: false,
-            total_budget_vnd: parseBudgetValue(budget) ?? 0,
-            daily_budget_vnd: Math.max(0, Math.floor((parseBudgetValue(budget) ?? 0) / Math.max(1, daysCount))),
-          });
-
-          const aiIds = (suggestionPayload.selected_place_ids || []).slice(0, desiredCount);
-          if (aiIds.length) {
-            finalIds = aiIds;
-            break;
-          }
-        } catch (error) {
-          lastSuggestError = error;
-        }
-      }
-
-      if (!finalIds.length && lastSuggestError) {
-        throw lastSuggestError;
-      }
+      const finalIds = (suggestionPayload.selected_place_ids || []).slice(0, desiredCount);
 
       const missingIds = finalIds.filter((id) => !places.some((place) => place._id === id));
       if (missingIds.length) {
@@ -411,13 +375,9 @@ export const CreateTripScreen = ({
         }
       }
 
-      if (!finalIds.length) {
-        Alert.alert('Ai chưa có gợi ý', 'Ai chưa trả về địa điểm phù hợp cho hành trình này. Bạn thử lại sau nhé.');
-        return;
+      if (finalIds.length) {
+        setSelectedPlaceIds(finalIds);
       }
-
-      setSelectedPlaceIds(finalIds);
-      Alert.alert('AI đã chọn xong', `Đã chọn ${finalIds.length} địa điểm gợi ý cho chuyến đi của bạn.`);
     } catch (error) {
       Alert.alert(
         'Khong the chon bang AI',
@@ -817,7 +777,7 @@ export const CreateTripScreen = ({
         </Pressable>
       </ScrollView>
 
-      <View 
+      <View
         className="absolute bottom-0 left-0 right-0 px-5 pt-4 bg-white"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
       >

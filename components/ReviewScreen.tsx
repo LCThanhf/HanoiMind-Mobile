@@ -22,7 +22,7 @@ import {
 } from '../services/reviewService/review.type';
 import { UsersService } from '../services/userService/user.service';
 import { User } from '../services/userService/user.type';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 
 // --- ICONS ---
 const ArrowLeftIcon = ({ color = '#1F2937' }) => (
@@ -880,8 +880,6 @@ export const ReviewScreen = ({
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-
-      <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
     </SafeAreaView>
   );
 };

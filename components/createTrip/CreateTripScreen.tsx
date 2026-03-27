@@ -27,6 +27,7 @@ import { StepOneInfo } from './StepOneInfo';
 import { StepTwoPlaces } from './StepTwoPlaces';
 import { StepThreeConfirm } from './StepThreeConfirm';
 import { MoodId } from './types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear();
@@ -42,6 +43,7 @@ export const CreateTripScreen = ({
   onClose?: () => void;
   onJourneyCreated?: (journeyId: string) => void;
 }) => {
+  const insets = useSafeAreaInsets();
   const today = useMemo(() => new Date(), []);
   const tomorrow = useMemo(() => {
     const next = new Date(today);
@@ -815,7 +817,10 @@ export const CreateTripScreen = ({
         </Pressable>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white">
+      <View 
+        className="absolute bottom-0 left-0 right-0 px-5 pt-4 bg-white"
+        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+      >
         {currentStep > 1 ? (
           <TouchableOpacity
             onPress={() => setCurrentStep((prev) => (prev === 3 ? 2 : 1))}

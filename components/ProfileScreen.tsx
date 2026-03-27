@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 
 // Import Service và Type
 import { UsersService } from '../services/userService/user.service';
@@ -191,8 +191,6 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
     </SafeAreaView>
   );
 };

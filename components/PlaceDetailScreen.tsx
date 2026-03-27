@@ -12,6 +12,7 @@ import {
     Platform,
     StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { Image } from 'expo-image';
 import { WebView } from 'react-native-webview';
@@ -94,6 +95,7 @@ type PlaceDetailScreenProps = {
 };
 
 export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refreshKey = 0 }: PlaceDetailScreenProps) => {
+    const insets = useSafeAreaInsets();
     const [place, setPlace] = useState<Place | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -507,7 +509,10 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                 </View>
             </ScrollView>
 
-            <View className="absolute bottom-0 left-0 right-0 bg-white/95 border-t border-slate-100 p-4 pb-4 flex-row items-center gap-x-3 shadow-lg">
+            <View
+                className="absolute left-4 right-4 bg-white rounded-3xl border border-slate-200 px-4 py-3 flex-row items-center gap-x-3 shadow-xl"
+                style={{ bottom: Math.max(insets.bottom, 12) }}
+            >
                 <View className="flex-1 pr-2">
                     <Text className="text-slate-400 text-[9px] font-bold uppercase">Dự kiến</Text>
                     <Text className="text-lg font-black text-slate-900">

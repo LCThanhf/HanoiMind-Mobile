@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Polygon } from 'react-native-svg';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 
 // --- IMPORT SERVICE & TYPES ---
 import { PlacesService } from '../services/placeService/place.service';
@@ -73,14 +73,14 @@ interface ExploreScreenProps {
     onPlaceClick: (placeId: string) => void;
 }
 
-export const ExploreScreen = ({ 
-    activeTab, 
-    onTabChange, 
-    onViewAllPlaces, 
-    onPlaceClick 
+export const ExploreScreen = ({
+    activeTab,
+    onTabChange,
+    onViewAllPlaces,
+    onPlaceClick
 }: ExploreScreenProps) => {
     const [searchText, setSearchText] = useState('');
-    
+
     // State quản lý dữ liệu từ API
     const [places, setPlaces] = useState<Place[]>([]);
     const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
@@ -91,13 +91,13 @@ export const ExploreScreen = ({
             try {
                 setIsLoadingPlaces(true);
                 // Gọi API lấy 2 nhà hàng có đánh giá cao nhất
-                const response = await PlacesService.findAll({ 
-                    limit: 2, 
-                    sortBy: 'rating', 
+                const response = await PlacesService.findAll({
+                    limit: 2,
+                    sortBy: 'rating',
                     sortOrder: 'DESC',
                     category: PlaceCategory.RESTAURANT // <-- THÊM FILTER CATEGORY Ở ĐÂY
                 });
-                
+
                 // Set dữ liệu trả về
                 if (response && response.data) {
                     setPlaces(response.data);
@@ -356,8 +356,6 @@ export const ExploreScreen = ({
                 </View>
 
             </ScrollView>
-
-            <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };

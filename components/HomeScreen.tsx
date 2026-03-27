@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Polygon } from 'react-native-svg';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 import { AppHeader } from './AppHeader';
 
 // API Imports
@@ -615,15 +615,6 @@ export const HomeScreen = ({
                 </View>
             </ScrollView>
 
-            <BottomTabBar
-                activeTab={activeNavTab}
-                onTabPress={(tab: MainTab) => {
-                    onTabChange?.(tab);
-                    if (tab === 'profile') {
-                        onOpenProfile?.();
-                    }
-                }}
-            />
         </SafeAreaView>
     );
 };

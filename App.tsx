@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
-import { View } from 'react-native';
 import './global.css';
 
 import { StarterScreen } from './components/StarterScreen';
@@ -61,6 +60,19 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
 
+  const shouldShowBottomTabBar =
+    appState === 'main' ||
+    appState === 'placesExplore' ||
+    appState === 'reviewPlace' ||
+    appState === 'notifications' ||
+    appState === 'tripManageDetail' ||
+    appState === 'tripDetail';
+
+  const handleBottomTabPress = (tab: MainTab) => {
+    setActiveTab(tab);
+    setAppState('main');
+  };
+
   const renderMainContent = () => {
     if (activeTab === 'profile') {
       return (
@@ -110,17 +122,14 @@ export default function App() {
 
     if (activeTab === 'chat') {
       return (
-        <View style={{ flex: 1 }}>
-          <ChatListScreen
-            onChatClick={(roomId, chatName) => {
-              setSelectedChatRoomId(roomId);
-              setSelectedChatName(chatName);
-              setPreviousState('main');
-              setAppState('chatDetail');
-            }}
-          />
-          <BottomTabBar activeTab={activeTab} onTabPress={setActiveTab} />
-        </View>
+        <ChatListScreen
+          onChatClick={(roomId, chatName) => {
+            setSelectedChatRoomId(roomId);
+            setSelectedChatName(chatName);
+            setPreviousState('main');
+            setAppState('chatDetail');
+          }}
+        />
       );
     }
 
@@ -334,6 +343,9 @@ export default function App() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
       {renderContent()}
+      {shouldShowBottomTabBar && (
+        <BottomTabBar activeTab={activeTab} onTabPress={handleBottomTabPress} />
+      )}
       <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
     </SafeAreaProvider>
   );

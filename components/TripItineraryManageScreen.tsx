@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { AiService } from '../services/aiService/ai.service';
@@ -16,7 +16,7 @@ import { JourneyTag } from '../services/journeyService/journey.type';
 import { UsersService } from '../services/userService/user.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
 import { TripStopCard } from './tripDetail/TripStopCard';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 
 interface TripItineraryManageScreenProps {
   tripId: string;
@@ -52,6 +52,7 @@ export const TripItineraryManageScreen = ({
   activeTab,
   onTabChange,
 }: TripItineraryManageScreenProps) => {
+  const insets = useSafeAreaInsets();
   const { isLoading, error, tripData, dayPlans, budgetSummary, journey, refresh } = useTripDetailData(tripId);
   const [deletingStopId, setDeletingStopId] = useState<string>('');
   const [optimizing, setOptimizing] = useState(false);
@@ -325,11 +326,17 @@ export const TripItineraryManageScreen = ({
                 </TouchableOpacity>
               </View>
             ))}
+            <View style={{ height: 160 + insets.bottom }} />
           </ScrollView>
 
           <View
-            className="absolute left-0 right-0 bottom-0 bg-white px-5 pt-3"
-            style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: 16, bottom: 70 }}
+            className="absolute left-0 right-0 bg-white px-5 pt-3"
+            style={{ 
+              borderTopWidth: 1, 
+              borderTopColor: '#E5E7EB', 
+              paddingBottom: 16, 
+              bottom: 60 + insets.bottom,
+            }}
           >
             <TouchableOpacity
               className="items-center justify-center rounded-xl"
@@ -349,8 +356,6 @@ export const TripItineraryManageScreen = ({
               * Bạn có thể sắp xếp lịch trình bằng cách thêm hoặc xóa địa điểm.
             </Text>
           </View>
-
-          <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </>
       )}
     </SafeAreaView>

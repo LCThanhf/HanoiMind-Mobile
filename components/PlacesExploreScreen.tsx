@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import * as Location from 'expo-location';
-import { BottomTabBar } from './BottomTabBar';
 
 // Import Service và Types
 import { PlacesService } from '../services/placeService/place.service';
@@ -63,19 +62,19 @@ interface PlacesExploreScreenProps {
     onBack: () => void;
     activeTab: any;
     onTabChange: (tab: any) => void;
-    onPlaceClick: (placeId: string) => void; 
+    onPlaceClick: (placeId: string) => void;
 }
 
 export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceClick }: PlacesExploreScreenProps) => {
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-    
+
     const [searchText, setSearchText] = useState('');
     const [activeCategory, setActiveCategory] = useState('Tất cả');
     const [sortBy, setSortBy] = useState<'rating' | 'distance' | 'createdAt' | 'crowdLevel'>('distance');
     const [maxCrowd, setMaxCrowd] = useState<number | undefined>(undefined);
-    
+
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [locationVersion, setLocationVersion] = useState(0);
@@ -118,12 +117,12 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
                 category: activeCategory === 'Tất cả' ? undefined : (activeCategory as PlaceCategory),
                 lat: coords.latitude,
                 lng: coords.longitude,
-                radius: 10000, 
+                radius: 10000,
                 page: targetPage,
                 limit: 10,
                 sortBy: sortBy,
                 sortOrder: sortBy === 'rating' ? 'DESC' : 'ASC',
-                maxCrowd: maxCrowd 
+                maxCrowd: maxCrowd
             });
 
             const nextPlaces = response?.data || [];
@@ -161,12 +160,12 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
             {/* Search Bar */}
             <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
                 <View style={styles.searchContainer}>
-                    <TextInput 
-                        value={searchText} 
-                        onChangeText={setSearchText} 
-                        onSubmitEditing={() => {setPage(1); fetchData(1, false);}} 
-                        placeholder="Tìm địa điểm..." 
-                        style={{ flex: 1, fontSize: 14 }} 
+                    <TextInput
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        onSubmitEditing={() => { setPage(1); fetchData(1, false); }}
+                        placeholder="Tìm địa điểm..."
+                        style={{ flex: 1, fontSize: 14 }}
                     />
                 </View>
             </View>
@@ -207,8 +206,8 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
                 ) : (
                     <>
                         {places.map((place) => (
-                            <TouchableOpacity 
-                                key={place._id} 
+                            <TouchableOpacity
+                                key={place._id}
                                 style={styles.placeCard}
                                 onPress={() => onPlaceClick(place._id)}
                             >
@@ -227,8 +226,8 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
 
                         {/* NÚT XEM THÊM ĐÃ ĐƯỢC KHÔI PHỤC TẠI ĐÂY */}
                         {hasMore && (
-                            <TouchableOpacity 
-                                style={styles.loadMoreBtn} 
+                            <TouchableOpacity
+                                style={styles.loadMoreBtn}
                                 onPress={handleLoadMore}
                                 disabled={loadingMore}
                             >
@@ -239,15 +238,13 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
                                 )}
                             </TouchableOpacity>
                         )}
-                        
+
                         {!hasMore && places.length > 0 && (
                             <Text style={styles.noMoreText}>Đã hiển thị tất cả địa điểm</Text>
                         )}
                     </>
                 )}
             </ScrollView>
-            
-            <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };

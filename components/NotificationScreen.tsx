@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { NotificationService } from '../services/notificationService/notification.service';
 import { Notification as ApiNotification, NotificationType } from '../services/notificationService/notification.type';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 
 type NotificationKind = 'avatar' | 'chat' | 'trip';
 
@@ -212,88 +212,86 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     <Text style={{ fontSize: 15, color: '#9CA3AF' }}>Không có thông báo nào</Text>
                 </View>
             ) : (
-            <ScrollView
-                className="flex-1"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 4, paddingTop: 12, paddingBottom: 92 }}
-            >
-                {notifications.map((item) => (
-                    <View key={item.id} style={{ marginBottom: 14, paddingLeft: 0 }}>
-                        {item.unread && (
-                            <View
-                                style={{
-                                    position: 'absolute',
-                                    left: 0,
-                                    top: 37,
-                                    width: 17,
-                                    height: 17,
-                                    borderRadius: 8.5,
-                                    backgroundColor: 'white',
-                                    borderWidth: 2,
-                                    borderColor: '#2B8EF0',
-                                    zIndex: 2,
-                                }}
-                            >
+                <ScrollView
+                    className="flex-1"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 4, paddingTop: 12, paddingBottom: 92 }}
+                >
+                    {notifications.map((item) => (
+                        <View key={item.id} style={{ marginBottom: 14, paddingLeft: 0 }}>
+                            {item.unread && (
                                 <View
                                     style={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: 4,
-                                        backgroundColor: '#2B8EF0',
-                                        alignSelf: 'center',
-                                        marginTop: 2.5,
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: 37,
+                                        width: 17,
+                                        height: 17,
+                                        borderRadius: 8.5,
+                                        backgroundColor: 'white',
+                                        borderWidth: 2,
+                                        borderColor: '#2B8EF0',
+                                        zIndex: 2,
                                     }}
-                                />
-                            </View>
-                        )}
+                                >
+                                    <View
+                                        style={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: 4,
+                                            backgroundColor: '#2B8EF0',
+                                            alignSelf: 'center',
+                                            marginTop: 2.5,
+                                        }}
+                                    />
+                                </View>
+                            )}
 
-                        <TouchableOpacity
-                            onPress={() => handleTap(item)}
-                            activeOpacity={0.85}
-                            style={{
-                                marginLeft: 2,
-                                marginRight: 2,
-                                borderRadius: 18,
-                                backgroundColor: '#F3F4F6',
-                                borderWidth: 1,
-                                borderColor: '#E5E7EB',
-                                paddingHorizontal: 16,
-                                paddingVertical: 16,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                shadowColor: '#000',
-                                shadowOpacity: 0.05,
-                                shadowRadius: 8,
-                                shadowOffset: { width: 0, height: 3 },
-                                elevation: 2,
-                            }}
-                        >
-                            <NotificationLeading item={item} />
+                            <TouchableOpacity
+                                onPress={() => handleTap(item)}
+                                activeOpacity={0.85}
+                                style={{
+                                    marginLeft: 2,
+                                    marginRight: 2,
+                                    borderRadius: 18,
+                                    backgroundColor: '#F3F4F6',
+                                    borderWidth: 1,
+                                    borderColor: '#E5E7EB',
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 16,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 8,
+                                    shadowOffset: { width: 0, height: 3 },
+                                    elevation: 2,
+                                }}
+                            >
+                                <NotificationLeading item={item} />
 
-                            <View style={{ flex: 1, marginLeft: 14, marginRight: 8 }}>
-                                <Text style={{ fontSize: 15, color: '#1F2937', fontWeight: '400' }} numberOfLines={1}>
-                                    {item.actor ? (
-                                        <>
-                                            <Text style={{ fontWeight: '700' }}>{item.actor}</Text>
-                                            <Text> {item.message}</Text>
-                                        </>
-                                    ) : (
-                                        item.message
-                                    )}
-                                </Text>
-                                <Text style={{ fontSize: 13, color: '#4B5563', marginTop: 4 }}>{item.timeAgo}</Text>
-                            </View>
+                                <View style={{ flex: 1, marginLeft: 14, marginRight: 8 }}>
+                                    <Text style={{ fontSize: 15, color: '#1F2937', fontWeight: '400' }} numberOfLines={1}>
+                                        {item.actor ? (
+                                            <>
+                                                <Text style={{ fontWeight: '700' }}>{item.actor}</Text>
+                                                <Text> {item.message}</Text>
+                                            </>
+                                        ) : (
+                                            item.message
+                                        )}
+                                    </Text>
+                                    <Text style={{ fontSize: 13, color: '#4B5563', marginTop: 4 }}>{item.timeAgo}</Text>
+                                </View>
 
-                            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-                                <Path d="M9 6l6 6-6 6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </Svg>
-                        </TouchableOpacity>
-                    </View>
-                ))}
-            </ScrollView>
+                                <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                                    <Path d="M9 6l6 6-6 6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </Svg>
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </ScrollView>
             )}
-
-            <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };

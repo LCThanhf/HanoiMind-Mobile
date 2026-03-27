@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { BottomTabBar, MainTab } from './BottomTabBar';
+import { MainTab } from './BottomTabBar';
 import { AppHeader } from './AppHeader';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { Journey } from '../services/journeyService/journey.type';
@@ -415,8 +415,6 @@ export const TripsScreen = ({ activeTab, onTabChange, onCreateTrip, onTripClick,
                     )}
                 </View>
             </ScrollView>
-
-            <BottomTabBar activeTab={activeTab} onTabPress={onTabChange} />
         </SafeAreaView>
     );
 };

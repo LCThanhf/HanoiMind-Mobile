@@ -1,18 +1,18 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { 
-    View, Text, TouchableOpacity, ActivityIndicator, Alert, 
+import {
+    View, Text, TouchableOpacity, ActivityIndicator, Alert,
     Platform, Linking, LayoutAnimation, StyleSheet, ScrollView,
-    Animated, PanResponder, Dimensions 
+    Animated, PanResponder, Dimensions
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
-import { 
-    ArrowLeft, Navigation, ExternalLink, MapPin, X, 
+import {
+    ArrowLeft, Navigation, ExternalLink, MapPin, X,
     Car, Clock, Map as MapIcon, MoreVertical, Bike, Footprints,
-    ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowLeft as LeftIcon, ArrowRight as RightIcon, 
+    ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowLeft as LeftIcon, ArrowRight as RightIcon,
     CornerUpLeft, CornerUpRight, CircleDot
 } from 'lucide-react-native';
+import { ScreenHeader } from './shared';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -21,9 +21,9 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Mốc 1: 50% (Mở vừa phải)
 // Mốc 2: 85% (Mở full màn hình)
 const SNAP_POINTS = [
-    SCREEN_HEIGHT * 0.15, 
-    SCREEN_HEIGHT * 0.50, 
-    SCREEN_HEIGHT * 0.65  
+    SCREEN_HEIGHT * 0.15,
+    SCREEN_HEIGHT * 0.50,
+    SCREEN_HEIGHT * 0.65
 ];
 
 // Tọa độ Y tương ứng để đẩy Animated.View lên
@@ -35,7 +35,7 @@ const TRANSLATE_Y_SNAPS = [
 
 // Cấu hình ORS
 const ORS_BASE_URL = 'https://api.openrouteservice.org/v2/directions';
-const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjVlMjMxNjJjNGViMTQyZjc4ZjlmMzk5YzRkNTIxM2FmIiwiaCI6Im11cm11cjY0In0='; 
+const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjVlMjMxNjJjNGViMTQyZjc4ZjlmMzk5YzRkNTIxM2FmIiwiaCI6Im11cm11cjY0In0=';
 
 const getStepIcon = (instruction: string = '', modifier: string = '', type: number) => {
     const text = instruction.toLowerCase();
@@ -66,14 +66,13 @@ const getStepIcon = (instruction: string = '', modifier: string = '', type: numb
 
 export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void }) => {
     const mapRef = useRef<MapView>(null);
-    const insets = useSafeAreaInsets();
     const locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
     const [travelMode, setTravelMode] = useState<'driving-car' | 'foot-walking' | 'cycling-regular'>('driving-car');
     const [userLocation, setUserLocation] = useState<Location.LocationObjectCoords | null>(null);
     const [isLocating, setIsLocating] = useState(true);
     const [routeState, setRouteState] = useState<'IDLE' | 'LOADING' | 'READY' | 'NAVIGATING'>('IDLE');
-    const [routeData, setRouteData] = useState<any>(null); 
+    const [routeData, setRouteData] = useState<any>(null);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     // --- LOGIC ANIMATION ĐA ĐIỂM DỪNG (MULTI-SNAP) ---
@@ -98,7 +97,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
             onPanResponderMove: Animated.event([null, { dy: pan }], { useNativeDriver: false }),
             onPanResponderRelease: (_, gestureState) => {
                 pan.flattenOffset(); // Gộp offset và value lại
-                
+
                 // Tính vị trí dự kiến thả ra (cộng thêm vận tốc vy để tạo lực quán tính quẹt ngón tay)
                 const projectedY = currentPanValue.current + gestureState.vy * 100;
 
@@ -146,7 +145,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
             const url = `${ORS_BASE_URL}/${mode}?api_key=${ORS_API_KEY}&start=${userLocation.longitude},${userLocation.latitude}&end=${destLocation.longitude},${destLocation.latitude}`;
             const response = await fetch(url);
             const data = await response.json();
-            
+
             if (data.features?.length > 0) {
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 const route = data.features[0];
@@ -158,7 +157,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                 };
                 setRouteData(normalized);
                 setRouteState('READY');
-                
+
                 // Tự động bật lên mốc 50% khi load đường xong
                 Animated.spring(pan, { toValue: TRANSLATE_Y_SNAPS[1], useNativeDriver: false, friction: 8 }).start();
 
@@ -172,7 +171,7 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
     const startNavigation = async () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setRouteState('NAVIGATING');
-        
+
         // Thu gọn bảng về 15% khi bắt đầu chạy xe
         Animated.spring(pan, { toValue: TRANSLATE_Y_SNAPS[0], useNativeDriver: false, friction: 8 }).start();
 
@@ -187,18 +186,24 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
 
     const steps = useMemo(() => routeData?.steps || [], [routeData]);
 
-    if (isLocating) return <ActivityIndicator style={{flex: 1}} color="#3B82F6" />;
+    if (isLocating) return <ActivityIndicator style={{ flex: 1 }} color="#3B82F6" />;
 
     return (
-        <View style={{flex: 1, backgroundColor: '#fff'}}>
-            <View style={[styles.header, { paddingTop: insets.top }]}>
-                <TouchableOpacity onPress={onBack} style={styles.headerBtn}><ArrowLeft color="#111827" size={24} /></TouchableOpacity>
-                <Text style={styles.headerTitle} numberOfLines={1}>{place?.name || "Chỉ dẫn địa điểm"}</Text>
-                <TouchableOpacity style={styles.headerBtn}><MoreVertical color="#111827" size={24} /></TouchableOpacity>
-            </View>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScreenHeader
+                title={place?.name || 'Chỉ dẫn địa điểm'}
+                onBack={onBack}
+                horizontalPadding={16}
+                topPadding={8}
+                bottomPadding={12}
+                titleSize={17}
+                titleWeight="700"
+                containerStyle={{ zIndex: 10 }}
+                rightSlot={<TouchableOpacity style={styles.headerBtn}><MoreVertical color="#111827" size={24} /></TouchableOpacity>}
+            />
 
             <View style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-                
+
                 {routeState === 'NAVIGATING' && steps[currentStepIndex] && (
                     <View style={[styles.navHeader, { paddingTop: 10 }]}>
                         <View style={styles.navHeaderContent}>
@@ -219,11 +224,11 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                     </View>
                 )}
 
-                <MapView ref={mapRef} provider={PROVIDER_GOOGLE} style={{flex: 1}} initialRegion={{ ...destLocation, latitudeDelta: 0.01, longitudeDelta: 0.01 }}>
+                <MapView ref={mapRef} provider={PROVIDER_GOOGLE} style={{ flex: 1 }} initialRegion={{ ...destLocation, latitudeDelta: 0.01, longitudeDelta: 0.01 }}>
                     {routeData?.coordinates && <Polyline coordinates={routeData.coordinates} strokeColor="#3B82F6" strokeWidth={6} />}
                     <Marker coordinate={destLocation} title={place?.name} />
                     {userLocation && (
-                        <Marker coordinate={userLocation} flat anchor={{x: 0.5, y: 0.5}} rotation={userLocation.heading || 0}>
+                        <Marker coordinate={userLocation} flat anchor={{ x: 0.5, y: 0.5 }} rotation={userLocation.heading || 0}>
                             <View style={styles.userMarker}><Navigation size={22} color="#3B82F6" fill="#3B82F6" /></View>
                         </Marker>
                     )}
@@ -244,9 +249,9 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                         ) : (
                             <View style={{ paddingHorizontal: 20 }}>
                                 <View style={styles.modeSelector}>
-                                    <ModeTab active={travelMode === 'driving-car'} icon={<Car size={18}/>} label="Ô tô" onPress={() => {setTravelMode('driving-car'); fetchRoute('driving-car');}} />
-                                    <ModeTab active={travelMode === 'cycling-regular'} icon={<Bike size={18}/>} label="Xe đạp" onPress={() => {setTravelMode('cycling-regular'); fetchRoute('cycling-regular');}} />
-                                    <ModeTab active={travelMode === 'foot-walking'} icon={<Footprints size={18}/>} label="Đi bộ" onPress={() => {setTravelMode('foot-walking'); fetchRoute('foot-walking');}} />
+                                    <ModeTab active={travelMode === 'driving-car'} icon={<Car size={18} />} label="Ô tô" onPress={() => { setTravelMode('driving-car'); fetchRoute('driving-car'); }} />
+                                    <ModeTab active={travelMode === 'cycling-regular'} icon={<Bike size={18} />} label="Xe đạp" onPress={() => { setTravelMode('cycling-regular'); fetchRoute('cycling-regular'); }} />
+                                    <ModeTab active={travelMode === 'foot-walking'} icon={<Footprints size={18} />} label="Đi bộ" onPress={() => { setTravelMode('foot-walking'); fetchRoute('foot-walking'); }} />
                                 </View>
 
                                 <View style={styles.statsCard}>
@@ -313,28 +318,26 @@ const ModeTab = ({ active, icon, label, onPress }: any) => (
 );
 
 const styles = StyleSheet.create({
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F1F5F9', zIndex: 10 },
-    headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827', flex: 1, textAlign: 'center' },
     headerBtn: { padding: 4 },
     userMarker: { backgroundColor: '#fff', padding: 6, borderRadius: 20, elevation: 5 },
     navHeader: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: '#3B82F6', zIndex: 10, paddingBottom: 15, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
     navHeaderContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20 },
     navInstruction: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
     navSubText: { color: '#DBEAFE', fontSize: 13, marginTop: 2 },
-    
+
     // Panel Style cho Multi-Snap
-    bottomPanel: { 
-        position: 'absolute', 
+    bottomPanel: {
+        position: 'absolute',
         bottom: -(SNAP_POINTS[2] - SNAP_POINTS[0]), // Giấu phần lớn panel ở dưới
         height: SNAP_POINTS[2], // Tổng chiều cao bằng với Mốc 85%
-        left: 0, right: 0, 
-        backgroundColor: '#fff', 
-        borderTopLeftRadius: 35, borderTopRightRadius: 35, 
-        elevation: 25, shadowOpacity: 0.15 
+        left: 0, right: 0,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 35, borderTopRightRadius: 35,
+        elevation: 25, shadowOpacity: 0.15
     },
     dragHandleWrapper: { alignItems: 'center', paddingVertical: 15 },
     dragHandle: { width: 50, height: 6, backgroundColor: '#CBD5E1', borderRadius: 3 },
-    
+
     idleContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 25, paddingBottom: 30 },
     placeName: { fontSize: 22, fontWeight: '800', color: '#111827' },
     placeSub: { fontSize: 14, color: '#6B7280', marginTop: 4 },
@@ -359,7 +362,7 @@ const styles = StyleSheet.create({
     stepContent: { flex: 1, paddingLeft: 12 },
     stepInstruction: { fontSize: 15, fontWeight: '600', color: '#111827', lineHeight: 22 },
     stepMeta: { fontSize: 13, color: '#6B7280', marginTop: 3 },
-    
+
     fixedActionBar: { backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 15, paddingBottom: Platform.OS === 'ios' ? 40 : 20, borderTopWidth: 1, borderColor: '#E5E7EB', shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 10, gap: 10, zIndex: 50 },
     startBtn: { backgroundColor: '#3B82F6', height: 58, borderRadius: 18, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
     stopBtn: { backgroundColor: '#EF4444', height: 58, borderRadius: 18, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },

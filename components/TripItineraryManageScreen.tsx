@@ -17,6 +17,7 @@ import { UsersService } from '../services/userService/user.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
 import { TripStopCard } from './tripDetail/TripStopCard';
 import { MainTab } from './BottomTabBar';
+import { ScreenHeader } from './shared';
 
 interface TripItineraryManageScreenProps {
   tripId: string;
@@ -168,25 +169,7 @@ export const TripItineraryManageScreen = ({
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="px-5 pt-3 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
-          <Text className="text-[18px] text-gray-900" style={{ fontWeight: '600' }}>
-            {tripData?.title || 'Chi tiết hành trình'}
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-      </View>
+      <ScreenHeader title={tripData?.title || 'Chi tiết hành trình'} onBack={onBack} />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -331,10 +314,10 @@ export const TripItineraryManageScreen = ({
 
           <View
             className="absolute left-0 right-0 bg-white px-5 pt-3"
-            style={{ 
-              borderTopWidth: 1, 
-              borderTopColor: '#E5E7EB', 
-              paddingBottom: 16, 
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: '#E5E7EB',
+              paddingBottom: 16,
               bottom: 60 + insets.bottom,
             }}
           >

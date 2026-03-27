@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Map as MapIcon, Clock, MapPin } from 'lucide-react-native';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
+import { CharacteristicBadge, ScreenHeader, TimelineConnector } from './shared';
 
 interface TripRouteScreenProps {
   tripId: string;
@@ -165,25 +166,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="px-5 pt-3 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
-          <Text className="text-[18px] text-gray-900" style={{ fontWeight: '600' }}>
-            Lộ trình tham quan
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-      </View>
+      <ScreenHeader title="Lộ trình tham quan" onBack={onBack} />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -360,14 +343,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
                 Chi tiết các chặng
               </Text>
-              <View
-                className="rounded-full px-3 py-1"
-                style={{ backgroundColor: '#DBEAFE' }}
-              >
-                <Text className="text-[11px]" style={{ color: '#3B82F6', fontWeight: '700' }}>
-                  Đang tối ưu
-                </Text>
-              </View>
+              <CharacteristicBadge label="Đang tối ưu" backgroundColor="#DBEAFE" textColor="#3B82F6" />
             </View>
 
             {selectedDay && selectedDay.stops.length >= 2 ? (
@@ -382,15 +358,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                   >
                     <View className="flex-row items-start justify-between">
                       <View className="flex-row" style={{ flex: 1, paddingRight: 8 }}>
-                        <View style={{ marginTop: 2, alignItems: 'center' }}>
-                          <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-                            <Circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="2" />
-                            <Circle cx="9" cy="9" r="3" fill="#3B82F6" />
-                          </Svg>
-                          {index !== selectedDay.stops.length - 2 && (
-                            <View style={{ width: 2, flex: 1, minHeight: 18, marginTop: 4, backgroundColor: '#BFDBFE' }} />
-                          )}
-                        </View>
+                        <TimelineConnector isLast={index === selectedDay.stops.length - 2} dotColor="#3B82F6" lineColor="#BFDBFE" />
 
                         <View style={{ marginLeft: 10, flex: 1 }}>
                           <Text className="text-[18px] text-gray-900" style={{ fontWeight: '700' }} numberOfLines={1}>

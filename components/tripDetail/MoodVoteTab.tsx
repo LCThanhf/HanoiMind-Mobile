@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { MoodVoteOption } from './types';
+import { AvatarStack, CardContainer, PillBadge } from '../shared';
 
 const StarSparkleIcon = () => (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -61,6 +62,14 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
         icon: moodIconById[option.id] || moodIconById.chill,
     }));
 
+    const voteResultAvatars = [
+        { uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80', name: 'A' },
+        { uri: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80', name: 'B' },
+        { uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80', name: 'C' },
+        { name: 'D' },
+        { name: 'E' },
+    ];
+
     return (
         <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
             {/* Header */}
@@ -71,11 +80,13 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                         Lựa chọn của bạn
                     </Text>
                 </View>
-                <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' }}>
-                    <Text className="text-[12px] text-gray-600" style={{ fontWeight: '500' }}>
-                        {tripName}
-                    </Text>
-                </View>
+                <PillBadge
+                    label={tripName}
+                    backgroundColor="#F3F4F6"
+                    textColor="#4B5563"
+                    textWeight="500"
+                    borderColor="#E5E7EB"
+                />
             </View>
 
             {/* List */}
@@ -193,18 +204,11 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
                     Kết quả bình chọn
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', zIndex: 3 }} />
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', marginLeft: -8, zIndex: 2 }} />
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', marginLeft: -8, zIndex: 1 }} />
-                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6', borderWidth: 2, borderColor: 'white', marginLeft: -8, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#374151' }}>+2</Text>
-                    </View>
-                </View>
+                <AvatarStack items={voteResultAvatars} size={28} overlap={8} maxVisible={3} />
             </View>
 
             {/* Chart Card */}
-            <View style={{ backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#F3F4F6', marginBottom: 20 }}>
+            <CardContainer style={{ borderRadius: 16, marginBottom: 20 }}>
                 <View style={{ padding: 16, paddingBottom: 32 }}>
                     <Text style={{ fontSize: 13, color: '#374151', fontWeight: '500', marginBottom: 24 }}>
                         Phân bổ xu hướng chuyến đi
@@ -245,7 +249,7 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                         </Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </CardContainer>
 
             {/* Re-generate route button */}
             <TouchableOpacity

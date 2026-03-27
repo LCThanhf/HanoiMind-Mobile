@@ -21,6 +21,7 @@ import { Place } from '../services/placeService/place.type';
 import { FavoriteService } from '../services/favoriteService/favorite.service';
 import { FavoriteType } from '../services/favoriteService/favorite.type';
 import { ReviewService } from '../services/reviewService/review.service';
+import { BackChevronIcon, Button, CharacteristicBadge, ListActionRow } from './shared';
 
 const COST_RATES = {
     dining: { RESTAURANT: 150000, CAFE: 70000, STREET_FOOD: 40000 },
@@ -283,9 +284,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
         <View className="flex-1 bg-slate-50">
             <View className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 pt-12 pb-4">
                 <TouchableOpacity onPress={onBack} className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm">
-                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5">
-                        <Path d="M15 18l-6-6 6-6" />
-                    </Svg>
+                    <BackChevronIcon size={20} color="#111827" strokeWidth={2.5} />
                 </TouchableOpacity>
 
                 <View className="flex-row gap-x-2">
@@ -324,9 +323,14 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                             backgroundColor: 'rgba(0,0,0,0.20)',
                         }}
                     />
-                    <View className="absolute bottom-16 left-5 bg-black/40 px-3 py-1.5 rounded-lg border border-white/20">
-                        <Text className="text-white text-xs font-semibold uppercase">{place.category}</Text>
-                    </View>
+                    <CharacteristicBadge
+                        label={place.category}
+                        backgroundColor="rgba(0,0,0,0.4)"
+                        textColor="#FFFFFF"
+                        borderColor="rgba(255,255,255,0.2)"
+                        containerStyle={{ position: 'absolute', bottom: 64, left: 20, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}
+                        textStyle={{ fontSize: 12, textTransform: 'uppercase' }}
+                    />
                 </View>
 
                 <View className="bg-white rounded-t-[32px] -mt-10 px-5 pt-16 pb-40 shadow-2xl relative">
@@ -350,10 +354,16 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     {place.tags && place.tags.length > 0 && (
                         <View className="flex-row flex-wrap gap-2 mb-6">
                             {place.tags.map((tag, index) => (
-                                <View key={index} className="flex-row items-center bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
-                                    <TagIcon />
-                                    <Text className="text-slate-500 text-xs ml-1 font-medium">{tag}</Text>
-                                </View>
+                                <CharacteristicBadge
+                                    key={index}
+                                    label={tag}
+                                    icon={<TagIcon />}
+                                    backgroundColor="#F8FAFC"
+                                    textColor="#64748B"
+                                    borderColor="#F1F5F9"
+                                    containerStyle={{ paddingHorizontal: 10, paddingVertical: 5 }}
+                                    textStyle={{ fontSize: 12, fontWeight: '500' }}
+                                />
                             ))}
                         </View>
                     )}
@@ -434,43 +444,44 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     </View>
 
                     {hasContactInfo && (
-                        <View className="mb-8 bg-primary-soft/30 p-5 rounded-2xl border border-primary-border/50">
+                        <View className="mb-8 bg-primary-soft/30 p-2 rounded-2xl border border-primary-border/50">
                             {(place.ownerId || (place as any).owner_id) && (
-                                <TouchableOpacity onPress={() => Alert.alert('Nhắn tin', 'Tính năng chat với chủ cơ sở đang được phát triển!')} className="flex-row items-center mb-4">
-                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
-                                        <MessageCircleIcon />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text className="text-slate-900 font-semibold">Chat với chủ cơ sở</Text>
-                                    </View>
-                                    <Text className="text-primary-strong text-xs font-bold uppercase">Nhắn tin</Text>
-                                </TouchableOpacity>
+                                <ListActionRow
+                                    icon={<MessageCircleIcon />}
+                                    title="Chat với chủ cơ sở"
+                                    rightElement={<Text className="text-primary-strong text-xs font-bold uppercase">Nhắn tin</Text>}
+                                    onPress={() => Alert.alert('Nhắn tin', 'Tính năng chat với chủ cơ sở đang được phát triển!')}
+                                    iconContainerBackgroundColor="#EFF6FF"
+                                />
                             )}
 
                             {place.phoneNumber && (
-                                <TouchableOpacity onPress={() => Linking.openURL(`tel:${place.phoneNumber}`)} className={`flex-row items-center ${place.website ? 'mb-4' : ''}`}>
-                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
+                                <ListActionRow
+                                    icon={
                                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
                                             <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                                         </Svg>
-                                    </View>
-                                    <Text className="text-slate-900 font-semibold flex-1">{place.phoneNumber}</Text>
-                                    <Text className="text-primary-strong text-xs font-bold uppercase">Gọi điện</Text>
-                                </TouchableOpacity>
+                                    }
+                                    title={place.phoneNumber}
+                                    rightElement={<Text className="text-primary-strong text-xs font-bold uppercase">Gọi điện</Text>}
+                                    onPress={() => Linking.openURL('tel:' + place.phoneNumber)}
+                                    iconContainerBackgroundColor="#EFF6FF"
+                                />
                             )}
 
                             {place.website && (
-                                <TouchableOpacity onPress={() => Linking.openURL(place.website || '')} className="flex-row items-center">
-                                    <View className="w-10 h-10 bg-primary-soft rounded-full items-center justify-center mr-3">
+                                <ListActionRow
+                                    icon={
                                         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
                                             <Path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                         </Svg>
-                                    </View>
-                                    <Text className="text-slate-900 font-semibold flex-1" numberOfLines={1}>
-                                        {place.website.replace('https://', '')}
-                                    </Text>
-                                    <Text className="text-primary-strong text-xs font-bold uppercase">Website</Text>
-                                </TouchableOpacity>
+                                    }
+                                    title={place.website.replace('https://', '')}
+                                    rightElement={<Text className="text-primary-strong text-xs font-bold uppercase">Website</Text>}
+                                    onPress={() => Linking.openURL(place.website || '')}
+                                    iconContainerBackgroundColor="#EFF6FF"
+                                    showBorderBottom={false}
+                                />
                             )}
                         </View>
                     )}
@@ -521,17 +532,28 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                     </Text>
                 </View>
 
-                <TouchableOpacity onPress={onReview} className="flex-1 bg-slate-100 h-14 rounded-2xl items-center justify-center flex-row">
-                    <StarIcon />
-                    <Text className="text-slate-600 font-bold ml-2">Review</Text>
-                </TouchableOpacity>
+                <Button
+                    label="Review"
+                    onPress={onReview || (() => { })}
+                    disabled={!onReview}
+                    variant="secondary"
+                    rightSlot={<View style={{ marginLeft: 8 }}><StarIcon /></View>}
+                    style={{ flex: 1, width: 'auto', minHeight: 56, borderRadius: 16, borderColor: '#E2E8F0', backgroundColor: '#F1F5F9' }}
+                    textColor="#475569"
+                />
 
-                <TouchableOpacity onPress={handleOpenMap} className="flex-[1.2] bg-primary-strong h-14 rounded-2xl items-center justify-center flex-row shadow-md">
-                    <Text className="text-white font-bold mr-2 text-sm">Bản đồ</Text>
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                        <Path d="M5 12h14M12 5l7 7-7 7" />
-                    </Svg>
-                </TouchableOpacity>
+                <Button
+                    label="Bản đồ"
+                    onPress={handleOpenMap}
+                    rightSlot={(
+                        <View style={{ marginLeft: 8 }}>
+                            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                <Path d="M5 12h14M12 5l7 7-7 7" />
+                            </Svg>
+                        </View>
+                    )}
+                    style={{ flex: 1.2, width: 'auto', minHeight: 56, borderRadius: 16, backgroundColor: '#2563EB' }}
+                />
             </View>
         </View>
     );

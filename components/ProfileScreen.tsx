@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
+import { AvatarCircle, ListActionRow } from './shared';
 
 // Import Service và Type
 import { UsersService } from '../services/userService/user.service';
@@ -112,12 +112,14 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
         <View style={{ height: 18 }} />
 
         <View className="items-center px-5 pt-5 pb-6">
-          <Image
-            source={{
-              uri: user?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'
-            }}
-            style={{ width: 96, height: 96, borderRadius: 48 }}
-          />
+          <View style={{ width: 96, height: 96, borderRadius: 48, overflow: 'hidden' }}>
+            <AvatarCircle
+              uri={user?.avatar}
+              name={user?.fullName || 'User'}
+              size={96}
+              backgroundColor="#D1D5DB"
+            />
+          </View>
           <Text className="mt-5 text-[28px] text-gray-900 font-bold">
             {user?.fullName || 'Người dùng Bero'}
           </Text>
@@ -138,41 +140,19 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
         <View className="px-4">
           <View className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
             {profileItems.map((item, index) => (
-              <TouchableOpacity
+              <ListActionRow
                 key={item.key}
-                activeOpacity={0.8}
-                className="flex-row items-center px-4 py-4"
-                style={{
-                  borderBottomWidth: index === profileItems.length - 1 ? 0 : 1,
-                  borderBottomColor: '#E5E7EB',
-                }}
-              >
-                <View
-                  className="mr-4 items-center justify-center rounded-xl"
-                  style={{ width: 44, height: 44, backgroundColor: item.accent }}
-                >
-                  {item.icon}
-                </View>
-
-                <View className="flex-1">
-                  <Text className="text-gray-900 font-medium text-[16px]">
-                    {item.title}
-                  </Text>
-                  {item.subtitle ? (
-                    <Text className="mt-1 text-[13px] text-gray-500">{item.subtitle}</Text>
-                  ) : null}
-                </View>
-
-                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M9 18l6-6-6-6"
-                    stroke="#111827"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </TouchableOpacity>
+                icon={item.icon}
+                title={item.title}
+                subtitle={item.subtitle}
+                iconContainerBackgroundColor={item.accent}
+                iconContainerSize={44}
+                horizontalPadding={16}
+                verticalPadding={16}
+                showBorderBottom={index !== profileItems.length - 1}
+                borderBottomColor="#E5E7EB"
+                showChevron
+              />
             ))}
           </View>
         </View>

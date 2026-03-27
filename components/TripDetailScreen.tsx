@@ -8,6 +8,7 @@ import { MoodVoteTab } from './tripDetail/MoodVoteTab';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { TripStatCard } from './tripDetail/TripStatCard';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
+import { PillBadge } from './shared';
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -152,22 +153,14 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                     {/* Status Tabs */}
                     <View className="px-5 flex-row items-center mb-4 mt-4">
-                        <View
-                            className="px-3 py-1.5 rounded-full mr-2"
-                            style={{ backgroundColor: '#ECFDF5' }}
-                        >
-                            <Text className="text-[12px]" style={{ color: '#22C55E', fontWeight: '600' }}>
-                                {tripData.status}
-                            </Text>
-                        </View>
-                        <View
-                            className="px-3 py-1.5 rounded-full"
-                            style={{ backgroundColor: '#EBF5FF' }}
-                        >
-                            <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                                Owner
-                            </Text>
-                        </View>
+                        <PillBadge
+                            label={tripData.status}
+                            backgroundColor="#ECFDF5"
+                            textColor="#22C55E"
+                            textWeight="600"
+                            containerStyle={{ marginRight: 8 }}
+                        />
+                        <PillBadge label="Owner" backgroundColor="#EBF5FF" textColor="#2B8EF0" textWeight="600" />
                     </View>
 
                     {/* Trip Title & Location */}

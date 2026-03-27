@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View, Text, ScrollView, TouchableOpacity, SafeAreaView,
-    TextInput, Image, ActivityIndicator, Alert, StyleSheet
+    Image, ActivityIndicator, Alert, StyleSheet
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import * as Location from 'expo-location';
+import { Button, CardContainer, PillBadge, ScreenHeader, SearchInput } from './shared';
+import { PlaceCard } from './cards';
 
 // Import Service và Types
 import { PlacesService } from '../services/placeService/place.service';
@@ -147,27 +148,25 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={onBack}>
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path d="M19 12H5M12 19l-7-7 7-7" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Khám phá địa điểm</Text>
-            </View>
+            <ScreenHeader
+                title="Khám phá địa điểm"
+                onBack={onBack}
+                showBorder={false}
+                horizontalPadding={16}
+                topPadding={10}
+                bottomPadding={12}
+                titleSize={20}
+                titleWeight="700"
+            />
 
             {/* Search Bar */}
             <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-                <View style={styles.searchContainer}>
-                    <TextInput
-                        value={searchText}
-                        onChangeText={setSearchText}
-                        onSubmitEditing={() => { setPage(1); fetchData(1, false); }}
-                        placeholder="Tìm địa điểm..."
-                        style={{ flex: 1, fontSize: 14 }}
-                    />
-                </View>
+                <SearchInput
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    onSubmitEditing={() => { setPage(1); fetchData(1, false); }}
+                    placeholder="Tìm địa điểm..."
+                />
             </View>
 
             {/* Filter Row 1: Sort & Categories */}
@@ -205,38 +204,19 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
                     <ActivityIndicator size="large" color="#2B8EF0" style={{ marginTop: 20 }} />
                 ) : (
                     <>
-                        {places.map((place) => (
-                            <TouchableOpacity
-                                key={place._id}
-                                style={styles.placeCard}
-                                onPress={() => onPlaceClick(place._id)}
-                            >
-                                <Image source={{ uri: place.images?.[0] || 'https://via.placeholder.com/150' }} style={styles.placeImage} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.placeName}>{place.name}</Text>
-                                    <Text style={styles.infoText}>
-                                        {place.distance ? `${(place.distance / 1000).toFixed(1)} km` : 'N/A'} • {place.reviewCount} đánh giá
-                                    </Text>
-                                    <View style={styles.crowdBadge}>
-                                        <Text style={styles.crowdText}>Độ đông đúc: {place.crowdLevel}/5</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                        {places.map((place) => (<PlaceCard key={place._id} place={place} layout="horizontal" onPress={onPlaceClick} />))}
 
-                        {/* NÚT XEM THÊM ĐÃ ĐƯỢC KHÔI PHỤC TẠI ĐÂY */}
                         {hasMore && (
-                            <TouchableOpacity
-                                style={styles.loadMoreBtn}
-                                onPress={handleLoadMore}
-                                disabled={loadingMore}
-                            >
-                                {loadingMore ? (
-                                    <ActivityIndicator size="small" color="#2B8EF0" />
-                                ) : (
-                                    <Text style={styles.loadMoreText}>Xem thêm</Text>
-                                )}
-                            </TouchableOpacity>
+                            <View style={styles.loadMoreWrap}>
+                                <Button
+                                    label="Xem thêm"
+                                    onPress={handleLoadMore}
+                                    loading={loadingMore}
+                                    variant="secondary"
+                                    textColor="#2B8EF0"
+                                    style={styles.loadMoreBtn}
+                                />
+                            </View>
                         )}
 
                         {!hasMore && places.length > 0 && (
@@ -250,9 +230,6 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
 };
 
 const styles = StyleSheet.create({
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 14 },
-    headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700' },
-    searchContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, borderRadius: 12, backgroundColor: 'white', height: 46, borderWidth: 1, borderColor: '#E5E7EB' },
     scrollRow: { paddingHorizontal: 16, gap: 8, alignItems: 'center' },
     sortGroup: { flexDirection: 'row', gap: 6 },
     divider: { width: 1, height: 20, backgroundColor: '#D1D5DB', marginHorizontal: 4 },
@@ -265,13 +242,14 @@ const styles = StyleSheet.create({
     filterPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#F3F4F6' },
     filterPillActive: { backgroundColor: '#10B981' },
     filterPillText: { fontSize: 11, color: '#374151' },
-    placeCard: { flexDirection: 'row', backgroundColor: 'white', borderRadius: 16, padding: 12, marginBottom: 12, gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+    placeCardPress: { marginBottom: 12 },
+    placeCard: { flexDirection: 'row', padding: 12, gap: 12, borderColor: '#E5E7EB', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
     placeImage: { width: 100, height: 80, borderRadius: 10, backgroundColor: '#E5E7EB' },
     placeName: { fontSize: 15, fontWeight: '700', marginBottom: 4, color: '#111827' },
     infoText: { fontSize: 12, color: '#6B7280' },
-    crowdBadge: { marginTop: 6, backgroundColor: '#FEF3C7', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    crowdText: { fontSize: 10, color: '#D97706', fontWeight: '700' },
-    loadMoreBtn: { padding: 20, alignItems: 'center', marginTop: 10 },
-    loadMoreText: { color: '#2B8EF0', fontWeight: '700', fontSize: 14 },
+    crowdBadge: { marginTop: 6, alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    loadMoreWrap: { alignItems: 'center', marginTop: 10 },
+    loadMoreBtn: { width: 160, minHeight: 44, borderRadius: 999, borderColor: '#BFDBFE' },
     noMoreText: { textAlign: 'center', color: '#9CA3AF', marginTop: 20, fontSize: 12 },
 });
+

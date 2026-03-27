@@ -13,6 +13,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { NotificationService } from '../services/notificationService/notification.service';
 import { Notification as ApiNotification, NotificationType } from '../services/notificationService/notification.type';
 import { MainTab } from './BottomTabBar';
+import { AvatarCircle } from './shared';
 
 type NotificationKind = 'avatar' | 'chat' | 'trip';
 
@@ -57,10 +58,9 @@ function mapApiToItem(notif: ApiNotification): NotificationItem {
 const NotificationLeading = ({ item }: { item: NotificationItem }) => {
     if (item.kind === 'avatar' && item.avatar) {
         return (
-            <Image
-                source={{ uri: item.avatar }}
-                style={{ width: 52, height: 52, borderRadius: 26 }}
-            />
+            <View style={{ width: 52, height: 52, borderRadius: 26, overflow: 'hidden' }}>
+                <AvatarCircle uri={item.avatar} size={52} backgroundColor="#D1D5DB" />
+            </View>
         );
     }
 

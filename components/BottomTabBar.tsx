@@ -1,8 +1,8 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 // 1. IMPORT THÊM HOOK NÀY
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type MainTab = 'home' | 'trips' | 'explore' | 'chat' | 'profile';
 
@@ -13,8 +13,8 @@ interface BottomTabBarProps {
 
 export const BottomTabBar = ({ activeTab, onTabPress }: BottomTabBarProps) => {
   // 2. LẤY THÔNG SỐ SAFE AREA
-  const insets = useSafeAreaInsets(); 
-  
+  const insets = useSafeAreaInsets();
+
   // Tính toán padding bottom an toàn: 
   // Nếu máy có viền dưới (iPhone/Android vuốt) thì lấy insets.bottom, 
   // nếu máy đời cũ có nút bấm thì mặc định là 10.
@@ -25,7 +25,7 @@ export const BottomTabBar = ({ activeTab, onTabPress }: BottomTabBarProps) => {
       className="absolute bottom-0 left-0 right-0 bg-white flex-row items-center justify-around"
       style={{
         // 3. ĐỂ HEIGHT TỰ ĐỘNG CO GIÃN THEO SAFE AREA
-        height: 60 + safePaddingBottom, 
+        height: 60 + safePaddingBottom,
         paddingBottom: safePaddingBottom,
         borderTopWidth: 1,
         borderTopColor: '#F3F4F6',
@@ -43,7 +43,7 @@ export const BottomTabBar = ({ activeTab, onTabPress }: BottomTabBarProps) => {
       </TouchableOpacity>
 
       {/* Các tab khác giữ nguyên, chỉ cần thêm className="... h-full" cho TouchableOpacity nếu muốn vùng bấm rộng hơn */}
-      
+
       {/* Trips */}
       <TouchableOpacity className="flex-1 items-center justify-center h-full" activeOpacity={0.7} onPress={() => onTabPress('trips')}>
         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">

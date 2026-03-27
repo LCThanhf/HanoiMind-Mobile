@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatService from '../../services/chatService/chat.service';
 import { UsersService } from '../../services/userService/user.service';
+import { AvatarCircle } from '../shared';
 
 // 👉 Đảm bảo import đúng đường dẫn đến file utils của bạn
 import { processImage, upImageToCloudinary, getCdnUrl } from '../../utils/uploadImage';
@@ -22,13 +23,13 @@ const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
 export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isGroup = true }: ChatDetailScreenProps) => {
   const insets = useSafeAreaInsets();
-  
+
   const bottomInsetRef = useRef(insets.bottom);
   if (insets.bottom > bottomInsetRef.current) {
     bottomInsetRef.current = insets.bottom;
   }
   const safeBottom = Math.max(bottomInsetRef.current, 12);
-  
+
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
@@ -39,7 +40,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-  
+
   const [isCreatePollVisible, setIsCreatePollVisible] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
@@ -74,8 +75,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
         let userId = await AsyncStorage.getItem('userId');
         if (!userId) {
-           const myProfile = await UsersService.getMe();
-           userId = myProfile?._id || '';
+          const myProfile = await UsersService.getMe();
+          userId = myProfile?._id || '';
         }
         setCurrentUserId(userId as string);
 
@@ -83,7 +84,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
         const history = await ChatService.getMessages(roomId);
         setMessages(history || []);
-        
+
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
       } catch (error) {
         console.error('Lỗi khởi tạo màn hình Chat:', error);
@@ -96,7 +97,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
     ChatService.onReceiveMessage((newMsg) => {
       setMessages((prev) => {
-        const hasRealMsg = prev.some(m => (m._id || m.id) === (newMsg._id ));
+        const hasRealMsg = prev.some(m => (m._id || m.id) === (newMsg._id));
         if (hasRealMsg) return prev;
 
         const matchingLocalIndex = prev.findIndex(m => typeof m._id === 'string' && m._id.startsWith('local_') && m.sender_id === newMsg.sender_id && m.content === newMsg.content);
@@ -113,8 +114,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
     ChatService.onUpdateReaction((data) => {
       setMessages((prev) => prev.map((msg) => {
-        const targetId = data.message_id || data._id; 
-        const msgId = msg._id || msg.id; 
+        const targetId = data.message_id || data._id;
+        const msgId = msg._id || msg.id;
         if (msgId && targetId && msgId === targetId) return { ...msg, reactions: data.reactions };
         return msg;
       }));
@@ -134,10 +135,10 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   const handleSend = () => {
     if (!inputText.trim() || !currentUserId) return;
     const content = inputText.trim();
-    setInputText(''); 
+    setInputText('');
     const localId = `local_${Date.now()}`;
     ChatService.sendMessage({ room_id: roomId, content: content, type: 'TEXT' as any });
-    
+
     setMessages((prev) => [...prev, { _id: localId, content, sender_id: currentUserId, type: 'TEXT', created_at: new Date().toISOString(), reactions: [], seen_by: [] }]);
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
@@ -145,17 +146,17 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   // --- XỬ LÝ ẢNH BẰNG CLOUDINARY UTILS ---
   const handlePickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ 
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
-        allowsEditing: true, 
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
         quality: 1 // Để chất lượng cao nhất, file util sẽ lo việc nén
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         handleUploadImage(result.assets[0].uri);
       }
-    } catch (error) { 
-      console.log('Lỗi chọn ảnh:', error); 
+    } catch (error) {
+      console.log('Lỗi chọn ảnh:', error);
     }
   };
 
@@ -170,11 +171,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
       if (secureUrl) {
         // Bước 3: Gửi tin nhắn chứa ảnh lên socket
-        ChatService.sendMessage({ 
-          room_id: roomId, 
-          content: 'Đã gửi một ảnh', 
-          type: 'IMAGE' as any, 
-          metadata: { url: secureUrl } 
+        ChatService.sendMessage({
+          room_id: roomId,
+          content: 'Đã gửi một ảnh',
+          type: 'IMAGE' as any,
+          metadata: { url: secureUrl }
         });
       } else {
         throw new Error('Không nhận được URL từ Cloudinary');
@@ -182,8 +183,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     } catch (error) {
       console.error('Lỗi upload ảnh:', error);
       Alert.alert('Lỗi', 'Không thể tải ảnh lên. Vui lòng kiểm tra lại mạng hoặc cấu hình.');
-    } finally { 
-      setIsUploading(false); 
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -195,7 +196,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   };
 
   const handleAddPollOption = () => setPollOptions([...pollOptions, '']);
-  
+
   const handleRemovePollOption = (index: number) => {
     if (pollOptions.length <= 2) return Alert.alert('Lỗi', 'Cần ít nhất 2 lựa chọn');
     setPollOptions(pollOptions.filter((_, i) => i !== index));
@@ -251,11 +252,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     const showName = !isMe && (!prevMsg || prevMsg.sender_id !== item.sender_id);
     const showAvatar = !isMe && (!nextMsg || nextMsg.sender_id !== item.sender_id);
     const senderName = item.sender?.fullName || item.sender_name || 'Người dùng';
-    const senderAvatar = item.sender?.avatar || item.sender_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}&background=random`;
+    const senderAvatar = item.sender?.avatar || item.sender_avatar;
 
     const hasReactions = item.reactions && item.reactions.length > 0;
     let uniqueEmojis: string[] = [];
-    if (hasReactions) uniqueEmojis = Array.from(new Set(item.reactions.map((r: any) => r.emoji))).slice(0, 3) as string[]; 
+    if (hasReactions) uniqueEmojis = Array.from(new Set(item.reactions.map((r: any) => r.emoji))).slice(0, 3) as string[];
 
     const isImage = item.type === 'IMAGE';
     const isPoll = item.type === 'POLL';
@@ -264,8 +265,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     if (isPoll && item.metadata) {
       return (
         <View className="w-full items-center my-4 px-4">
-          <TouchableOpacity 
-            activeOpacity={0.9} 
+          <TouchableOpacity
+            activeOpacity={0.9}
             onLongPress={() => !isSending && setSelectedMessageId(isSelected ? null : msgId)}
             className="w-full max-w-[320px] bg-white rounded-3xl p-4 border border-gray-100"
             style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
@@ -284,12 +285,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
               const isVoted = opt.voters?.includes(currentUserId);
               const totalVotes = opt.voters?.length || 0;
               return (
-                <TouchableOpacity 
-                  key={opt.id} 
+                <TouchableOpacity
+                  key={opt.id}
                   onPress={() => handleVotePoll(msgId, opt.id)}
-                  className={`flex-row items-center px-4 py-3.5 mb-2 rounded-2xl border ${
-                    isVoted ? 'bg-primary-soft border-primary-border' : 'bg-gray-50 border-gray-100'
-                  }`}
+                  className={`flex-row items-center px-4 py-3.5 mb-2 rounded-2xl border ${isVoted ? 'bg-primary-soft border-primary-border' : 'bg-gray-50 border-gray-100'
+                    }`}
                 >
                   <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isVoted ? 'border-primary' : 'border-gray-300'}`}>
                     {isVoted && <View className="w-2.5 h-2.5 rounded-full bg-primary" />}
@@ -322,33 +322,37 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     // 👉 RENDER TEXT & IMAGE
     return (
       <View className={`w-full ${showName ? 'mt-3' : 'mt-0.5'} ${isMe ? 'items-end' : 'items-start'}`}>
-        
+
         {showName && <Text className="text-[11px] font-medium text-gray-500 mb-1 ml-14">{senderName}</Text>}
 
         <View className={`flex-row px-4 ${isMe ? 'justify-end' : 'justify-start'} w-full ${hasReactions ? 'mb-4' : ''}`}>
           {!isMe && (
             <View className="w-8 mr-2 justify-end">
-              {showAvatar ? <Image source={{ uri: senderAvatar }} className="w-8 h-8 rounded-full mb-1" /> : null}
+              {showAvatar ? (
+                <View className="mb-1 rounded-full overflow-hidden" style={{ width: 32, height: 32 }}>
+                  <AvatarCircle uri={senderAvatar} name={senderName} size={32} backgroundColor="#D1D5DB" />
+                </View>
+              ) : null}
             </View>
           )}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             activeOpacity={0.8}
             onLongPress={() => { if (!isSending) setSelectedMessageId(isSelected ? null : msgId); }}
             className={`relative ${isImage ? 'p-1' : 'px-4 py-2.5'} rounded-2xl ${isMe ? 'bg-[#2B8EF0]' : 'bg-gray-100'}`}
-            style={{ opacity: isSending ? 0.7 : 1, maxWidth: isMe ? '75%' : '80%' }} 
+            style={{ opacity: isSending ? 0.7 : 1, maxWidth: isMe ? '75%' : '80%' }}
           >
             {!isImage && <Text className={`text-[15px] leading-5 ${isMe ? 'text-white' : 'text-gray-900'}`}>{item.content || item.message}</Text>}
-            
+
             {/* Sử dụng getCdnUrl để nén ảnh thumbnail trên khung chat (tối ưu list) */}
             {isImage && item.metadata?.url && (
-              <Image 
-                source={{ uri: getCdnUrl(item.metadata.url, 'w_400,c_limit,q_auto') }} 
-                style={{ width: 200, height: 250, borderRadius: 12, backgroundColor: '#f3f4f6' }} 
-                resizeMode="cover" 
+              <Image
+                source={{ uri: getCdnUrl(item.metadata.url, 'w_400,c_limit,q_auto') }}
+                style={{ width: 200, height: 250, borderRadius: 12, backgroundColor: '#f3f4f6' }}
+                resizeMode="cover"
               />
             )}
-            
+
             {(!nextMsg || nextMsg.sender_id !== item.sender_id) && (
               <Text className={`text-[10px] mt-1 ${isMe ? 'text-primary-soft text-right' : 'text-gray-400 text-left'}`}>{timeString} {isSending ? '...' : ''}</Text>
             )}
@@ -411,21 +415,21 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
       {/* Bottom Input Area */}
       <View className="flex-row items-center px-3 py-3 bg-white border-t border-gray-100" style={{ paddingBottom: isKeyboardVisible ? 12 : safeBottom }}>
-        
+
         {/* Nút Tools: Image & Poll */}
         <View className="flex-row mr-2 items-center">
           <TouchableOpacity onPress={handlePickImage} className="p-1.5 mr-1 rounded-full">
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <Rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <Circle cx="8.5" cy="8.5" r="1.5"/>
-              <Path d="M21 15l-5-5L5 21"/>
+              <Rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <Circle cx="8.5" cy="8.5" r="1.5" />
+              <Path d="M21 15l-5-5L5 21" />
             </Svg>
           </TouchableOpacity>
-          
+
           {isGroup && (
             <TouchableOpacity onPress={() => setIsCreatePollVisible(true)} className="p-1.5 rounded-full">
               <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <Path d="M18 20V10"/><Path d="M12 20V4"/><Path d="M6 20v-6"/>
+                <Path d="M18 20V10" /><Path d="M12 20V4" /><Path d="M6 20v-6" />
               </Svg>
             </TouchableOpacity>
           )}
@@ -446,11 +450,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <TouchableOpacity activeOpacity={1} onPress={() => Keyboard.dismiss()} className="flex-1 bg-black/40 justify-end">
             <View className="bg-white rounded-t-3xl pt-5 px-5" style={{ paddingBottom: safeBottom + 20, maxHeight: '85%' }}>
-              
+
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-xl font-bold text-gray-900">Tạo bình chọn</Text>
                 <TouchableOpacity onPress={() => setIsCreatePollVisible(false)} className="p-1.5 bg-gray-100 rounded-full">
-                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><Line x1="18" y1="6" x2="6" y2="18"/><Line x1="6" y1="6" x2="18" y2="18"/></Svg>
+                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><Line x1="18" y1="6" x2="6" y2="18" /><Line x1="6" y1="6" x2="18" y2="18" /></Svg>
                 </TouchableOpacity>
               </View>
 
@@ -463,14 +467,14 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
                   <View key={index} className="flex-row items-center bg-white border border-gray-200 rounded-xl mb-3 pr-2 overflow-hidden shadow-sm">
                     <TextInput value={opt} onChangeText={(txt) => handleUpdatePollOption(txt, index)} placeholder={`Lựa chọn ${index + 1}`} className="flex-1 py-3.5 px-4 text-[16px] text-gray-900" />
                     <TouchableOpacity onPress={() => handleRemovePollOption(index)} className="p-3">
-                      <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></Svg>
+                      <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></Svg>
                     </TouchableOpacity>
                   </View>
                 ))}
 
                 <TouchableOpacity onPress={handleAddPollOption} className="flex-row items-center py-3 mb-6 mt-1">
                   <View className="w-8 h-8 rounded-full bg-primary-soft items-center justify-center mr-3">
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#2B8EF0" strokeWidth="2.5"><Line x1="12" y1="5" x2="12" y2="19"/><Line x1="5" y1="12" x2="19" y2="12"/></Svg>
+                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#2B8EF0" strokeWidth="2.5"><Line x1="12" y1="5" x2="12" y2="19" /><Line x1="5" y1="12" x2="19" y2="12" /></Svg>
                   </View>
                   <Text className="text-[#2B8EF0] font-bold text-[15px]">Thêm lựa chọn</Text>
                 </TouchableOpacity>

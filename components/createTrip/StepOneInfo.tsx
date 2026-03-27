@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { moodOptions } from './constants';
 import { CafeIcon, CalendarIcon, FoodIcon, HealingIcon, MoneyIcon, NatureIcon } from './icons';
+import { SectionHeader } from '../shared';
 import { MoodId } from './types';
 
 interface StepOneInfoProps {
@@ -50,12 +51,7 @@ export const StepOneInfo = ({
 }: StepOneInfoProps) => (
   <>
     <View className="px-5">
-      <View className="flex-row items-center mb-4">
-        <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-        <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-          Các thông tin cơ bản
-        </Text>
-      </View>
+      <SectionHeader title="Các thông tin cơ bản" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
       <View className="mb-3">
         <Text className="text-[13px] text-gray-600 mb-2" style={{ fontWeight: '500' }}>
@@ -145,19 +141,16 @@ export const StepOneInfo = ({
     </View>
 
     <View className="px-5 mb-6">
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center">
-          <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-          <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-            Tâm trạng di chuyển
-          </Text>
-        </View>
-        <TouchableOpacity onPress={onToggleMode} activeOpacity={0.7}>
-          <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-            {isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <SectionHeader
+        title="Tâm trạng di chuyển"
+        actionLabel={isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
+        onActionPress={onToggleMode}
+        showActionIcon={false}
+        paddingHorizontal={0}
+        paddingTop={0}
+        paddingBottom={0}
+        marginBottom={16}
+      />
 
       <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
         {moodOptions.map((mood) => {

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   Platform,
@@ -28,6 +27,7 @@ import { StepTwoPlaces } from './StepTwoPlaces';
 import { StepThreeConfirm } from './StepThreeConfirm';
 import { MoodId } from './types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button } from '../shared';
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear();
@@ -791,32 +791,21 @@ export const CreateTripScreen = ({
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity
-          className="flex-row items-center justify-center py-5 rounded-2xl"
+        <Button
+          label={actionLabel}
+          onPress={handleProceed}
+          loading={isProcessing}
+          rightSlot={!isProcessing ? <View style={{ marginLeft: 8 }}><SparkleIcon /></View> : null}
           style={{
-            backgroundColor: '#2B8EF0',
+            minHeight: 60,
+            borderRadius: 16,
             shadowColor: '#2B8EF0',
             shadowOpacity: 0.1,
             shadowRadius: 6,
             shadowOffset: { width: 0, height: 3 },
             elevation: 5,
-            opacity: isProcessing ? 0.75 : 1,
           }}
-          onPress={handleProceed}
-          disabled={isProcessing}
-          activeOpacity={0.85}
-        >
-          {isProcessing ? (
-            <ActivityIndicator color="white" size="small" />
-          ) : (
-            <>
-              <SparkleIcon />
-              <Text className="text-white text-[15px] ml-2" style={{ fontWeight: '700' }}>
-                {actionLabel}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        />
       </View>
 
       {Platform.OS === 'ios' ? (

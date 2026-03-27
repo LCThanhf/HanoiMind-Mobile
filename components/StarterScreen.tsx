@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { Button, ScreenHeader } from './shared';
 
 interface StarterScreenProps {
     onLoginPress: () => void;
@@ -10,15 +11,7 @@ interface StarterScreenProps {
 export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSignUpPress }) => {
     return (
         <SafeAreaView className="flex-1 bg-white">
-            {/* Header */}
-            <View className="items-center pt-12 pb-3 border-b border-gray-100">
-                <Text
-                    className="text-gray-700 text-[17px] font-semibold text-center"
-                    style={{ letterSpacing: 0.3 }}
-                >
-                    Welcome
-                </Text>
-            </View>
+            <ScreenHeader title="Welcome" showBorder={true} titleSize={17} titleWeight="600" />
 
             {/* Center Content */}
             <View className="flex-1 items-center justify-center px-10">
@@ -62,40 +55,25 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSi
             {/* Bottom Buttons & Footer */}
             <View className="px-6 pb-10">
                 {/* Sign Up Button */}
-                <TouchableOpacity
-                    className="w-full rounded-lg flex-row items-center justify-center mb-3"
-                    style={{
-                        backgroundColor: '#2B8EF0',
-                        paddingVertical: 16,
-                    }}
-                    activeOpacity={0.85}
+                <Button
+                    label="Chưa có tài khoản"
                     onPress={onSignUpPress}
-                >
-                    <Text
-                        className="text-white text-[16px]"
-                        style={{ fontFamily: 'Georgia', fontWeight: '600', letterSpacing: 0.2 }}
-                    >
-                        Chưa có tài khoản
-                    </Text>
-                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 6 }}>
-                        <Path d="M5 12h14M12 5l7 7-7 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                </TouchableOpacity>
+                    style={{ marginBottom: 12 }}
+                    rightSlot={
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 6 }}>
+                            <Path d="M5 12h14M12 5l7 7-7 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                    }
+                />
 
                 {/* Login Button */}
-                <TouchableOpacity
-                    className="w-full rounded-lg items-center justify-center border border-gray-200"
-                    style={{ paddingVertical: 15 }}
-                    activeOpacity={0.7}
+                <Button
+                    label="Đã có tài khoản"
+                    variant="secondary"
                     onPress={onLoginPress}
-                >
-                    <Text
-                        className="text-gray-800 text-[16px]"
-                        style={{ fontFamily: 'Georgia', fontWeight: '600', letterSpacing: 0.2 }}
-                    >
-                        Đã có tài khoản
-                    </Text>
-                </TouchableOpacity>
+                    style={{ minHeight: 54 }}
+                    textColor="#1F2937"
+                />
 
                 {/* Footer Caption */}
                 <View className="flex-row items-center justify-center mt-5">
@@ -114,7 +92,7 @@ export const StarterScreen: React.FC<StarterScreenProps> = ({ onLoginPress, onSi
                         className="text-gray-400 text-[11px] tracking-widest"
                         style={{ fontFamily: 'Georgia', textTransform: 'uppercase' }}
                     >
-                         Bạn đã sẵn sàng khám phá chưa?
+                        Bạn đã sẵn sàng khám phá chưa?
                     </Text>
                 </View>
             </View>

@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { Place } from '../../services/placeService/place.type';
 import { SparkleIcon } from './icons';
+import { SectionHeader } from '../shared';
 import { SelectedPlaceSummary } from './types';
 
 interface StepTwoPlacesProps {
@@ -40,12 +41,7 @@ export const StepTwoPlaces = ({
   onLoadMorePlaces,
 }: StepTwoPlacesProps) => (
   <View className="px-5 pb-6">
-    <View className="flex-row items-center mb-4">
-      <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-      <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-        Chọn địa điểm mong muốn
-      </Text>
-    </View>
+    <SectionHeader title="Chọn địa điểm mong muốn" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
     <View style={{ backgroundColor: '#EBF5FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}>
       <Text style={{ color: '#1E3A8A', fontSize: 13, fontWeight: '600' }}>

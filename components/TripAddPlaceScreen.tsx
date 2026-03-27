@@ -5,16 +5,15 @@ import {
   Image,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 import { PlacesService } from '../services/placeService/place.service';
 import { Place, PlaceCategory } from '../services/placeService/place.type';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
+import { ScreenHeader, SearchInput } from './shared';
 
 interface TripAddPlaceScreenProps {
   tripId: string;
@@ -84,25 +83,7 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="px-5 pt-3 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
-          <Text className="text-[18px] text-gray-900" style={{ fontWeight: '700' }}>
-            Thêm địa điểm
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-      </View>
+      <ScreenHeader title="Thêm địa điểm" onBack={onBack} titleWeight="700" />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="px-5 pt-4">
@@ -117,18 +98,12 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
             <Text className="text-[12px] text-gray-500 mt-1">{tripStatText}</Text>
           </View>
 
-          <View
-            className="rounded-xl px-3"
-            style={{ height: 46, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }}
-          >
-            <TextInput
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder="Tìm địa điểm..."
-              onSubmitEditing={fetchPlaces}
-              style={{ flex: 1, fontSize: 14 }}
-            />
-          </View>
+          <SearchInput
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Tìm địa điểm..."
+            onSubmitEditing={fetchPlaces}
+          />
         </View>
 
         <View className="px-5 mt-3">

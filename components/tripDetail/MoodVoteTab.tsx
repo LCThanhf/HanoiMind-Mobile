@@ -20,7 +20,7 @@ interface MoodVoteTabProps {
     tripName: string;
 }
 
-const moodIconById: Record<string, JSX.Element> = {
+const moodIconById: Record<string, React.ReactElement> = {
     relax: (
         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
             <Path d="M12 22C12 22 20 18 20 10C20 2 12 2 12 2C12 2 4 2 4 10C4 18 12 22 12 22Z" fill="#BEF264" />

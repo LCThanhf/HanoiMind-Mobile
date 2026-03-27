@@ -253,16 +253,26 @@ export const ReviewScreen = ({
   const isMyReview = (review: Review): boolean => {
     if (!currentUser) return false;
     const currentUserId = String(
-      currentUser.id || (currentUser as any)._id || '',
+      (currentUser as any)._id || (currentUser as any).id || '',
     );
     const reviewUserId = String(
       review.user?.id ||
-        (review.user as any)?._id ||
-        (review as any).user_id ||
-        '',
+      (review.user as any)?._id ||
+      (review as any).user_id ||
+      '',
     );
     if (!currentUserId || !reviewUserId) return false;
     return currentUserId === reviewUserId;
+  };
+
+  const handleReact = (review: Review, reaction: 'LIKE' | 'DISLIKE') => {
+    const reviewId = getReviewId(review);
+    if (!reviewId) return;
+
+    setReactions((prev) => ({
+      ...prev,
+      [reviewId]: prev[reviewId] === reaction ? null : reaction,
+    }));
   };
 
   const handleReviewPress = (review: Review) => {
@@ -310,8 +320,8 @@ export const ReviewScreen = ({
                 status === 403
                   ? 'Chỉ có thể xóa đánh giá trong vòng 48 giờ sau khi gửi.'
                   : err?.response?.data?.message ||
-                    err.message ||
-                    'Không thể xóa đánh giá, vui lòng thử lại sau.';
+                  err.message ||
+                  'Không thể xóa đánh giá, vui lòng thử lại sau.';
               Alert.alert('Không thể xóa', msg);
             } finally {
               setIsSubmitting(false);
@@ -356,8 +366,8 @@ export const ReviewScreen = ({
         status === 403
           ? 'Chỉ có thể sửa đánh giá trong vòng 48 giờ sau khi gửi.'
           : error?.response?.data?.message ||
-            error.message ||
-            'Không thể cập nhật đánh giá.';
+          error.message ||
+          'Không thể cập nhật đánh giá.';
       Alert.alert('Không thể cập nhật', msg);
     } finally {
       setIsSubmitting(false);
@@ -543,10 +553,10 @@ export const ReviewScreen = ({
                     borderBottomColor: '#F1F5F9',
                     ...(mine
                       ? {
-                          backgroundColor: '#F0F7FF',
-                          borderRadius: 12,
-                          padding: 8,
-                        }
+                        backgroundColor: '#F0F7FF',
+                        borderRadius: 12,
+                        padding: 8,
+                      }
                       : {}),
                   }}
                 >
@@ -666,7 +676,7 @@ export const ReviewScreen = ({
         >
           <TouchableOpacity
             activeOpacity={1}
-            onPress={() => {}}
+            onPress={() => { }}
             style={{
               width: '84%',
               backgroundColor: 'white',
@@ -716,8 +726,8 @@ export const ReviewScreen = ({
                       <View style={{ marginTop: 4 }}>
                         {renderReviewStars(
                           selectedReview.criteria?.cleanliness ||
-                            selectedReview.rating ||
-                            5,
+                          selectedReview.rating ||
+                          5,
                         )}
                       </View>
                     </View>

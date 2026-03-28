@@ -154,7 +154,7 @@ export const TripCard = ({ trip, onPress, style, variant = 'detailed' }: TripCar
             <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" style={{ marginRight: 4 }}>
               <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" fill="#6B7280" />
             </Svg>
-            <Text style={styles.textSmallDark} numberOfLines={1}>
+            <Text style={styles.textSmallDark}>
               {getLocationLabel(trip)}
             </Text>
           </View>

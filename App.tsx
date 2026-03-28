@@ -25,6 +25,7 @@ import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
 import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
 import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
 import { TripRouteScreen } from './components/TripRouteScreen';
+import { TripBudgetManageScreen } from './components/TripBudgetManageScreen';
 import { Place } from './services/placeService/place.type';
 
 type AppState =
@@ -36,6 +37,7 @@ type AppState =
   | 'tripManageDetail'
   | 'tripAddPlace'
   | 'tripRoute'
+  | 'tripBudgetManage'
   | 'placesExplore'
   | 'placeDetail'
   | 'reviewPlace'
@@ -208,6 +210,7 @@ export default function App() {
             tripId={selectedTripId}
             onBack={() => setAppState('tripDetail')}
             onOpenTripRoute={() => setAppState('tripRoute')}
+            onOpenBudgetManage={() => setAppState('tripBudgetManage')}
             onAddPlace={(dayNumber) => {
               setSelectedTripDayNumber(dayNumber);
               setAppState('tripAddPlace');
@@ -237,6 +240,14 @@ export default function App() {
 
       case 'tripRoute':
         return <TripRouteScreen tripId={selectedTripId} onBack={() => setAppState('tripManageDetail')} />;
+
+      case 'tripBudgetManage':
+        return (
+          <TripBudgetManageScreen
+            tripId={selectedTripId}
+            onBack={() => setAppState('tripManageDetail')}
+          />
+        );
 
       case 'placesExplore':
         return (

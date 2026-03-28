@@ -22,6 +22,7 @@ interface TripItineraryManageScreenProps {
   tripId: string;
   onBack: () => void;
   onOpenTripRoute: () => void;
+  onOpenBudgetManage: () => void;
   onAddPlace: (dayNumber: number) => void;
   onOpenPlaceDetail: (placeId: string) => void;
   activeTab: MainTab;
@@ -47,6 +48,7 @@ export const TripItineraryManageScreen = ({
   tripId,
   onBack,
   onOpenTripRoute,
+  onOpenBudgetManage,
   onAddPlace,
   onOpenPlaceDetail,
   activeTab,
@@ -215,7 +217,10 @@ export const TripItineraryManageScreen = ({
                     {formatCurrencyVnd(budgetSummary.limit || budgetSummary.planned)}
                   </Text>
                 </View>
-                <Text className="text-[12px] text-gray-500 mb-3">Tiết kiệm là quốc sách!</Text>
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-[12px] text-gray-500">Tiết kiệm là quốc sách!</Text>
+                  <Text className="text-[12px]" style={{ color: '#6B7280' }}>Còn lại</Text>
+                </View>
 
                 <View style={{ height: 6, borderRadius: 999, backgroundColor: '#E5E7EB' }}>
                   <View
@@ -230,7 +235,20 @@ export const TripItineraryManageScreen = ({
 
                 <View className="flex-row items-center justify-between mt-2">
                   <Text className="text-[12px] text-gray-600">Đã dùng: {formatCurrencyVnd(budgetSummary.planned)}</Text>
-                  <Text className="text-[12px] text-gray-600">Còn lại</Text>
+                  <Button
+                    activeOpacity={0.85}
+                    onPress={onOpenBudgetManage}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 3,
+                      borderRadius: 20,
+                      borderWidth: 1.5,
+                      borderColor: '#22C55E',
+                      backgroundColor: 'transparent',
+                    }}
+                  >
+                    <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '600' }}>Quản lí ngân sách</Text>
+                  </Button>
                 </View>
               </View>
 

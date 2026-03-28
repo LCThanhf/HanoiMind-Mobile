@@ -1,9 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Place } from '../../services/placeService/place.type';
 import { SparkleIcon } from './icons';
+import { Button, SectionHeader } from '../shared';
 import { SelectedPlaceSummary } from './types';
 
 interface StepTwoPlacesProps {
@@ -40,12 +41,7 @@ export const StepTwoPlaces = ({
   onLoadMorePlaces,
 }: StepTwoPlacesProps) => (
   <View className="px-5 pb-6">
-    <View className="flex-row items-center mb-4">
-      <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-      <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-        Chọn địa điểm mong muốn
-      </Text>
-    </View>
+    <SectionHeader title="Chọn địa điểm mong muốn" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
     <View style={{ backgroundColor: '#EBF5FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}>
       <Text style={{ color: '#1E3A8A', fontSize: 13, fontWeight: '600' }}>
@@ -60,7 +56,7 @@ export const StepTwoPlaces = ({
                 marginTop: index === 0 ? 0 : 8,
                 backgroundColor: 'white',
                 borderWidth: 1,
-                borderColor: '#D1E6FF',
+                borderColor: '#EBF5FF',
                 borderRadius: 10,
                 paddingHorizontal: 10,
                 paddingVertical: 8,
@@ -76,7 +72,7 @@ export const StepTwoPlaces = ({
               >
                 {index + 1}. {place.name}
               </Text>
-              <TouchableOpacity
+              <Button
                 onPress={() => onRemoveSelectedPlace(place.id)}
                 activeOpacity={0.7}
                 style={{
@@ -89,14 +85,14 @@ export const StepTwoPlaces = ({
                 }}
               >
                 <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700' }}>Xóa</Text>
-              </TouchableOpacity>
+              </Button>
             </View>
           ))}
         </View>
       ) : null}
     </View>
 
-    <TouchableOpacity
+    <Button
       activeOpacity={0.85}
       onPress={onAiSelectPlaces}
       disabled={isAiSelectingPlaces || isProcessing || placesLoading}
@@ -122,7 +118,7 @@ export const StepTwoPlaces = ({
           </Text>
         </>
       )}
-    </TouchableOpacity>
+    </Button>
 
     <View className="flex-row items-center px-4 rounded-xl mb-3" style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 48 }}>
       <TextInput
@@ -142,7 +138,7 @@ export const StepTwoPlaces = ({
       filteredPlaces.map((place) => {
         const selected = selectedPlaceIds.includes(place._id);
         return (
-          <TouchableOpacity
+          <Button
             key={place._id}
             activeOpacity={0.8}
             onPress={() => onTogglePlace(place._id)}
@@ -185,7 +181,7 @@ export const StepTwoPlaces = ({
               </Text>
             </View>
             <Text style={{ fontSize: 12, color: '#9CA3AF' }}>{Math.round(place.rating || 0)}★</Text>
-          </TouchableOpacity>
+          </Button>
         );
       })
     )}
@@ -197,7 +193,7 @@ export const StepTwoPlaces = ({
     ) : null}
 
     {!placesLoading && filteredPlaces.length > 0 && hasMorePlaces ? (
-      <TouchableOpacity
+      <Button
         activeOpacity={0.8}
         onPress={onLoadMorePlaces}
         disabled={loadingMorePlaces}
@@ -205,7 +201,7 @@ export const StepTwoPlaces = ({
           height: 44,
           borderRadius: 10,
           borderWidth: 1,
-          borderColor: '#D1E6FF',
+          borderColor: '#EBF5FF',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#F8FBFF',
@@ -217,7 +213,8 @@ export const StepTwoPlaces = ({
         ) : (
           <Text style={{ color: '#2B8EF0', fontSize: 13, fontWeight: '700' }}>Xem thêm địa điểm</Text>
         )}
-      </TouchableOpacity>
+      </Button>
     ) : null}
   </View>
 );
+

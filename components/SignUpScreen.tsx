@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { View, Text, SafeAreaView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Button, FormInputRow, ScreenHeader } from './shared';
 
 // Gọi service
 import { AuthService } from '../services/authService/auth.service';
@@ -46,7 +46,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
                 email: email.trim(),
                 password: password,
                 //thêm fullName nếu có, nếu không thì backend sẽ tự lấy phần trước @ của email làm fullName
-                fullName: fullName || email.split('@')[0], 
+                fullName: fullName || email.split('@')[0],
             });
 
             // 3. Lưu tokens vào AsyncStorage
@@ -69,15 +69,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            {/* Header */}
-            <View className="flex-row items-center justify-center pt-12 pb-3 border-b border-gray-100 relative">
-                <TouchableOpacity className="absolute left-4 top-12" onPress={onBack} activeOpacity={0.7}>
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path d="M15 18l-6-6 6-6" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                </TouchableOpacity>
-                <Text className="text-gray-900 text-[17px] font-semibold">Đăng ký</Text>
-            </View>
+            <ScreenHeader title="Đăng ký" onBack={onBack} backIconType="chevron" titleSize={17} horizontalPadding={16} />
 
             {/* Content */}
             <View className="flex-1 px-6 pt-8">
@@ -86,47 +78,40 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
                     Tạo tài khoản để khám phá và lập kế hoạch cho những chuyến đi mơ ước của bạn.
                 </Text>
 
-                {/* Full Name Input */}
-                <Text className="text-gray-900 text-[15px] font-semibold mb-2">Họ và tên</Text>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-4 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="Nguyễn Văn A"
-                        value={fullName}
-                        onChangeText={setFullName}
-                        editable={!loading}
-                    />
-                </View>
+                <FormInputRow
+                    label="Họ và tên"
+                    placeholder="Nguyễn Văn A"
+                    value={fullName}
+                    onChangeText={setFullName}
+                    editable={!loading}
+                    marginBottom={16}
+                />
 
-                {/* Email Input */}
-                <Text className="text-gray-900 text-[15px] font-semibold mb-2">Email</Text>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-4 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        editable={!loading}
-                    />
-                </View>
+                <FormInputRow
+                    label="Email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!loading}
+                    marginBottom={16}
+                />
 
-                {/* Password Input */}
-                <Text className="text-gray-900 text-[15px] font-semibold mb-2">Mật khẩu</Text>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-1 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="••••••••"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
-                    </TouchableOpacity>
-                </View>
+                <FormInputRow
+                    label="Mật khẩu"
+                    placeholder="••••••••"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    editable={!loading}
+                    marginBottom={4}
+                    rightSlot={
+                        <Button onPress={() => setShowPassword(!showPassword)}>
+                            <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
+                        </Button>
+                    }
+                />
 
                 {/* Helper text */}
                 {password.length > 0 && password.length < 8 && (
@@ -134,42 +119,38 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNavigateToSignIn, 
                 )}
                 {(password.length === 0 || password.length >= 8) && <View className="mb-4" />}
 
-                {/* Confirm Password Input */}
-                <Text className="text-gray-900 text-[15px] font-semibold mb-2">Xác nhận mật khẩu</Text>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-8 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        secureTextEntry={!showConfirmPassword}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                        <Text>{showConfirmPassword ? 'Hiện' : 'Ẩn'}</Text>
-                    </TouchableOpacity>
-                </View>
+                <FormInputRow
+                    label="Xác nhận mật khẩu"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    editable={!loading}
+                    marginBottom={32}
+                    rightSlot={
+                        <Button onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                            <Text>{showConfirmPassword ? 'Hiện' : 'Ẩn'}</Text>
+                        </Button>
+                    }
+                />
 
-                {/* Sign Up Button */}
-                <TouchableOpacity
-                    className={`w-full rounded-lg items-center justify-center mb-4 ${loading ? 'opacity-70' : ''}`}
-                    style={{ backgroundColor: '#2B8EF0', paddingVertical: 16 }}
+                <Button
+                    label="Đăng ký"
                     onPress={handleSignUp}
                     disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-[16px] font-semibold">Đăng ký</Text>}
-                </TouchableOpacity>
+                    loading={loading}
+                    style={{ marginBottom: 16 }}
+                />
 
                 {/* Bottom Section */}
                 <View className="items-center">
                     <Text className="text-gray-600 text-[15px] mb-3">Bạn đã có tài khoản?</Text>
-                    <TouchableOpacity
-                        className="w-full rounded-lg items-center justify-center border border-gray-200"
-                        style={{ paddingVertical: 14 }}
+                    <Button
+                        label="Đăng nhập ngay"
+                        variant="secondary"
                         onPress={onNavigateToSignIn}
-                    >
-                        <Text className="text-[#2B8EF0] text-[16px] font-semibold">Đăng nhập ngay</Text>
-                    </TouchableOpacity>
+                        textColor="#2B8EF0"
+                    />
                 </View>
             </View>
         </SafeAreaView>

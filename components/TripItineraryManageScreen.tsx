@@ -4,7 +4,6 @@ import {
   Alert,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +16,7 @@ import { UsersService } from '../services/userService/user.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
 import { TripStopCard } from './tripDetail/TripStopCard';
 import { MainTab } from './BottomTabBar';
+import { Button, ScreenHeader } from './shared';
 
 interface TripItineraryManageScreenProps {
   tripId: string;
@@ -168,25 +168,7 @@ export const TripItineraryManageScreen = ({
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="px-5 pt-3 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
-          <Text className="text-[18px] text-gray-900" style={{ fontWeight: '600' }}>
-            {tripData?.title || 'Chi tiết hành trình'}
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-      </View>
+      <ScreenHeader title={tripData?.title || 'Chi tiết hành trình'} onBack={onBack} />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -199,7 +181,7 @@ export const TripItineraryManageScreen = ({
               <View
                 className="rounded-2xl p-4"
                 style={{
-                  backgroundColor: '#F9FAFB',
+                  backgroundColor: '#F8FAFC',
                   shadowColor: '#0F172A',
                   shadowOpacity: 0.1,
                   shadowRadius: 10,
@@ -252,7 +234,7 @@ export const TripItineraryManageScreen = ({
                 </View>
               </View>
 
-              <TouchableOpacity
+              <Button
                 activeOpacity={0.85}
                 onPress={onOpenTripRoute}
                 className="items-center justify-center rounded-xl mt-3"
@@ -266,7 +248,7 @@ export const TripItineraryManageScreen = ({
                 <Text className="text-[14px]" style={{ color: '#1D4ED8', fontWeight: '700' }}>
                   Xem lộ trình tham quan
                 </Text>
-              </TouchableOpacity>
+              </Button>
             </View>
 
             {!!error && (
@@ -308,22 +290,22 @@ export const TripItineraryManageScreen = ({
                   </View>
                 )}
 
-                <TouchableOpacity
+                <Button
                   activeOpacity={0.8}
                   onPress={() => onAddPlace(day.dayNumber)}
                   className="items-center justify-center rounded-xl"
                   style={{
                     borderWidth: 1,
-                    borderColor: '#93C5FD',
+                    borderColor: '#BFDBFE',
                     borderStyle: 'dashed',
                     height: 48,
                     backgroundColor: '#EFF6FF',
                   }}
                 >
-                  <Text className="text-[14px]" style={{ color: '#2563EB', fontWeight: '600' }}>
+                  <Text className="text-[14px]" style={{ color: '#3B82F6', fontWeight: '600' }}>
                     + Thêm địa điểm mới
                   </Text>
-                </TouchableOpacity>
+                </Button>
               </View>
             ))}
             <View style={{ height: 160 + insets.bottom }} />
@@ -331,14 +313,14 @@ export const TripItineraryManageScreen = ({
 
           <View
             className="absolute left-0 right-0 bg-white px-5 pt-3"
-            style={{ 
-              borderTopWidth: 1, 
-              borderTopColor: '#E5E7EB', 
-              paddingBottom: 16, 
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: '#E5E7EB',
+              paddingBottom: 16,
               bottom: 60 + insets.bottom,
             }}
           >
-            <TouchableOpacity
+            <Button
               className="items-center justify-center rounded-xl"
               style={{ height: 48, backgroundColor: '#2B8EF0' }}
               disabled={optimizing}
@@ -351,7 +333,7 @@ export const TripItineraryManageScreen = ({
                   Tối ưu lại bằng AI
                 </Text>
               )}
-            </TouchableOpacity>
+            </Button>
             <Text className="text-[11px] text-gray-500 mt-2" style={{ fontWeight: '500' }}>
               * Bạn có thể sắp xếp lịch trình bằng cách thêm hoặc xóa địa điểm.
             </Text>

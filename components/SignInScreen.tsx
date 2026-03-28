@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { View, Text, SafeAreaView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Button, CheckIcon, FormInputRow, ScreenHeader } from './shared';
 
 // Import service
 import { AuthService } from '../services/authService/auth.service';
@@ -86,14 +86,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <View className="flex-row items-center justify-center pt-12 pb-3 border-b border-gray-100 relative">
-                <TouchableOpacity className="absolute left-4 top-12" onPress={onBack}>
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path d="M15 18l-6-6 6-6" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                </TouchableOpacity>
-                <Text className="text-gray-900 text-[17px] font-semibold">Đăng nhập</Text>
-            </View>
+            <ScreenHeader title="Đăng nhập" onBack={onBack} backIconType="chevron" titleSize={17} horizontalPadding={16} />
 
             <View className="flex-1 px-6 pt-8">
                 <Text className="text-gray-900 text-[28px] font-bold mb-3">Chào mừng trở lại!</Text>
@@ -101,36 +94,32 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                     Hãy đăng nhập để tiếp tục những chuyến phiêu lưu tuyệt vời cùng HanoiMind.
                 </Text>
 
-                <Text className="text-gray-900 text-[15px] font-semibold mb-2">Email</Text>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-4 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        editable={!loading}
-                    />
-                </View>
+                <FormInputRow
+                    label="Email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    editable={!loading}
+                    marginBottom={16}
+                />
 
-                <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-gray-900 text-[15px] font-semibold">Mật khẩu</Text>
-                </View>
-                <View className="flex-row items-center border border-gray-200 rounded-lg px-4 mb-8 bg-gray-50">
-                    <TextInput
-                        className="flex-1 py-4 px-3 text-[15px] text-gray-900"
-                        placeholder="••••••••"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
-                    </TouchableOpacity>
-                </View>
+                <FormInputRow
+                    label="Mật khẩu"
+                    placeholder="••••••••"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    editable={!loading}
+                    marginBottom={32}
+                    rightSlot={
+                        <Button onPress={() => setShowPassword(!showPassword)}>
+                            <Text>{showPassword ? 'Hiện' : 'Ẩn'}</Text>
+                        </Button>
+                    }
+                />
 
-                <TouchableOpacity
+                <Button
                     className="flex-row items-center mb-6"
                     activeOpacity={0.75}
                     onPress={() => setRememberLogin((prev) => !prev)}
@@ -150,30 +139,27 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onNavigateToSignUp, 
                         }}
                     >
                         {rememberLogin ? (
-                            <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-                                <Path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                            </Svg>
+                            <CheckIcon size={12} color="white" />
                         ) : null}
                     </View>
                     <Text className="text-[13px] text-gray-600" style={{ fontWeight: '500' }}>
                         Ghi nhớ tài khoản và mật khẩu trên thiết bị này
                     </Text>
-                </TouchableOpacity>
+                </Button>
 
-                <TouchableOpacity
-                    className={`w-full rounded-lg items-center justify-center mb-6 ${loading ? 'opacity-70' : ''}`}
-                    style={{ backgroundColor: '#2B8EF0', paddingVertical: 16 }}
+                <Button
+                    label="Đăng nhập"
                     onPress={handleSignIn}
                     disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-[16px] font-semibold">Đăng nhập</Text>}
-                </TouchableOpacity>
+                    loading={loading}
+                    style={{ marginBottom: 24 }}
+                />
 
                 <View className="flex-row items-center justify-center">
                     <Text className="text-gray-600 text-[15px]">Bạn chưa có tài khoản? </Text>
-                    <TouchableOpacity onPress={onNavigateToSignUp}>
+                    <Button onPress={onNavigateToSignUp}>
                         <Text className="text-[#2B8EF0] text-[15px] font-semibold">Đăng ký ngay</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             </View>
         </SafeAreaView>

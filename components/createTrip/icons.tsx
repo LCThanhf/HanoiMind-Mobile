@@ -1,14 +1,15 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { AppColors } from '../../utils/theme';
 
-export const HealingIcon = ({ color = '#22C55E' }: { color?: string }) => (
+export const HealingIcon = ({ color = AppColors.status.success }: { color?: string }) => (
   <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
     <Path d="M3 8c3-3 6-3 9 0s6 3 9 0" stroke={color} strokeWidth="2" strokeLinecap="round" />
     <Path d="M3 14c3-3 6-3 9 0s6 3 9 0" stroke={color} strokeWidth="2" strokeLinecap="round" />
   </Svg>
 );
 
-export const CafeIcon = ({ color = '#2B8EF0' }: { color?: string }) => (
+export const CafeIcon = ({ color = AppColors.brand.primary }: { color?: string }) => (
   <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
     <Path d="M17 8h1a4 4 0 0 1 0 8h-1" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     <Path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -23,7 +24,7 @@ export const NatureIcon = ({ color = '#D4A574' }: { color?: string }) => (
   </Svg>
 );
 
-export const FoodIcon = ({ color = '#EF4444' }: { color?: string }) => (
+export const FoodIcon = ({ color = AppColors.status.danger }: { color?: string }) => (
   <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
     <Path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     <Path d="M7 2v20" stroke={color} strokeWidth="2" strokeLinecap="round" />
@@ -31,14 +32,14 @@ export const FoodIcon = ({ color = '#EF4444' }: { color?: string }) => (
   </Svg>
 );
 
-export const CalendarIcon = ({ color = '#2B8EF0' }: { color?: string }) => (
+export const CalendarIcon = ({ color = AppColors.brand.primary }: { color?: string }) => (
   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
     <Rect x="3" y="4" width="18" height="18" rx="2" stroke={color} strokeWidth="1.5" />
     <Path d="M16 2v4M8 2v4M3 10h18" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
   </Svg>
 );
 
-export const MoneyIcon = ({ color = '#2B8EF0' }: { color?: string }) => (
+export const MoneyIcon = ({ color = AppColors.brand.primary }: { color?: string }) => (
   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.5" />
     <Path

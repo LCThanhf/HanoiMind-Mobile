@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated, Dimensions, Image, Modal, Text,
-    TouchableOpacity, TouchableWithoutFeedback, View,
+    Animated, Dimensions, Modal, Text, TouchableWithoutFeedback, View,
 } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { UsersService } from '../services/userService/user.service';
+import { Button, AvatarCircle, ListActionRow } from './shared';
 
 interface AppHeaderProps {
     onOpenProfile: () => void;
@@ -12,6 +12,21 @@ interface AppHeaderProps {
     variant?: 'default' | 'homeTrips';
     onOpenNotifications?: () => void;
 }
+
+const ProfileIcon = () => (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+        <Circle cx="12" cy="8" r="4" stroke="#374151" strokeWidth="1.8" />
+        <Path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" />
+    </Svg>
+);
+
+const LogoutIcon = () => (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+        <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M16 17l5-5-5-5" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M21 12H9" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+);
 
 export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpenNotifications }: AppHeaderProps) => {
     const [userAvatar, setUserAvatar] = useState('');
@@ -58,7 +73,7 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
 
                 {variant === 'homeTrips' ? (
                     <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity
+                        <Button
                             activeOpacity={0.8}
                             onPress={onOpenNotifications}
                             style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}
@@ -79,26 +94,28 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
                                     strokeLinejoin="round"
                                 />
                             </Svg>
-                        </TouchableOpacity>
+                        </Button>
 
-                        <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                        <Button activeOpacity={0.8} onPress={openDropdown}>
                             <View ref={avatarRef}>
-                                <Image
-                                    source={{ uri: userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
-                                    style={{ width: 36, height: 36, borderRadius: 18 }}
+                                <AvatarCircle
+                                    uri={userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'}
+                                    name={userName}
+                                    size={36}
                                 />
                             </View>
-                        </TouchableOpacity>
+                        </Button>
                     </View>
                 ) : (
-                    <TouchableOpacity activeOpacity={0.8} onPress={openDropdown}>
+                    <Button activeOpacity={0.8} onPress={openDropdown}>
                         <View ref={avatarRef}>
-                            <Image
-                                source={{ uri: userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80' }}
-                                style={{ width: 44, height: 44, borderRadius: 22 }}
+                            <AvatarCircle
+                                uri={userAvatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80'}
+                                name={userName}
+                                size={44}
                             />
                         </View>
-                    </TouchableOpacity>
+                    </Button>
                 )}
             </View>
 
@@ -124,29 +141,30 @@ export const AppHeader = ({ onOpenProfile, onLogout, variant = 'default', onOpen
                                 opacity: dropdownOpacity,
                                 transform: [{ translateY: dropdownTranslateY }],
                             }}>
-                                <TouchableOpacity
-                                    activeOpacity={0.75}
+                                <ListActionRow
+                                    icon={<ProfileIcon />}
+                                    title="Hồ sơ"
                                     onPress={() => { setShowDropdown(false); onOpenProfile(); }}
-                                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}
-                                >
-                                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 12 }}>
-                                        <Circle cx="12" cy="8" r="4" stroke="#374151" strokeWidth="1.8" />
-                                        <Path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" />
-                                    </Svg>
-                                    <Text style={{ fontSize: 15, color: '#111827', fontWeight: '500' }}>Hồ sơ</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    activeOpacity={0.75}
+                                    titleSize={15}
+                                    titleColor="#111827"
+                                    iconContainerBackgroundColor="transparent"
+                                    iconContainerSize={18}
+                                    horizontalPadding={16}
+                                    verticalPadding={14}
+                                    borderBottomColor="#F3F4F6"
+                                />
+                                <ListActionRow
+                                    icon={<LogoutIcon />}
+                                    title="Đăng xuất"
                                     onPress={() => { setShowDropdown(false); onLogout(); }}
-                                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}
-                                >
-                                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" style={{ marginRight: 12 }}>
-                                        <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                        <Path d="M16 17l5-5-5-5" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                        <Path d="M21 12H9" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                    </Svg>
-                                    <Text style={{ fontSize: 15, color: '#EF4444', fontWeight: '500' }}>Đăng xuất</Text>
-                                </TouchableOpacity>
+                                    titleSize={15}
+                                    titleColor="#EF4444"
+                                    iconContainerBackgroundColor="transparent"
+                                    iconContainerSize={18}
+                                    horizontalPadding={16}
+                                    verticalPadding={14}
+                                    showBorderBottom={false}
+                                />
                             </Animated.View>
                         </TouchableWithoutFeedback>
                     </View>

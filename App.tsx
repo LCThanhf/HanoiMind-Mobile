@@ -89,7 +89,7 @@ export default function App() {
       return (
         <ExploreScreen
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={setActiveTab} onViewForum={() => setAppState('forum')}
           onViewAllPlaces={() => {
             setPreviousState('main');
             setAppState('placesExplore');
@@ -139,6 +139,15 @@ export default function App() {
         onTabChange={setActiveTab}
         onOpenProfile={() => setActiveTab('profile')}
         onCreateTrip={() => setAppState('createTrip')}
+        onViewAllPlaces={() => {
+          setPreviousState('main');
+          setAppState('placesExplore');
+        }}
+        onPlaceClick={(placeId) => {
+          setSelectedPlaceId(placeId);
+          setPreviousState('main');
+          setAppState('placeDetail');
+        }}
         onLogout={() => setAppState('starter')}
         onOpenNotifications={() => setAppState('notifications')}
         onTripClick={(tripId) => {

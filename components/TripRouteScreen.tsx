@@ -4,7 +4,6 @@ import {
   Linking,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -12,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Map as MapIcon, Clock, MapPin } from 'lucide-react-native';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
+import { Button, CharacteristicBadge, ScreenHeader, TimelineConnector } from './shared';
 
 interface TripRouteScreenProps {
   tripId: string;
@@ -165,25 +165,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
-      <View className="px-5 pt-3 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M19 12H5M12 19l-7-7 7-7"
-                stroke="#111827"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </TouchableOpacity>
-          <Text className="text-[18px] text-gray-900" style={{ fontWeight: '600' }}>
-            Lộ trình tham quan
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-      </View>
+      <ScreenHeader title="Lộ trình tham quan" onBack={onBack} />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -221,7 +203,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               {routeDays.map((day) => {
                 const selected = day.dayNumber === selectedDay?.dayNumber;
                 return (
-                  <TouchableOpacity
+                  <Button
                     key={day.dayNumber}
                     activeOpacity={0.8}
                     onPress={() => setSelectedDayNumber(day.dayNumber)}
@@ -240,7 +222,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                       </Svg>
                       <Text
                         style={{
-                          color: selected ? '#2B8EF0' : '#4B5563',
+                          color: selected ? '#2B8EF0' : '#374151',
                           fontWeight: '800',
                           fontSize: 14,
                         }}
@@ -248,7 +230,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                         Ngày {day.dayNumber}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </Button>
                 );
               })}
             </View>
@@ -277,7 +259,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                 longitudeDelta: 0.08,
               }}
             >
-              {coordinates.length >= 2 && <Polyline coordinates={coordinates} strokeColor="#2563EB" strokeWidth={5} />}
+              {coordinates.length >= 2 && <Polyline coordinates={coordinates} strokeColor="#3B82F6" strokeWidth={5} />}
 
               {(selectedDay?.stops || []).map((stop, index) => (
                 <Marker
@@ -290,7 +272,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                       width: 24,
                       height: 24,
                       borderRadius: 12,
-                      backgroundColor: '#2563EB',
+                      backgroundColor: '#3B82F6',
                       borderWidth: 2,
                       borderColor: '#FFFFFF',
                       alignItems: 'center',
@@ -309,7 +291,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               className="bg-white border border-gray-100 rounded-2xl shadow-sm"
               style={{
                 elevation: 4,
-                shadowColor: '#1e293b',
+                shadowColor: '#111827',
                 shadowOpacity: 0.05,
                 shadowRadius: 10,
                 shadowOffset: { width: 0, height: 4 },
@@ -317,7 +299,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
             >
               <View className="flex-row items-center py-4 px-3">
                 <View className="flex-1 items-center space-y-2 border-r border-gray-100">
-                  <View className="w-10 h-10 rounded-full bg-blue-50/50 items-center justify-center mb-1">
+                  <View className="w-10 h-10 rounded-full bg-primary-soft/50 items-center justify-center mb-1">
                     <MapPin size={22} color="#0EA5E9" strokeWidth={2.5} />
                   </View>
                   <Text className="text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-0.5">
@@ -360,14 +342,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
               <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
                 Chi tiết các chặng
               </Text>
-              <View
-                className="rounded-full px-3 py-1"
-                style={{ backgroundColor: '#DBEAFE' }}
-              >
-                <Text className="text-[11px]" style={{ color: '#3B82F6', fontWeight: '700' }}>
-                  Đang tối ưu
-                </Text>
-              </View>
+              <CharacteristicBadge label="Đang tối ưu" backgroundColor="#DBEAFE" textColor="#3B82F6" />
             </View>
 
             {selectedDay && selectedDay.stops.length >= 2 ? (
@@ -382,15 +357,7 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                   >
                     <View className="flex-row items-start justify-between">
                       <View className="flex-row" style={{ flex: 1, paddingRight: 8 }}>
-                        <View style={{ marginTop: 2, alignItems: 'center' }}>
-                          <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-                            <Circle cx="9" cy="9" r="7" stroke="#3B82F6" strokeWidth="2" />
-                            <Circle cx="9" cy="9" r="3" fill="#3B82F6" />
-                          </Svg>
-                          {index !== selectedDay.stops.length - 2 && (
-                            <View style={{ width: 2, flex: 1, minHeight: 18, marginTop: 4, backgroundColor: '#BFDBFE' }} />
-                          )}
-                        </View>
+                        <TimelineConnector isLast={index === selectedDay.stops.length - 2} dotColor="#3B82F6" lineColor="#BFDBFE" />
 
                         <View style={{ marginLeft: 10, flex: 1 }}>
                           <Text className="text-[18px] text-gray-900" style={{ fontWeight: '700' }} numberOfLines={1}>
@@ -431,16 +398,12 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
           </View>
 
           <View className="px-5 pt-5">
-            <TouchableOpacity
-              className="items-center justify-center rounded-xl"
-              style={{ height: 48, backgroundColor: '#2B8EF0', opacity: selectedDay && selectedDay.stops.length >= 2 ? 1 : 0.5 }}
-              disabled={!selectedDay || selectedDay.stops.length < 2}
+            <Button
+              label="Mở trong Google Maps"
               onPress={handleOpenGoogleMaps}
-            >
-              <Text className="text-white text-[15px]" style={{ fontWeight: '700' }}>
-                Mở trong Google Maps
-              </Text>
-            </TouchableOpacity>
+              disabled={!selectedDay || selectedDay.stops.length < 2}
+              style={{ borderRadius: 12 }}
+            />
           </View>
         </ScrollView>
       )}

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert, Image, Share, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, Share, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
+import { Button, AvatarCircle } from '../shared';
 
 interface MembersTabProps {
     members: TripMemberView[];
@@ -9,13 +10,6 @@ interface MembersTabProps {
     onLeaveTrip: () => void;
     isLeaving?: boolean;
 }
-
-const initialsFromName = (name: string) => {
-    const words = name.trim().split(' ').filter(Boolean);
-    if (!words.length) return 'U';
-    if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
-    return `${words[0].slice(0, 1)}${words[words.length - 1].slice(0, 1)}`.toUpperCase();
-};
 
 export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false }: MembersTabProps) => {
     const owner = members.find((member) => member.isOwner) || members[0];
@@ -57,23 +51,9 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                     className="flex-row items-center px-4 py-3 rounded-2xl mb-5"
                     style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
                 >
-                    {owner.avatar ? (
-                        <Image source={{ uri: owner.avatar }} style={{ width: 46, height: 46, borderRadius: 23, marginRight: 12 }} />
-                    ) : (
-                        <View
-                            style={{
-                                width: 46,
-                                height: 46,
-                                borderRadius: 23,
-                                backgroundColor: '#C4856A',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginRight: 12,
-                            }}
-                        >
-                            <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>{initialsFromName(owner.name)}</Text>
-                        </View>
-                    )}
+                    <View style={{ marginRight: 12 }}>
+                        <AvatarCircle uri={owner.avatar} name={owner.name} size={46} backgroundColor="#C4856A" />
+                    </View>
                     <View className="flex-1">
                         <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
                             {owner.name}
@@ -107,25 +87,9 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                             borderBottomColor: '#F3F4F6',
                         }}
                     >
-                        {member.avatar ? (
-                            <Image source={{ uri: member.avatar }} style={{ width: 46, height: 46, borderRadius: 23, marginRight: 12 }} />
-                        ) : (
-                            <View
-                                style={{
-                                    width: 46,
-                                    height: 46,
-                                    borderRadius: 23,
-                                    backgroundColor: '#7B6FB5',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginRight: 12,
-                                }}
-                            >
-                                <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
-                                    {initialsFromName(member.name)}
-                                </Text>
-                            </View>
-                        )}
+                        <View style={{ marginRight: 12 }}>
+                            <AvatarCircle uri={member.avatar} name={member.name} size={46} backgroundColor="#7B6FB5" />
+                        </View>
                         <View className="flex-1">
                             <Text className="text-[15px] text-gray-900" style={{ fontWeight: '600' }}>
                                 {member.name}
@@ -161,7 +125,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                 <View
                     className="flex-row items-center px-3 rounded-xl mb-3"
                     style={{
-                        backgroundColor: '#F9FAFB',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1,
                         borderColor: '#E5E7EB',
                         height: 44,
@@ -170,7 +134,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                     <Text className="flex-1 text-[13px] text-gray-700" style={{ fontWeight: '400' }}>
                         {inviteLink}
                     </Text>
-                    <TouchableOpacity
+                    <Button
                         activeOpacity={0.7}
                         onPress={handleCopyInvite}
                     >
@@ -183,11 +147,11 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                                 strokeLinecap="round"
                             />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
                 {/* Action Buttons */}
                 <View className="flex-row" style={{ gap: 10 }}>
-                    <TouchableOpacity
+                    <Button
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
@@ -203,8 +167,8 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                             />
                         </Svg>
                         <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Copy link</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Button>
+                    <Button
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
@@ -222,7 +186,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                             />
                         </Svg>
                         <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Share</Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
             </View>
 
@@ -233,7 +197,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
             </Text>
 
             {/* Leave Trip */}
-            <TouchableOpacity
+            <Button
                 className="items-center justify-center py-4 rounded-2xl mb-4"
                 style={{ backgroundColor: '#FEE2E2' }}
                 activeOpacity={0.8}
@@ -250,7 +214,8 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                 ) : (
                     <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
                 )}
-            </TouchableOpacity>
+            </Button>
         </View>
     );
 };
+

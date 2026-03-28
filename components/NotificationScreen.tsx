@@ -5,7 +5,6 @@ import {
     Image,
     ScrollView,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +12,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { NotificationService } from '../services/notificationService/notification.service';
 import { Notification as ApiNotification, NotificationType } from '../services/notificationService/notification.type';
 import { MainTab } from './BottomTabBar';
+import { Button, AvatarCircle } from './shared';
 
 type NotificationKind = 'avatar' | 'chat' | 'trip';
 
@@ -57,10 +57,9 @@ function mapApiToItem(notif: ApiNotification): NotificationItem {
 const NotificationLeading = ({ item }: { item: NotificationItem }) => {
     if (item.kind === 'avatar' && item.avatar) {
         return (
-            <Image
-                source={{ uri: item.avatar }}
-                style={{ width: 52, height: 52, borderRadius: 26 }}
-            />
+            <View style={{ width: 52, height: 52, borderRadius: 26, overflow: 'hidden' }}>
+                <AvatarCircle uri={item.avatar} size={52} backgroundColor="#D1D5DB" />
+            </View>
         );
     }
 
@@ -98,7 +97,7 @@ const NotificationLeading = ({ item }: { item: NotificationItem }) => {
                 width: 52,
                 height: 52,
                 borderRadius: 26,
-                backgroundColor: '#FDE7B0',
+                backgroundColor: '#FEF3C7',
                 alignItems: 'center',
                 justifyContent: 'center',
             }}
@@ -175,7 +174,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
     }, []);
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <View
                 style={{
                     paddingHorizontal: 16,
@@ -183,13 +182,13 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     paddingBottom: 12,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E5E7EB',
-                    backgroundColor: '#F5F6FA',
+                    backgroundColor: '#F8FAFC',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                 }}
             >
-                <TouchableOpacity
+                <Button
                     onPress={onBack}
                     activeOpacity={0.8}
                     style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}
@@ -197,7 +196,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                     <Svg width={21} height={21} viewBox="0 0 24 24" fill="none">
                         <Path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </Svg>
-                </TouchableOpacity>
+                </Button>
 
                 <Text style={{ fontSize: 24, fontWeight: '700', color: '#F472B6' }}>Thông báo</Text>
                 <View style={{ width: 32 }} />
@@ -247,7 +246,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                 </View>
                             )}
 
-                            <TouchableOpacity
+                            <Button
                                 onPress={() => handleTap(item)}
                                 activeOpacity={0.85}
                                 style={{
@@ -271,7 +270,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                 <NotificationLeading item={item} />
 
                                 <View style={{ flex: 1, marginLeft: 14, marginRight: 8 }}>
-                                    <Text style={{ fontSize: 15, color: '#1F2937', fontWeight: '400' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 15, color: '#111827', fontWeight: '400' }} numberOfLines={1}>
                                         {item.actor ? (
                                             <>
                                                 <Text style={{ fontWeight: '700' }}>{item.actor}</Text>
@@ -281,13 +280,13 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
                                             item.message
                                         )}
                                     </Text>
-                                    <Text style={{ fontSize: 13, color: '#4B5563', marginTop: 4 }}>{item.timeAgo}</Text>
+                                    <Text style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>{item.timeAgo}</Text>
                                 </View>
 
                                 <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                                     <Path d="M9 6l6 6-6 6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </Svg>
-                            </TouchableOpacity>
+                            </Button>
                         </View>
                     ))}
                 </ScrollView>
@@ -295,3 +294,4 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
         </SafeAreaView>
     );
 };
+

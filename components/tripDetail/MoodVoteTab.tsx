@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { MoodVoteOption } from './types';
+import { Button, AvatarStack, CardContainer, PillBadge } from '../shared';
 
 const StarSparkleIcon = () => (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -42,7 +43,7 @@ const moodIconById: Record<string, React.ReactElement> = {
     ),
     culture: (
         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-            <Path d="M4 22H20M4 18V10M20 18V10M8 18V14M16 18V14M12 18V14M12 2L2 10H22L12 2Z" fill="#9CA3AF" stroke="#4B5563" strokeWidth="2" strokeLinejoin="round" />
+            <Path d="M4 22H20M4 18V10M20 18V10M8 18V14M16 18V14M12 18V14M12 2L2 10H22L12 2Z" fill="#9CA3AF" stroke="#374151" strokeWidth="2" strokeLinejoin="round" />
         </Svg>
     ),
     chill: (
@@ -61,6 +62,14 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
         icon: moodIconById[option.id] || moodIconById.chill,
     }));
 
+    const voteResultAvatars = [
+        { uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80', name: 'A' },
+        { uri: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80', name: 'B' },
+        { uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80', name: 'C' },
+        { name: 'D' },
+        { name: 'E' },
+    ];
+
     return (
         <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
             {/* Header */}
@@ -71,11 +80,13 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                         Lựa chọn của bạn
                     </Text>
                 </View>
-                <View className="px-3 py-1.5 rounded-full" style={{ backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' }}>
-                    <Text className="text-[12px] text-gray-600" style={{ fontWeight: '500' }}>
-                        {tripName}
-                    </Text>
-                </View>
+                <PillBadge
+                    label={tripName}
+                    backgroundColor="#F3F4F6"
+                    textColor="#4B5563"
+                    textWeight="500"
+                    borderColor="#E5E7EB"
+                />
             </View>
 
             {/* List */}
@@ -83,7 +94,7 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 {moods.map((mood) => {
                     const isActive = selectedMood === mood.id;
                     return (
-                        <TouchableOpacity
+                        <Button
                             key={mood.id}
                             onPress={() => setSelectedMood(mood.id)}
                             activeOpacity={0.8}
@@ -147,13 +158,13 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                                     </Svg>
                                 </View>
                             )}
-                        </TouchableOpacity>
+                        </Button>
                     );
                 })}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity
+            <Button
                 activeOpacity={0.8}
                 style={{
                     backgroundColor: '#1ECAFA',
@@ -171,7 +182,7 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 }}
             >
                 <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>Gửi bình chọn</Text>
-            </TouchableOpacity>
+            </Button>
 
             {/* Bottom Text */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -193,20 +204,13 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
                     Kết quả bình chọn
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', zIndex: 3 }} />
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', marginLeft: -8, zIndex: 2 }} />
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80' }} style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'white', marginLeft: -8, zIndex: 1 }} />
-                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6', borderWidth: 2, borderColor: 'white', marginLeft: -8, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#374151' }}>+2</Text>
-                    </View>
-                </View>
+                <AvatarStack items={voteResultAvatars} size={28} overlap={8} maxVisible={3} />
             </View>
 
             {/* Chart Card */}
-            <View style={{ backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#F3F4F6', marginBottom: 20 }}>
+            <CardContainer style={{ borderRadius: 16, marginBottom: 20 }}>
                 <View style={{ padding: 16, paddingBottom: 32 }}>
-                    <Text style={{ fontSize: 13, color: '#4B5563', fontWeight: '500', marginBottom: 24 }}>
+                    <Text style={{ fontSize: 13, color: '#374151', fontWeight: '500', marginBottom: 24 }}>
                         Phân bổ xu hướng chuyến đi
                     </Text>
 
@@ -231,24 +235,24 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
-                            <Path d="M17 21v-2a4 4 0 0 0-3-3.87M9 21v-2a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v2" stroke="#4B5563" strokeWidth="1.5" strokeLinecap="round" />
-                            <Circle cx="9" cy="7" r="4" stroke="#4B5563" strokeWidth="1.5" />
-                            <Circle cx="17" cy="7" r="3" stroke="#4B5563" strokeWidth="1.5" />
+                            <Path d="M17 21v-2a4 4 0 0 0-3-3.87M9 21v-2a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4v2" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" />
+                            <Circle cx="9" cy="7" r="4" stroke="#374151" strokeWidth="1.5" />
+                            <Circle cx="17" cy="7" r="3" stroke="#374151" strokeWidth="1.5" />
                         </Svg>
                         <Text style={{ fontSize: 13, color: '#374151', fontWeight: '500' }}>
                             {membersCount} thành viên
                         </Text>
                     </View>
-                    <TouchableOpacity activeOpacity={0.7}>
+                    <Button activeOpacity={0.7}>
                         <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '600' }}>
                             Xem chi tiết
                         </Text>
-                    </TouchableOpacity>
+                    </Button>
                 </View>
-            </View>
+            </CardContainer>
 
             {/* Re-generate route button */}
-            <TouchableOpacity
+            <Button
                 activeOpacity={0.7}
                 style={{
                     flexDirection: 'row',
@@ -266,7 +270,7 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
                 <Text style={{ fontSize: 15, fontWeight: '700', color: '#F59E0B', marginLeft: 8 }}>
                     Tạo lại lộ trình theo số đông
                 </Text>
-            </TouchableOpacity>
+            </Button>
 
             {/* Footer Text */}
             <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '400', textAlign: 'center', fontStyle: 'italic', lineHeight: 18, paddingHorizontal: 10 }}>
@@ -275,3 +279,4 @@ export const MoodVoteTab = ({ options, membersCount, tripName }: MoodVoteTabProp
         </ScrollView>
     );
 };
+

@@ -1,37 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle, Polygon } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { MainTab } from './BottomTabBar';
+import { Button, CardContainer, SectionHeader, StarRating, StatItemView } from './shared';
 
 // --- IMPORT SERVICE & TYPES ---
 import { PlacesService } from '../services/placeService/place.service';
+import { ForumService } from '../services/forumService/forum.service';
 // Import thêm PlaceCategory để filter
 import { Place, PlaceCategory } from '../services/placeService/place.type';
-
-// --- MOCK DATA (Cho Diễn đàn & Đánh giá) ---
-const forumPosts = [
-    {
-        id: 'f1',
-        author: 'Minh Anh',
-        avatarColor: '#C4856A',
-        avatarInitial: 'M',
-        avatarImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
-        content: 'Ai có gợi ý quán bún chả ngon ở Hà Nội k?',
-        likes: 36,
-        comments: 5,
-    },
-    {
-        id: 'f2',
-        author: 'Quang Minh',
-        avatarColor: '#5C4033',
-        avatarInitial: 'Q',
-        avatarImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80',
-        content: 'Chia sẻ lịch trình Sapa 2 ngày cho mọi người',
-        likes: 18,
-        comments: 10,
-    },
-];
+import { ForumPost, PostSortBy } from '../services/forumService/forum.type';
 
 const reviews = [
     {
@@ -50,23 +29,8 @@ const reviews = [
     },
 ];
 
-const StarRating = ({ rating, total = 5 }: { rating: number; total?: number }) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        {Array.from({ length: total }).map((_, i) => (
-            <Svg key={i} width={13} height={13} viewBox="0 0 24 24" fill="none" style={{ marginRight: 1 }}>
-                <Polygon
-                    points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                    fill={i < Math.floor(rating) ? '#FBBF24' : '#E5E7EB'}
-                    stroke={i < Math.floor(rating) ? '#FBBF24' : '#E5E7EB'}
-                    strokeWidth="1"
-                />
-            </Svg>
-        ))}
-        <Text style={{ fontSize: 12, color: '#374151', fontWeight: '600', marginLeft: 4 }}>{rating}</Text>
-    </View>
-);
-
 interface ExploreScreenProps {
+    onViewForum?: () => void;
     activeTab: MainTab;
     onTabChange: (tab: MainTab) => void;
     onViewAllPlaces?: () => void;
@@ -74,16 +38,17 @@ interface ExploreScreenProps {
 }
 
 export const ExploreScreen = ({
+    onViewForum,
     activeTab,
     onTabChange,
     onViewAllPlaces,
     onPlaceClick
 }: ExploreScreenProps) => {
-    const [searchText, setSearchText] = useState('');
-
     // State quản lý dữ liệu từ API
     const [places, setPlaces] = useState<Place[]>([]);
     const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
+    const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+    const [isLoadingForum, setIsLoadingForum] = useState(true);
 
     // Lấy dữ liệu địa điểm khi màn hình load
     useEffect(() => {
@@ -111,6 +76,28 @@ export const ExploreScreen = ({
         fetchPlaces();
     }, []);
 
+    useEffect(() => {
+        const fetchForumPosts = async () => {
+            try {
+                setIsLoadingForum(true);
+                const response = await ForumService.findAll({
+                    page: 1,
+                    limit: 2,
+                    sortBy: PostSortBy.LATEST,
+                });
+
+                setForumPosts(response.data || []);
+            } catch (error) {
+                console.error('Lỗi khi tải bài diễn đàn:', error);
+                setForumPosts([]);
+            } finally {
+                setIsLoadingForum(false);
+            }
+        };
+
+        fetchForumPosts();
+    }, []);
+
     // Format số lượng đánh giá (VD: 1500 -> 1.5K)
     const formatReviewCount = (count: number) => {
         if (!count) return '0';
@@ -131,7 +118,7 @@ export const ExploreScreen = ({
     };
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-[#F5F6FA]">
+        <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">
             <View
                 style={{
                     paddingHorizontal: 16,
@@ -139,7 +126,7 @@ export const ExploreScreen = ({
                     paddingBottom: 12,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E5E7EB',
-                    backgroundColor: '#F5F6FA',
+                    backgroundColor: '#F8FAFC',
                     alignItems: 'center',
                 }}
             >
@@ -149,21 +136,8 @@ export const ExploreScreen = ({
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 90, paddingTop: 16 }}>
 
                 {/* ================= KHÁM PHÁ ĐỊA ĐIỂM ================= */}
-                <View
-                    className="mx-5 mb-4 rounded-2xl overflow-hidden"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
-                >
-                    <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
-                        <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
-                            Khám phá nhà hàng
-                        </Text>
-                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center" onPress={onViewAllPlaces}>
-                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem tất cả</Text>
-                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
-                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </Svg>
-                        </TouchableOpacity>
-                    </View>
+                <CardContainer style={{ marginHorizontal: 20, marginBottom: 16 }}>
+                    <SectionHeader title="Khám phá nhà hàng" actionLabel="Xem tất cả" onActionPress={onViewAllPlaces} />
 
                     <View className="flex-row px-4 pb-4" style={{ gap: 12 }}>
                         {isLoadingPlaces ? (
@@ -176,11 +150,11 @@ export const ExploreScreen = ({
                             </View>
                         ) : (
                             places.map((place) => (
-                                <TouchableOpacity
+                                <Button
                                     key={place._id}
                                     activeOpacity={0.8}
                                     onPress={() => onPlaceClick(place._id)}
-                                    style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6' }}
+                                    style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F3F4F6' }}
                                 >
                                     <Image
                                         source={{ uri: place.images && place.images.length > 0 ? place.images[0] : 'https://via.placeholder.com/400' }}
@@ -213,99 +187,102 @@ export const ExploreScreen = ({
                                             </View>
                                         </View>
                                     </View>
-                                </TouchableOpacity>
+                                </Button>
                             ))
                         )}
                     </View>
-                </View>
+                </CardContainer>
 
                 {/* ================= DIỄN ĐÀN DU LỊCH ================= */}
-                <View
-                    className="mx-5 mb-4 rounded-2xl overflow-hidden"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
-                >
-                    <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
-                        <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
-                            Diễn đàn du lịch
-                        </Text>
-                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
-                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem tất cả</Text>
-                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
-                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </Svg>
-                        </TouchableOpacity>
-                    </View>
+                <CardContainer style={{ marginHorizontal: 20, marginBottom: 16 }}>
+                    <SectionHeader title="Diễn đàn du lịch" actionLabel="Xem tất cả" onActionPress={onViewForum} />
 
-                    {forumPosts.map((post, index) => (
-                        <TouchableOpacity
-                            key={post.id}
+                    {isLoadingForum ? (
+                        <View className="py-4 items-center justify-center">
+                            <ActivityIndicator size="small" color="#2B8EF0" />
+                        </View>
+                    ) : forumPosts.length === 0 ? (
+                        <Button
                             activeOpacity={0.75}
-                            style={{
-                                paddingHorizontal: 16,
-                                paddingVertical: 12,
-                                borderTopWidth: index === 0 ? 1 : 0,
-                                borderBottomWidth: index < forumPosts.length - 1 ? 1 : 1,
-                                borderColor: '#F3F4F6',
-                            }}
+                            onPress={onViewForum}
+                            style={{ paddingHorizontal: 16, paddingVertical: 12 }}
                         >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                                <Image
-                                    source={{ uri: post.avatarImage }}
-                                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
-                                />
-                                <Text style={{ fontSize: 14, color: '#111827', fontWeight: '600' }}>{post.author}</Text>
-                            </View>
-                            <Text style={{ fontSize: 13, color: '#374151', fontWeight: '400', marginBottom: 8, lineHeight: 19 }}>
-                                {post.content}
+                            <Text style={{ fontSize: 13, color: '#6B7280' }}>
+                                Chưa có bài viết gần đây. Chạm để vào diễn đàn.
                             </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 5 }}>
-                                        <Path
-                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                                            fill="#EF4444"
-                                            stroke="#EF4444"
-                                            strokeWidth="1.5"
-                                        />
-                                    </Svg>
-                                    <Text style={{ fontSize: 13, color: '#6B7280', fontWeight: '500' }}>{post.likes}</Text>
+                        </Button>
+                    ) : (
+                        forumPosts.map((post, index) => (
+                            <Button
+                                key={post._id}
+                                activeOpacity={0.75}
+                                onPress={onViewForum}
+                                style={{
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 12,
+                                    borderTopWidth: index === 0 ? 1 : 0,
+                                    borderBottomWidth: index < forumPosts.length - 1 ? 1 : 1,
+                                    borderColor: '#F3F4F6',
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                    <Image
+                                        source={{
+                                            uri:
+                                                post.author?.avatar ||
+                                                'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=100&q=80',
+                                        }}
+                                        style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+                                    />
+                                    <Text style={{ fontSize: 14, color: '#111827', fontWeight: '600' }} numberOfLines={1}>
+                                        {post.author?.fullName || 'Thành viên'}
+                                    </Text>
                                 </View>
+                                <Text style={{ fontSize: 13, color: '#374151', fontWeight: '400', marginBottom: 8, lineHeight: 19 }} numberOfLines={2}>
+                                    {post.content}
+                                </Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 5 }}>
-                                        <Path
-                                            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                                            stroke="#9CA3AF"
-                                            strokeWidth="1.8"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </Svg>
-                                    <Text style={{ fontSize: 13, color: '#6B7280', fontWeight: '500' }}>{post.comments}</Text>
+                                    <StatItemView
+                                        value={post.stats?.likes || 0}
+                                        icon={(
+                                            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                                                <Path
+                                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                                    fill="#EF4444"
+                                                    stroke="#EF4444"
+                                                    strokeWidth="1.5"
+                                                />
+                                            </Svg>
+                                        )}
+                                        valueStyle={{ fontSize: 13 }}
+                                    />
+                                    <StatItemView
+                                        value={post.stats?.comments || 0}
+                                        icon={(
+                                            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                                                <Path
+                                                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                                    stroke="#9CA3AF"
+                                                    strokeWidth="1.8"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </Svg>
+                                        )}
+                                        valueStyle={{ fontSize: 13 }}
+                                    />
                                 </View>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                            </Button>
+                        ))
+                    )}
+                </CardContainer>
 
                 {/* ================= ĐÁNH GIÁ ĐỊA ĐIỂM ================= */}
-                <View
-                    className="mx-5 mb-4 rounded-2xl overflow-hidden"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
-                >
-                    <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
-                        <Text className="text-gray-900 text-[15px]" style={{ fontWeight: '700' }}>
-                            Đánh giá địa điểm
-                        </Text>
-                        <TouchableOpacity activeOpacity={0.7} className="flex-row items-center">
-                            <Text style={{ fontSize: 13, color: '#2B8EF0', fontWeight: '500' }}>Xem tất cả</Text>
-                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2 }}>
-                                <Path d="M9 18l6-6-6-6" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </Svg>
-                        </TouchableOpacity>
-                    </View>
+                <CardContainer style={{ marginHorizontal: 20, marginBottom: 16 }}>
+                    <SectionHeader title="Đánh giá địa điểm" actionLabel="Xem tất cả" />
 
                     {reviews.map((review, index) => (
-                        <TouchableOpacity
+                        <Button
                             key={review.id}
                             activeOpacity={0.75}
                             style={{
@@ -329,9 +306,9 @@ export const ExploreScreen = ({
                             <Text style={{ fontSize: 13, color: '#374151', fontWeight: '400', lineHeight: 19 }}>
                                 {review.content}
                             </Text>
-                        </TouchableOpacity>
+                        </Button>
                     ))}
-                </View>
+                </CardContainer>
 
             </ScrollView>
         </SafeAreaView>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
+import { SectionHeader } from '../shared';
 
 interface SelectedPlaceDetail {
   id: string;
@@ -29,19 +30,14 @@ export const StepThreeConfirm = ({
   selectedPlaces,
 }: StepThreeConfirmProps) => (
   <View className="px-5 pb-10">
-    <View className="flex-row items-center mb-4">
-      <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-      <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-        XAC NHAN & CHAY AI
-      </Text>
-    </View>
+    <SectionHeader title="XAC NHAN & CHAY AI" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
     <View style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, padding: 14, marginBottom: 14 }}>
       <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 6 }}>{tripName || 'Chua dat ten'}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Ngày đi: {dateRangeSummary}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Mode: {isSoloMode ? 'Solo' : 'Group'}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563', marginBottom: 2 }}>Mood: {selectedMoodTitle}</Text>
-      <Text style={{ fontSize: 13, color: '#4B5563' }}>Ngân sách: {budget || 'Chua nhap'}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Ngày đi: {dateRangeSummary}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Mode: {isSoloMode ? 'Solo' : 'Group'}</Text>
+      <Text style={{ fontSize: 13, color: '#374151', marginBottom: 2 }}>Mood: {selectedMoodTitle}</Text>
+      <Text style={{ fontSize: 13, color: '#374151' }}>Ngân sách: {budget || 'Chua nhap'}</Text>
     </View>
 
     <Text style={{ fontSize: 13, fontWeight: '700', color: '#111827', marginBottom: 8 }}>
@@ -116,3 +112,4 @@ export const StepThreeConfirm = ({
     ))}
   </View>
 );
+

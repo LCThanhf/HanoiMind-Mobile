@@ -1,9 +1,10 @@
 import React from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { moodOptions } from './constants';
 import { CafeIcon, CalendarIcon, FoodIcon, HealingIcon, MoneyIcon, NatureIcon } from './icons';
+import { Button, SectionHeader } from '../shared';
 import { MoodId } from './types';
 
 interface StepOneInfoProps {
@@ -50,12 +51,7 @@ export const StepOneInfo = ({
 }: StepOneInfoProps) => (
   <>
     <View className="px-5">
-      <View className="flex-row items-center mb-4">
-        <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-        <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-          Các thông tin cơ bản
-        </Text>
-      </View>
+      <SectionHeader title="Các thông tin cơ bản" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
       <View className="mb-3">
         <Text className="text-[13px] text-gray-600 mb-2" style={{ fontWeight: '500' }}>
@@ -85,26 +81,26 @@ export const StepOneInfo = ({
         <View className="flex-row" style={{ gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Từ</Text>
-            <TouchableOpacity
+            <Button
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('start')}
               className="flex-row items-center px-4 rounded-xl"
               style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}
             >
               <Text style={{ fontSize: 15, fontWeight: '500', color: '#111827' }}>{startDate}</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
 
           <View style={{ flex: 1 }}>
             <Text className="text-[11px] text-gray-500 mb-1" style={{ fontWeight: '500' }}>Đến</Text>
-            <TouchableOpacity
+            <Button
               activeOpacity={0.8}
               onPress={() => onOpenDatePicker('end')}
               className="flex-row items-center px-4 rounded-xl"
               style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}
             >
               <Text style={{ fontSize: 15, fontWeight: '500', color: '#111827' }}>{endDate}</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
         </View>
       </View>
@@ -145,25 +141,22 @@ export const StepOneInfo = ({
     </View>
 
     <View className="px-5 mb-6">
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center">
-          <View style={{ width: 4, height: 20, backgroundColor: '#2B8EF0', borderRadius: 2, marginRight: 10 }} />
-          <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>
-            Tâm trạng di chuyển
-          </Text>
-        </View>
-        <TouchableOpacity onPress={onToggleMode} activeOpacity={0.7}>
-          <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-            {isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <SectionHeader
+        title="Tâm trạng di chuyển"
+        actionLabel={isSoloMode ? 'Đổi mode: Solo' : 'Đổi mode: Group'}
+        onActionPress={onToggleMode}
+        showActionIcon={false}
+        paddingHorizontal={0}
+        paddingTop={0}
+        paddingBottom={0}
+        marginBottom={16}
+      />
 
       <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
         {moodOptions.map((mood) => {
           const isSelected = selectedMood === mood.id;
           return (
-            <TouchableOpacity
+            <Button
               key={mood.id}
               style={{ width: '50%', paddingHorizontal: 6, marginBottom: 12 }}
               onPress={() => onSelectMood(mood.id)}
@@ -180,17 +173,18 @@ export const StepOneInfo = ({
                 <View className="items-center justify-center mb-3" style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: 'white' }}>
                   {getMoodIcon(mood.icon, mood.color)}
                 </View>
-                <Text className="text-[14px] mb-1" style={{ color: '#1F2937', fontWeight: '600' }}>
+                <Text className="text-[14px] mb-1" style={{ color: '#111827', fontWeight: '600' }}>
                   {mood.title}
                 </Text>
                 <Text className="text-[11px]" style={{ color: '#6B7280', fontWeight: '400' }}>
                   {mood.budget}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </Button>
           );
         })}
       </View>
     </View>
   </>
 );
+

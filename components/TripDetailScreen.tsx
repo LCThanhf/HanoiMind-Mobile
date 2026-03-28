@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Animated, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, Animated, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { ItineraryTab } from './tripDetail/ItineraryTab';
@@ -8,6 +8,7 @@ import { MoodVoteTab } from './tripDetail/MoodVoteTab';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { TripStatCard } from './tripDetail/TripStatCard';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
+import { Button, PillBadge } from './shared';
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -100,7 +101,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
             <View className="px-5 pt-12 pb-4 bg-white">
                 <View className="flex-row items-center justify-between relative">
                     {/* Left Side */}
-                    <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
+                    <Button onPress={onBack} activeOpacity={0.7}>
                         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
                             <Path
                                 d="M19 12H5M12 19l-7-7 7-7"
@@ -110,7 +111,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                 strokeLinejoin="round"
                             />
                         </Svg>
-                    </TouchableOpacity>
+                    </Button>
 
                     {/* Center Title */}
                     <Text className="text-[17px] text-gray-900" style={{ fontWeight: '600' }}>
@@ -119,7 +120,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
 
                     {/* Right Side */}
                     <View className="flex-row items-center">
-                        <TouchableOpacity className="mr-3" activeOpacity={0.7}>
+                        <Button className="mr-3" activeOpacity={0.7}>
                             <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                                 <Path
                                     d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"
@@ -129,14 +130,14 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                     strokeLinejoin="round"
                                 />
                             </Svg>
-                        </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.7} onPress={handleMoreOptions} disabled={isDeleting}>
+                        </Button>
+                        <Button activeOpacity={0.7} onPress={handleMoreOptions} disabled={isDeleting}>
                             <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                                 <Circle cx="12" cy="5" r="1.5" fill="#111827" />
                                 <Circle cx="12" cy="12" r="1.5" fill="#111827" />
                                 <Circle cx="12" cy="19" r="1.5" fill="#111827" />
                             </Svg>
-                        </TouchableOpacity>
+                        </Button>
                     </View>
                 </View>
             </View>
@@ -152,22 +153,14 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                     {/* Status Tabs */}
                     <View className="px-5 flex-row items-center mb-4 mt-4">
-                        <View
-                            className="px-3 py-1.5 rounded-full mr-2"
-                            style={{ backgroundColor: '#ECFDF5' }}
-                        >
-                            <Text className="text-[12px]" style={{ color: '#22C55E', fontWeight: '600' }}>
-                                {tripData.status}
-                            </Text>
-                        </View>
-                        <View
-                            className="px-3 py-1.5 rounded-full"
-                            style={{ backgroundColor: '#EBF5FF' }}
-                        >
-                            <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '600' }}>
-                                Owner
-                            </Text>
-                        </View>
+                        <PillBadge
+                            label={tripData.status}
+                            backgroundColor="#ECFDF5"
+                            textColor="#22C55E"
+                            textWeight="600"
+                            containerStyle={{ marginRight: 8 }}
+                        />
+                        <PillBadge label="Owner" backgroundColor="#EBF5FF" textColor="#2B8EF0" textWeight="600" />
                     </View>
 
                     {/* Trip Title & Location */}
@@ -176,7 +169,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                             <Text className="text-[20px] text-gray-900 flex-1 mr-3" style={{ fontWeight: '700' }}>
                                 {tripData.title}
                             </Text>
-                            <TouchableOpacity
+                            <Button
                                 onPress={onViewDetail}
                                 activeOpacity={0.8}
                                 className="px-3 py-1.5 rounded-full"
@@ -185,7 +178,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                 <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '700' }}>
                                     Xem chi tiết
                                 </Text>
-                            </TouchableOpacity>
+                            </Button>
                         </View>
                         <View className="flex-row items-center">
                             <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -275,7 +268,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                 />
 
                                 {/* Tab Buttons */}
-                                <TouchableOpacity
+                                <Button
                                     className="flex-1 items-center justify-center"
                                     onPress={() => setActiveSubTab('itinerary')}
                                     activeOpacity={0.8}
@@ -292,8 +285,8 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                     >
                                         Lịch trình
                                     </Animated.Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
+                                </Button>
+                                <Button
                                     className="flex-1 items-center justify-center"
                                     onPress={() => setActiveSubTab('members')}
                                     activeOpacity={0.8}
@@ -310,8 +303,8 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                     >
                                         Thành viên
                                     </Animated.Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
+                                </Button>
+                                <Button
                                     className="flex-1 items-center justify-center"
                                     onPress={() => setActiveSubTab('mood')}
                                     activeOpacity={0.8}
@@ -328,7 +321,7 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                                     >
                                         Mood Vote
                                     </Animated.Text>
-                                </TouchableOpacity>
+                                </Button>
                             </View>
                         </View>
                     </View>

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -23,38 +22,10 @@ import {
 import { UsersService } from '../services/userService/user.service';
 import { User } from '../services/userService/user.type';
 import { MainTab } from './BottomTabBar';
+import { Button, CardContainer, ScreenHeader, StarRating } from './shared';
+import { ReviewCard } from './cards';
 
 // --- ICONS ---
-const ArrowLeftIcon = ({ color = '#1F2937' }) => (
-  <Svg
-    width={24}
-    height={24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <Path d="M15 18l-6-6 6-6" />
-  </Svg>
-);
-
-const StarIcon = ({ color = '#F59E0B', fill = 'none' }) => (
-  <Svg
-    width={20}
-    height={20}
-    viewBox="0 0 24 24"
-    fill={fill}
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-  </Svg>
-);
-
 const MapPinIcon = ({ color = '#000000' }) => (
   <Svg
     width={18}
@@ -68,21 +39,6 @@ const MapPinIcon = ({ color = '#000000' }) => (
   >
     <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
     <Path d="M12 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-  </Svg>
-);
-
-const ChevronRightIcon = ({ color = '#000000' }) => (
-  <Svg
-    width={16}
-    height={16}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <Path d="M9 18l6-6-6-6" />
   </Svg>
 );
 
@@ -382,7 +338,7 @@ export const ReviewScreen = ({
   ) => (
     <View style={{ flexDirection: 'row', gap: 4, marginBottom: 12 }}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <TouchableOpacity
+        <Button
           key={`star-sel-${star}`}
           onPress={() => onChange(star)}
         >
@@ -398,46 +354,14 @@ export const ReviewScreen = ({
           >
             <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
           </Svg>
-        </TouchableOpacity>
+        </Button>
       ))}
     </View>
   );
 
   const renderReviewStars = (value: number, size = 16) => (
-    <View style={{ flexDirection: 'row', gap: 2 }}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Svg
-          key={`star-${star}`}
-          width={size}
-          height={size}
-          viewBox="0 0 24 24"
-          fill={star <= value ? '#F59E0B' : 'none'}
-          stroke={star <= value ? '#F59E0B' : '#D1D5DB'}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </Svg>
-      ))}
-    </View>
+    <StarRating rating={value} showValue={false} size={size} />
   );
-
-  const formatRelativeTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) return 'Hôm nay';
-      if (diffDays === 2) return '1 ngày trước';
-      if (diffDays <= 7) return `${diffDays - 1} ngày trước`;
-      if (diffDays <= 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-      return date.toLocaleDateString('vi-VN');
-    } catch {
-      return '';
-    }
-  };
 
   if (isLoadingInit) {
     return (
@@ -449,20 +373,16 @@ export const ReviewScreen = ({
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-slate-50">
-      {/* Header */}
-      <View className="flex-row items-center pt-14 pb-4 px-4 bg-white shadow-sm z-10">
-        <TouchableOpacity
-          onPress={onBack}
-          className="w-10 h-10 items-start justify-center"
-        >
-          <ArrowLeftIcon />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold flex-1 text-center pr-10">
-          Đánh giá địa điểm
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Đánh giá địa điểm"
+        onBack={onBack}
+        horizontalPadding={16}
+        topPadding={8}
+        bottomPadding={12}
+        titleSize={20}
+        titleWeight="700"
+      />
 
-      {/* FIX SCROLL: thêm contentContainerStyle paddingBottom để lướt qua nav bar */}
       <ScrollView
         className="flex-1 px-4 pt-4"
         showsVerticalScrollIndicator={false}
@@ -470,12 +390,16 @@ export const ReviewScreen = ({
       >
         {/* 1. Thông tin địa điểm */}
         {place && (
-          <View className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+          <CardContainer style={{ padding: 16, marginBottom: 16 }}>
             <Text className="text-xl font-bold text-slate-900 mb-2">
               {place.name}
             </Text>
             <View className="flex-row items-center mb-2">
-              <StarIcon color="#F59E0B" fill="none" />
+              <StarRating
+                rating={place.rating ? Number(place.rating) : 0}
+                showValue={false}
+                size={16}
+              />
               <Text className="text-base font-bold ml-1.5 mr-1">
                 {place.rating ? Number(place.rating).toFixed(1) : 'Chưa có'}
               </Text>
@@ -492,11 +416,11 @@ export const ReviewScreen = ({
                 {place.address}
               </Text>
             </View>
-          </View>
+          </CardContainer>
         )}
 
         {/* 2. Form gửi đánh giá mới */}
-        <View className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+        <CardContainer style={{ padding: 16, marginBottom: 16 }}>
           <Text className="text-base font-bold text-slate-900 mb-2">
             Viết đánh giá
           </Text>
@@ -512,23 +436,16 @@ export const ReviewScreen = ({
               onChangeText={setComment}
             />
           </View>
-          <TouchableOpacity
+          <Button
+            label="Gửi đánh giá"
             onPress={handleSubmitReview}
-            disabled={isSubmitting}
-            className={`w-full py-3.5 rounded-xl items-center justify-center ${isSubmitting ? 'bg-blue-300' : 'bg-blue-500'}`}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-bold text-base">
-                Gửi đánh giá
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            loading={isSubmitting}
+            style={{ borderRadius: 12, minHeight: 52 }}
+          />
+        </CardContainer>
 
         {/* 3. Danh sách đánh giá */}
-        <View className="bg-white rounded-2xl p-4 shadow-sm mb-8">
+        <CardContainer style={{ padding: 16, marginBottom: 32 }}>
           <Text className="text-base font-bold text-slate-900 mb-4">
             Đánh giá gần đây
           </Text>
@@ -541,120 +458,19 @@ export const ReviewScreen = ({
             reviews.map((review, index) => {
               const mine = isMyReview(review);
               return (
-                <TouchableOpacity
+                <ReviewCard
                   key={getReviewId(review) || index}
-                  activeOpacity={mine ? 0.7 : 1}
-                  onPress={() => handleReviewPress(review)}
-                  style={{
-                    flexDirection: 'row',
-                    marginTop: 16,
-                    paddingBottom: index !== reviews.length - 1 ? 16 : 0,
-                    borderBottomWidth: index !== reviews.length - 1 ? 1 : 0,
-                    borderBottomColor: '#F1F5F9',
-                    ...(mine
-                      ? {
-                        backgroundColor: '#F0F7FF',
-                        borderRadius: 12,
-                        padding: 8,
-                      }
-                      : {}),
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        review.user?.avatar ||
-                        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
-                    }}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      marginRight: 12,
-                    }}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 4,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontWeight: '600',
-                          color: '#0f172a',
-                          fontSize: 14,
-                        }}
-                      >
-                        {review.user?.fullName || 'Người dùng ẩn danh'}
-                        {mine && (
-                          <Text style={{ color: '#93C5FD', fontSize: 11 }}>
-                            {' '}
-                            (bạn)
-                          </Text>
-                        )}
-                      </Text>
-                      {mine && <ChevronRightIcon color="#2B8EF0" />}
-                    </View>
-                    <View style={{ marginBottom: 6 }}>
-                      {renderReviewStars(
-                        review.criteria?.cleanliness || review.rating || 5,
-                      )}
-                    </View>
-                    <Text
-                      style={{
-                        color: '#374151',
-                        fontSize: 13,
-                        marginBottom: 6,
-                        lineHeight: 18,
-                      }}
-                    >
-                      {review.content}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>
-                        {formatRelativeTime(review.created_at)}
-                      </Text>
-                      {!mine && (
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <TouchableOpacity
-                            onPress={() => handleReact(review, 'LIKE')}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              paddingHorizontal: 10,
-                              paddingVertical: 5,
-                              borderRadius: 20,
-                              backgroundColor: reactions[getReviewId(review)] === 'LIKE' ? '#DBEAFE' : '#F1F5F9',
-                            }}
-                          >
-                            <Text style={{ fontSize: 14 }}>👍</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() => handleReact(review, 'DISLIKE')}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              paddingHorizontal: 10,
-                              paddingVertical: 5,
-                              borderRadius: 20,
-                              backgroundColor: reactions[getReviewId(review)] === 'DISLIKE' ? '#FEE2E2' : '#F1F5F9',
-                            }}
-                          >
-                            <Text style={{ fontSize: 14 }}>👎</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </TouchableOpacity>
+                  review={review}
+                  isMine={mine}
+                  isLast={index === reviews.length - 1}
+                  onPress={handleReviewPress}
+                  onReact={handleReact}
+                  reactionStatus={reactions[getReviewId(review)]}
+                />
               );
             })
           )}
-        </View>
+        </CardContainer>
       </ScrollView>
 
       {/* ===== MODAL: xem / sửa đánh giá ===== */}
@@ -664,7 +480,7 @@ export const ReviewScreen = ({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <TouchableOpacity
+        <Button
           style={{
             flex: 1,
             alignItems: 'center',
@@ -674,7 +490,7 @@ export const ReviewScreen = ({
           activeOpacity={1}
           onPress={closeModal}
         >
-          <TouchableOpacity
+          <Button
             activeOpacity={1}
             onPress={() => { }}
             style={{
@@ -739,45 +555,27 @@ export const ReviewScreen = ({
                   </Text>
                 </View>
                 <View style={{ height: 1, backgroundColor: '#F1F5F9' }} />
-                <View style={{ flexDirection: 'row' }}>
-                  <TouchableOpacity
-                    onPress={handleStartEdit}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 15,
-                      alignItems: 'center',
-                      borderRightWidth: 1,
-                      borderRightColor: '#F1F5F9',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#2B8EF0',
-                        fontWeight: '600',
-                        fontSize: 15,
-                      }}
-                    >
-                      Sửa
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleConfirmDelete}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 15,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#EF4444',
-                        fontWeight: '600',
-                        fontSize: 15,
-                      }}
-                    >
-                      Xóa
-                    </Text>
-                  </TouchableOpacity>
+                <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12 }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Button
+                      label="Sửa"
+                      variant="secondary"
+                      onPress={handleStartEdit}
+                      fullWidth
+                      style={{ minHeight: 44, borderRadius: 10, borderColor: '#DBEAFE' }}
+                      textColor="#2563EB"
+                    />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 8 }}>
+                    <Button
+                      label="Xóa"
+                      variant="ghost"
+                      onPress={handleConfirmDelete}
+                      fullWidth
+                      style={{ minHeight: 44, borderRadius: 10, backgroundColor: '#FEF2F2' }}
+                      textColor="#EF4444"
+                    />
+                  </View>
                 </View>
               </>
             )}
@@ -804,17 +602,13 @@ export const ReviewScreen = ({
                   >
                     Sửa đánh giá
                   </Text>
-                  <TouchableOpacity onPress={closeModal}>
-                    <Text
-                      style={{
-                        color: '#94A3B8',
-                        fontWeight: '600',
-                        fontSize: 14,
-                      }}
-                    >
-                      Hủy
-                    </Text>
-                  </TouchableOpacity>
+                  <Button
+                    label="Hủy"
+                    variant="link"
+                    size="sm"
+                    onPress={closeModal}
+                    textColor="#94A3B8"
+                  />
                 </View>
                 <View
                   style={{
@@ -833,12 +627,12 @@ export const ReviewScreen = ({
                       marginBottom: 16,
                       minHeight: 100,
                       borderWidth: 1,
-                      borderColor: '#E2E8F0',
+                      borderColor: '#E5E7EB',
                     }}
                   >
                     <TextInput
                       style={{
-                        color: '#1e293b',
+                        color: '#111827',
                         fontSize: 14,
                         textAlignVertical: 'top',
                         flex: 1,
@@ -850,35 +644,17 @@ export const ReviewScreen = ({
                       onChangeText={setEditComment}
                     />
                   </View>
-                  <TouchableOpacity
+                  <Button
+                    label="Cập nhật đánh giá"
                     onPress={handleSubmitEdit}
-                    disabled={isSubmitting}
-                    style={{
-                      backgroundColor: isSubmitting ? '#93C5FD' : '#2B8EF0',
-                      borderRadius: 12,
-                      paddingVertical: 14,
-                      alignItems: 'center',
-                    }}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator color="white" />
-                    ) : (
-                      <Text
-                        style={{
-                          color: 'white',
-                          fontWeight: '700',
-                          fontSize: 15,
-                        }}
-                      >
-                        Cập nhật đánh giá
-                      </Text>
-                    )}
-                  </TouchableOpacity>
+                    loading={isSubmitting}
+                    style={{ borderRadius: 12, minHeight: 52 }}
+                  />
                 </View>
               </>
             )}
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Button>
+        </Button>
       </Modal>
     </SafeAreaView>
   );

@@ -1,3 +1,5 @@
+// journeyService/journey.type.ts
+
 export enum JourneyStatus {
   PLANNING = 'PLANNING',
   UPCOMING = 'UPCOMING',
@@ -46,10 +48,26 @@ export enum StopStatus {
 export enum CostType {
   SHARED = 'SHARED',
   PER_PERSON = 'PER_PERSON',
-  CUSTOM = 'CUSTOM' // Đã thêm chia tùy chỉnh
+  CUSTOM = 'CUSTOM' 
 }
 
-// --- CÁC INTERFACE TÀI CHÍNH (MỚI) ---
+// [MỚI] Enum định nghĩa Mood
+export enum JourneyMood {
+  RESET_HEALING = 'RESET_HEALING',
+  FOOD_ADVENTURE = 'FOOD_ADVENTURE',
+  NATURE_RELAX = 'NATURE_RELAX',
+  CULTURE_HISTORY = 'CULTURE_HISTORY',
+  FUN_ENTERTAINMENT = 'FUN_ENTERTAINMENT'
+}
+
+// [MỚI] Interface lượt bình chọn Mood
+export interface MoodVote {
+  user_id: string;
+  mood: JourneyMood;
+  voted_at: string;
+}
+
+// --- CÁC INTERFACE TÀI CHÍNH ---
 export interface PayerDetail {
   user_id: string;
   amount_paid: number;
@@ -106,7 +124,6 @@ export interface JourneyStop {
   participant_ids?: string[];
   is_prepaid?: boolean;
   actual_cost?: number;
-  // Bổ sung các trường tài chính N-N
   cost_type?: CostType;
   payers?: PayerDetail[];
   splits?: SplitDetail[];
@@ -143,8 +160,11 @@ export interface Journey {
   planned_members_count: number;
   avatar?: string | null;
   tags: JourneyTag[];
-  // Bổ sung phân tích ngân sách từ backend
   budget_analysis?: BudgetAnalysis;
+  
+  // [MỚI BỔ SUNG]
+  primary_mood?: JourneyMood | null;
+  mood_votes?: MoodVote[];
 }
 
 // ==========================================
@@ -160,6 +180,7 @@ export interface CreateJourneyPayload {
   visibility?: JourneyVisibility;
   avatar?: string;
   tags?: JourneyTag[];
+  primary_mood?: JourneyMood; // [MỚI BỔ SUNG] Cho luồng tạo Solo
 }
 
 export interface UpdateJourneyPayload extends Partial<CreateJourneyPayload> {}
@@ -182,13 +203,13 @@ export interface AddStopPayload {
 export interface GetPublicFeedParams {
   search?: string;
   tag?: JourneyTag;
+  mood?: JourneyMood; // [MỚI BỔ SUNG] Để lọc theo định hướng chuyến đi
   minPrice?: number;
   maxPrice?: number;
   startDate?: string;
   endDate?: string;
 }
 
-// [MỚI] Payload cho API Cập nhật điểm dừng & Thanh toán
 export interface UpdateStopPayload {
   start_time?: string;
   end_time?: string;

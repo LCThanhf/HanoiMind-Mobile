@@ -677,7 +677,7 @@ export const CreateTripScreen = ({
           </Svg>
         </Button>
         <Text className="text-[17px] text-gray-900" style={{ fontWeight: '600' }}>
-          Tao chuyen di moi
+          Tạo chuyến đi mới
         </Text>
         <View style={{ width: 24 }} />
       </View>

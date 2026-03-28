@@ -30,7 +30,7 @@ export const StepThreeConfirm = ({
   selectedPlaces,
 }: StepThreeConfirmProps) => (
   <View className="px-5 pb-10">
-    <SectionHeader title="XAC NHAN & CHAY AI" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
+    <SectionHeader title="Xác nhận và chạy AI" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
     <View style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, padding: 14, marginBottom: 14 }}>
       <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 6 }}>{tripName || 'Chua dat ten'}</Text>

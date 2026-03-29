@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -16,21 +12,22 @@ import { JourneyService } from '../services/journeyService/journey.service';
 import {
   CostType,
   Journey,
+  JourneyMemberRole,
   PayerDetail,
-  UpdateStopPayload,
 } from '../services/journeyService/journey.type';
 import { PlacesService } from '../services/placeService/place.service';
 import { UsersService } from '../services/userService/user.service';
-import { AvatarCircle, Button, CardContainer, PillBadge, ScreenHeader } from './shared';
+import { AvatarCircle, Button, CardContainer, ScreenHeader } from './shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TripBudgetManageScreenProps {
   tripId: string;
   onBack: () => void;
+  onUpdateStop: (stop: StopCostItem, members: MemberProfile[], perStopEstimated: number) => void;
 }
 
-interface StopCostItem {
+export interface StopCostItem {
   dayId: string;
   dayNumber: number;
   stopSequence: number;
@@ -44,12 +41,14 @@ interface StopCostItem {
   payerUserId?: string;
   payerName?: string;
   payerAvatar?: string;
+  participantIds: string[];
 }
 
-interface MemberProfile {
+export interface MemberProfile {
   userId: string;
   name: string;
   avatar?: string;
+  role?: JourneyMemberRole;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -105,13 +104,30 @@ const StopCostCard = ({ stop, onUpdatePress }: StopCostCardProps) => {
               {stop.placeName}
             </Text>
           </View>
-          <PillBadge
-            label={stop.isPrepaid ? 'Đã trả trước' : 'Thanh toán sau'}
-            backgroundColor={stop.isPrepaid ? '#DCFCE7' : '#EBF5FF'}
-            textColor={stop.isPrepaid ? '#16A34A' : '#2B8EF0'}
-            textSize={10}
-            containerStyle={{ paddingHorizontal: 8, paddingVertical: 3 }}
-          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 999,
+              backgroundColor: stop.isPrepaid ? '#DCFCE7' : '#EBF5FF',
+            }}
+          >
+            <Svg width={11} height={11} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
+              <Circle cx="12" cy="12" r="10" stroke={stop.isPrepaid ? '#16A34A' : '#2B8EF0'} strokeWidth="2.2" />
+              <Path
+                d="M9 12l2 2 4-4"
+                stroke={stop.isPrepaid ? '#16A34A' : '#2B8EF0'}
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            <Text style={{ fontSize: 10, color: stop.isPrepaid ? '#16A34A' : '#2B8EF0', fontWeight: '600' }}>
+              {stop.isPrepaid ? 'Đã trả trước' : 'Thanh toán sau'}
+            </Text>
+          </View>
         </View>
 
         <Text
@@ -244,243 +260,9 @@ const StopCostCard = ({ stop, onUpdatePress }: StopCostCardProps) => {
   );
 };
 
-// ─── Update Cost Modal ────────────────────────────────────────────────────────
-
-interface UpdateCostModalProps {
-  visible: boolean;
-  stop: StopCostItem | null;
-  members: MemberProfile[];
-  actualCost: string;
-  isPrepaid: boolean;
-  payerUserId: string;
-  isSaving: boolean;
-  onChangeActualCost: (val: string) => void;
-  onTogglePrepaid: (val: boolean) => void;
-  onSelectPayer: (val: string) => void;
-  onSave: () => void;
-  onClose: () => void;
-}
-
-const UpdateCostModal = ({
-  visible,
-  stop,
-  members,
-  actualCost,
-  isPrepaid,
-  payerUserId,
-  isSaving,
-  onChangeActualCost,
-  onTogglePrepaid,
-  onSelectPayer,
-  onSave,
-  onClose,
-}: UpdateCostModalProps) => {
-  if (!stop) return null;
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={{ flex: 1 }}>
-        {/* Backdrop */}
-        <Pressable
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.45)',
-          }}
-          onPress={onClose}
-        />
-
-        {/* Sheet */}
-        <View
-          style={{
-            marginTop: 'auto',
-            backgroundColor: 'white',
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: 24,
-            paddingTop: 16,
-            paddingBottom: 36,
-          }}
-        >
-          {/* Handle */}
-          <View
-            style={{
-              width: 36,
-              height: 4,
-              backgroundColor: '#E5E7EB',
-              borderRadius: 2,
-              alignSelf: 'center',
-              marginBottom: 20,
-            }}
-          />
-
-          <Text style={{ fontSize: 17, color: '#111827', fontWeight: '700', marginBottom: 4 }}>
-            Cập nhật chi phí
-          </Text>
-          <Text
-            style={{ fontSize: 13, color: '#6B7280', fontWeight: '400', marginBottom: 20 }}
-            numberOfLines={1}
-          >
-            {stop.placeName}
-          </Text>
-
-          {/* Payment status toggle */}
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 10 }}>
-            Trạng thái thanh toán
-          </Text>
-          <View style={{ flexDirection: 'row', marginBottom: 20 }}>
-            <TouchableOpacity
-              onPress={() => onTogglePrepaid(false)}
-              activeOpacity={0.8}
-              style={{
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 10,
-                marginRight: 6,
-                borderWidth: 1.5,
-                borderColor: !isPrepaid ? '#2B8EF0' : '#E5E7EB',
-                backgroundColor: !isPrepaid ? '#EBF5FF' : 'white',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: !isPrepaid ? '#2B8EF0' : '#6B7280',
-                  fontWeight: '600',
-                }}
-              >
-                Thanh toán sau
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => onTogglePrepaid(true)}
-              activeOpacity={0.8}
-              style={{
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 10,
-                marginLeft: 6,
-                borderWidth: 1.5,
-                borderColor: isPrepaid ? '#22C55E' : '#E5E7EB',
-                backgroundColor: isPrepaid ? '#DCFCE7' : 'white',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: isPrepaid ? '#16A34A' : '#6B7280',
-                  fontWeight: '600',
-                }}
-              >
-                Đã trả trước
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Actual cost input */}
-          <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 10 }}>
-            Chi phí thực tế (VND)
-          </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderWidth: 1,
-              borderColor: '#E5E7EB',
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              marginBottom: 20,
-              height: 48,
-              backgroundColor: '#F8FAFC',
-            }}
-          >
-            <TextInput
-              style={{ flex: 1, fontSize: 15, color: '#111827', fontWeight: '500' }}
-              placeholder={`Dự kiến: ${formatCost(stop.estimatedCost)}`}
-              placeholderTextColor="#9CA3AF"
-              value={actualCost}
-              onChangeText={onChangeActualCost}
-              keyboardType="numeric"
-            />
-            <Text style={{ fontSize: 13, color: '#6B7280', fontWeight: '500' }}>đ</Text>
-          </View>
-
-          {/* Payer selection */}
-          {members.length > 0 && (
-            <>
-              <Text style={{ fontSize: 13, color: '#374151', fontWeight: '600', marginBottom: 10 }}>
-                Người trả
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ marginBottom: 24 }}
-                contentContainerStyle={{ paddingRight: 4 }}
-              >
-                {members.map((member) => {
-                  const isSelected = payerUserId === member.userId;
-                  return (
-                    <TouchableOpacity
-                      key={member.userId}
-                      onPress={() => onSelectPayer(isSelected ? '' : member.userId)}
-                      activeOpacity={0.8}
-                      style={{
-                        alignItems: 'center',
-                        marginRight: 10,
-                        paddingVertical: 8,
-                        paddingHorizontal: 10,
-                        borderRadius: 12,
-                        borderWidth: 1.5,
-                        borderColor: isSelected ? '#2B8EF0' : '#E5E7EB',
-                        backgroundColor: isSelected ? '#EBF5FF' : 'white',
-                        minWidth: 60,
-                      }}
-                    >
-                      <AvatarCircle uri={member.avatar} name={member.name} size={32} />
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          color: isSelected ? '#2B8EF0' : '#374151',
-                          fontWeight: '600',
-                          marginTop: 5,
-                          textAlign: 'center',
-                        }}
-                        numberOfLines={1}
-                      >
-                        {member.name.split(' ').pop()}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </>
-          )}
-
-          <Button
-            label="Lưu thay đổi"
-            onPress={onSave}
-            loading={isSaving}
-            style={{ borderRadius: 12, minHeight: 50 }}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScreenProps) => {
+export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBudgetManageScreenProps) => {
   const insets = useSafeAreaInsets();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -488,25 +270,30 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
   const [stops, setStops] = useState<StopCostItem[]>([]);
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [budgetLimit, setBudgetLimit] = useState(0);
+  const [perStopEstimated, setPerStopEstimated] = useState(0);
 
   // Day filter
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showDayDropdown, setShowDayDropdown] = useState(false);
-
-  // Edit modal state
-  const [editingStop, setEditingStop] = useState<StopCostItem | null>(null);
-  const [modalActualCost, setModalActualCost] = useState('');
-  const [modalIsPrepaid, setModalIsPrepaid] = useState(false);
-  const [modalPayerUserId, setModalPayerUserId] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setLoadError(null);
 
-      const loadedJourney = await JourneyService.findOne(tripId);
+      const [loadedJourney, rawBreakdown] = await Promise.all([
+        JourneyService.findOne(tripId),
+        JourneyService.getBudgetBreakdown(tripId).catch(() => null),
+      ]);
       setJourney(loadedJourney);
+
+      // Derive budget limit (same logic as useTripDetailData.toBudgetSummary)
+      const computedLimit =
+        Number(rawBreakdown?.budget_limit || 0) ||
+        Number((loadedJourney as any).budget_limit || (loadedJourney as any).budgetLimit || 0) ||
+        Number(loadedJourney.total_budget || 0);
+      setBudgetLimit(computedLimit);
 
       // Collect unique place IDs
       const allDayStops = (loadedJourney.days || []).flatMap((day) =>
@@ -551,11 +338,19 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
         ].filter(Boolean))
       );
 
+      // Build role map: owner → HOST, others from members array
+      const roleMap = new Map<string, JourneyMemberRole>();
+      roleMap.set(loadedJourney.owner_id, JourneyMemberRole.HOST);
+      (loadedJourney.members || []).forEach((m) => {
+        if (!roleMap.has(m.user_id)) roleMap.set(m.user_id, m.role);
+      });
+
       setMembers(
         memberIds.map((id) => ({
           userId: id,
           name: profileMap.get(id)?.name || `User ${id.slice(-4).toUpperCase()}`,
           avatar: profileMap.get(id)?.avatar,
+          role: roleMap.get(id),
         }))
       );
 
@@ -576,7 +371,7 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
             placeId: stop.place_id,
             placeName:
               placeMap.get(stop.place_id)?.name || `Địa điểm ${seq - 1}`,
-            estimatedCost: stop.estimated_cost || 0,
+            estimatedCost: stop.estimated_cost || 0, // will be overridden below
             actualCost:
               stop.actual_cost && stop.actual_cost > 0 ? stop.actual_cost : undefined,
             isPrepaid: stop.is_prepaid === true,
@@ -588,8 +383,20 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
                 ? `User ${firstPayer.user_id.slice(-4).toUpperCase()}`
                 : undefined),
             payerAvatar: payerProfile?.avatar,
+            participantIds: stop.participant_ids || [],
           });
         }
+      }
+
+      // Auto-distribute budget evenly across all stops
+      const totalStops = builtStops.length;
+      const computed = computedLimit > 0 && totalStops > 0
+        ? Math.round(computedLimit / totalStops)
+        : 0;
+      setPerStopEstimated(computed);
+
+      if (computed > 0) {
+        builtStops.forEach((s) => { s.estimatedCost = computed; });
       }
 
       setStops(builtStops);
@@ -615,56 +422,6 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
       (journey?.days || []).map((d) => d.day_number).sort((a, b) => a - b),
     [journey]
   );
-
-  // Modal helpers
-  const openEditModal = (stop: StopCostItem) => {
-    setEditingStop(stop);
-    setModalActualCost(stop.actualCost ? String(stop.actualCost) : '');
-    setModalIsPrepaid(stop.isPrepaid);
-    setModalPayerUserId(stop.payerUserId || '');
-  };
-
-  const closeEditModal = () => setEditingStop(null);
-
-  const handleSaveUpdate = async () => {
-    if (!editingStop) return;
-
-    const rawValue = modalActualCost.replace(/[^0-9]/g, '');
-    const parsedActual = rawValue ? parseInt(rawValue, 10) : undefined;
-
-    const payload: UpdateStopPayload = {
-      is_prepaid: modalIsPrepaid,
-      actual_cost:
-        parsedActual !== undefined && parsedActual > 0 ? parsedActual : undefined,
-      payers: modalPayerUserId
-        ? [
-            {
-              user_id: modalPayerUserId,
-              amount_paid:
-                parsedActual && parsedActual > 0
-                  ? parsedActual
-                  : editingStop.estimatedCost,
-            },
-          ]
-        : undefined,
-    };
-
-    try {
-      setIsSaving(true);
-      await JourneyService.updateStop(
-        tripId,
-        editingStop.dayId,
-        editingStop.stopId,
-        payload
-      );
-      closeEditModal();
-      await loadData();
-    } catch {
-      Alert.alert('Lỗi', 'Không thể cập nhật chi phí. Vui lòng thử lại.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const selectedDayLabel =
     selectedDay === null ? 'Chọn ngày' : `Ngày ${selectedDay}`;
@@ -755,12 +512,13 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
           <Button label="Thử lại" onPress={loadData} />
         </View>
       ) : (
-        <Pressable style={{ flex: 1 }} onPress={() => setShowDayDropdown(false)}>
+        <View style={{ flex: 1 }}>
           <ScrollView
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}
             keyboardShouldPersistTaps="handled"
+            onScrollBeginDrag={() => setShowDayDropdown(false)}
           >
             {/* Section header + day filter */}
             <View
@@ -892,30 +650,14 @@ export const TripBudgetManageScreen = ({ tripId, onBack }: TripBudgetManageScree
                   <StopCostCard
                     key={stop.stopId}
                     stop={stop}
-                    onUpdatePress={() => openEditModal(stop)}
+                    onUpdatePress={() => onUpdateStop(stop, members, perStopEstimated)}
                   />
                 ))
               )}
             </View>
           </ScrollView>
-        </Pressable>
+        </View>
       )}
-
-      {/* Update cost modal */}
-      <UpdateCostModal
-        visible={!!editingStop}
-        stop={editingStop}
-        members={members}
-        actualCost={modalActualCost}
-        isPrepaid={modalIsPrepaid}
-        payerUserId={modalPayerUserId}
-        isSaving={isSaving}
-        onChangeActualCost={setModalActualCost}
-        onTogglePrepaid={setModalIsPrepaid}
-        onSelectPayer={setModalPayerUserId}
-        onSave={handleSaveUpdate}
-        onClose={closeEditModal}
-      />
     </SafeAreaView>
   );
 };

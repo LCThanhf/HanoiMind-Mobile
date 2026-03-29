@@ -25,7 +25,8 @@ import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
 import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
 import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
 import { TripRouteScreen } from './components/TripRouteScreen';
-import { TripBudgetManageScreen } from './components/TripBudgetManageScreen';
+import { TripBudgetManageScreen, MemberProfile, StopCostItem } from './components/TripBudgetManageScreen';
+import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
 
 type AppState =
@@ -38,6 +39,7 @@ type AppState =
   | 'tripAddPlace'
   | 'tripRoute'
   | 'tripBudgetManage'
+  | 'tripUpdateCost'
   | 'placesExplore'
   | 'placeDetail'
   | 'reviewPlace'
@@ -58,6 +60,9 @@ export default function App() {
   const [selectedPlaceData, setSelectedPlaceData] = useState<Place | null>(null);
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string>('');
   const [selectedChatName, setSelectedChatName] = useState<string>('');
+  const [selectedStopForUpdate, setSelectedStopForUpdate] = useState<StopCostItem | null>(null);
+  const [membersForUpdate, setMembersForUpdate] = useState<MemberProfile[]>([]);
+  const [perStopEstimatedForUpdate, setPerStopEstimatedForUpdate] = useState(0);
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
@@ -246,8 +251,29 @@ export default function App() {
           <TripBudgetManageScreen
             tripId={selectedTripId}
             onBack={() => setAppState('tripManageDetail')}
+            onUpdateStop={(stop, members, perStopEstimated) => {
+              setSelectedStopForUpdate(stop);
+              setMembersForUpdate(members);
+              setPerStopEstimatedForUpdate(perStopEstimated);
+              setAppState('tripUpdateCost');
+            }}
           />
         );
+
+      case 'tripUpdateCost':
+        return selectedStopForUpdate ? (
+          <TripUpdateCostScreen
+            tripId={selectedTripId}
+            stop={selectedStopForUpdate}
+            members={membersForUpdate}
+            perStopEstimated={perStopEstimatedForUpdate}
+            onBack={() => setAppState('tripBudgetManage')}
+            onSaved={() => {
+              setSelectedStopForUpdate(null);
+              setAppState('tripBudgetManage');
+            }}
+          />
+        ) : null;
 
       case 'placesExplore':
         return (

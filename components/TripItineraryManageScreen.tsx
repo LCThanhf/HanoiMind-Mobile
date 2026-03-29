@@ -17,6 +17,7 @@ import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetail
 import { TripStopCard } from './tripDetail/TripStopCard';
 import { MainTab } from './BottomTabBar';
 import { Button, ScreenHeader } from './shared';
+import { isSoloTrip } from './cards/TripCard';
 
 interface TripItineraryManageScreenProps {
   tripId: string;
@@ -64,6 +65,8 @@ export const TripItineraryManageScreen = ({
     if (!budgetSummary.limit) return 0;
     return Math.min(100, Math.round((budgetSummary.planned / budgetSummary.limit) * 100));
   }, [budgetSummary.limit, budgetSummary.planned]);
+
+  const isGroupTrip = useMemo(() => journey ? !isSoloTrip(journey) : false, [journey]);
 
   const moodBadgeLabel = useMemo(() => {
     const firstTag = journey?.tags?.[0];
@@ -235,20 +238,22 @@ export const TripItineraryManageScreen = ({
 
                 <View className="flex-row items-center justify-between mt-2">
                   <Text className="text-[12px] text-gray-600">Đã dùng: {formatCurrencyVnd(budgetSummary.planned)}</Text>
-                  <Button
-                    activeOpacity={0.85}
-                    onPress={onOpenBudgetManage}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 3,
-                      borderRadius: 20,
-                      borderWidth: 1.5,
-                      borderColor: '#22C55E',
-                      backgroundColor: 'transparent',
-                    }}
-                  >
-                    <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '600' }}>Quản lí ngân sách</Text>
-                  </Button>
+                  {isGroupTrip && (
+                    <Button
+                      activeOpacity={0.85}
+                      onPress={onOpenBudgetManage}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 3,
+                        borderRadius: 20,
+                        borderWidth: 1.5,
+                        borderColor: '#22C55E',
+                        backgroundColor: 'transparent',
+                      }}
+                    >
+                      <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '600' }}>Quản lí ngân sách</Text>
+                    </Button>
+                  )}
                 </View>
               </View>
 

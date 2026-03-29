@@ -109,6 +109,7 @@ export const TripItineraryManageScreen = ({
   const [draftStartTime, setDraftStartTime] = useState<Date>(() => parseTimeToDate('08:00', 8 * 60));
   const [draftEndTime, setDraftEndTime] = useState<Date>(() => parseTimeToDate('10:00', 10 * 60));
   const [androidPickerField, setAndroidPickerField] = useState<'start' | 'end' | null>(null);
+  const [movingDirection, setMovingDirection] = useState<'up' | 'down' | null>(null);
 
   const progress = useMemo(() => {
     if (!budgetSummary.limit) return 0;
@@ -293,6 +294,68 @@ export const TripItineraryManageScreen = ({
       setSavingStopId('');
     }
   };
+
+  const handleMoveStop = async (direction: 'up' | 'down') => {
+    if (!editingStop || movingDirection) return;
+
+    const currentDayIndex = dayPlans.findIndex((d) => d.dayNumber === editingStop.dayNumber);
+    if (currentDayIndex === -1) return;
+
+    const currentDay = dayPlans[currentDayIndex];
+    const currentStopIndex = currentDay.stops.findIndex((s) => s.id === editingStop.stop.id);
+    if (currentStopIndex === -1) return;
+
+    let fromDayNum = currentDay.dayNumber;
+    let toDayNum = currentDay.dayNumber;
+    let oldIndex = currentStopIndex;
+    let newIndex = currentStopIndex;
+
+    if (direction === 'up') {
+      if (currentStopIndex > 0) {
+        newIndex = currentStopIndex - 1;
+      } else {
+        if (currentDayIndex === 0) return; // Không thể lên nữa
+        const prevDay = dayPlans[currentDayIndex - 1];
+        toDayNum = prevDay.dayNumber;
+        newIndex = Math.max(0, prevDay.stops.length);
+      }
+    } else {
+      if (currentStopIndex < currentDay.stops.length - 1) {
+        newIndex = currentStopIndex + 1;
+      } else {
+        if (currentDayIndex < dayPlans.length - 1) {
+          const nextDay = dayPlans[currentDayIndex + 1];
+          toDayNum = nextDay.dayNumber;
+          newIndex = 0;
+        } else {
+          // Tạo sang ngày mới
+          toDayNum = currentDay.dayNumber + 1;
+          newIndex = 0;
+        }
+      }
+    }
+
+    try {
+      setMovingDirection(direction);
+      await JourneyService.moveStop({
+        journey_id: tripId,
+        from_day_number: fromDayNum,
+        to_day_number: toDayNum,
+        old_index: oldIndex,
+        new_index: newIndex,
+      });
+      await refresh({ silent: true });
+      closeTimeEditor();
+    } catch (err) {
+      Alert.alert('Không thể sắp xếp', 'Vui lòng thử lại sau.');
+    } finally {
+      setMovingDirection(null);
+    }
+  };
+
+  const currentDayIndex = editingStop ? dayPlans.findIndex(d => d.dayNumber === editingStop.dayNumber) : -1;
+  const currentStopIndex = editingStop ? dayPlans[currentDayIndex]?.stops.findIndex(s => s.id === editingStop.stop.id) : -1;
+  const isFirstOfAll = currentDayIndex === 0 && currentStopIndex === 0;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -483,11 +546,47 @@ export const TripItineraryManageScreen = ({
                 style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16 }}
               >
                 <Text className="text-[16px] text-gray-900" style={{ fontWeight: '700' }}>
-                  Chỉnh giờ địa điểm
+                  Tùy chỉnh địa điểm
                 </Text>
-                <Text className="text-[12px] text-gray-500 mt-1" style={{ fontWeight: '500' }}>
+                <Text className="text-[12px] text-gray-500 mt-1 mb-2" style={{ fontWeight: '500' }}>
                   {editingStop?.stop.title || 'Địa điểm'} • Ngày {editingStop?.dayNumber}
                 </Text>
+
+                <View className="flex-row items-center justify-between mb-4 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                  <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
+                    Sắp xếp thứ tự
+                  </Text>
+                  <View className="flex-row items-center">
+                    <Button 
+                      onPress={() => handleMoveStop('up')} 
+                      disabled={isFirstOfAll || !!movingDirection || !!savingStopId}
+                      className="items-center justify-center rounded-lg mr-2"
+                      style={{ width: 40, height: 40, backgroundColor: isFirstOfAll ? '#F8FAFC' : '#EFF6FF' }}
+                    >
+                      {movingDirection === 'up' ? (
+                        <ActivityIndicator size="small" color="#3B82F6" />
+                      ) : (
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                          <Path d="M18 15l-6-6-6 6" stroke={isFirstOfAll ? "#CBD5E1" : "#3B82F6"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                      )}
+                    </Button>
+                    <Button 
+                      onPress={() => handleMoveStop('down')} 
+                      disabled={!!movingDirection || !!savingStopId}
+                      className="items-center justify-center rounded-lg"
+                      style={{ width: 40, height: 40, backgroundColor: '#EFF6FF' }}
+                    >
+                      {movingDirection === 'down' ? (
+                        <ActivityIndicator size="small" color="#3B82F6" />
+                      ) : (
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                          <Path d="M6 9l6 6 6-6" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                      )}
+                    </Button>
+                  </View>
+                </View>
 
                 <View className="mt-4">
                   <View className="flex-row items-center justify-between mb-3">

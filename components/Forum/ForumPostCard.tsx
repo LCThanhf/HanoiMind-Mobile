@@ -4,6 +4,8 @@ import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'luc
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { Button, PillBadge, StatItemView } from '../shared';
+import { AppColors } from 'utils/theme';
+import { DateUtils } from 'utils/dateUtils';
 
 interface ForumPostCardProps {
   post?: ForumPost;
@@ -86,12 +88,12 @@ return (
       {/* Header: Author info & Badge */}
       <View className="flex-row items-center p-4">
         <Image 
-          source={{ uri: post.author.avatar || 'https://via.placeholder.com/150' }} 
+          source={{ uri: post.author.avatar || 'https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg' }} 
           className="w-10 h-10 rounded-full" 
         />
         <View className="ml-3 flex-1">
           <Text className="font-bold text-gray-800">{post.author.fullName}</Text>
-          <Text className="text-xs text-gray-400">{post.updated_at}</Text>
+          <Text className="text-xs text-gray-400">{DateUtils.formatDateTime(post.created_at)}</Text>
         </View>
         
       {/* Badge trạng thái - Dùng prop thay vì className */}
@@ -145,7 +147,7 @@ return (
             <Text className="text-[11px] text-primary-strong font-semibold ml-1">Phố cổ Hội An</Text>
           </View>
           <View className="flex-row items-center bg-success-soft px-3 py-1.5 rounded-xl border border-success-soft">
-            <Navigation size={14} color="#10b981" />
+            <Navigation size={14} color={AppColors.status.success} />
             <Text className="text-[11px] text-success-strong font-semibold ml-1">Hội An thong dong</Text>
           </View>
         </View>

@@ -6,6 +6,8 @@ import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn compone
 import { ForumPost, ForumCategory, PostStatus, PostSortBy } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
+import { AppColors } from 'utils/theme';  
+import { DateUtils } from 'utils/dateUtils';
 
 // 1. Thêm các thư viện xử lý ảnh
 import * as ImagePicker from 'expo-image-picker';
@@ -126,11 +128,11 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
     : posts;
 
 
-    console.log('--- ĐIỀU TRA FORUM SCREEN ---');
-    console.log('ForumTopTabs:', !!ForumTopTabs);
-    console.log('SearchInput:', !!SearchInput);
-    console.log('Button:', !!Button);
-    console.log('Plus Icon:', !!Plus);
+    // console.log('--- ĐIỀU TRA FORUM SCREEN ---');
+    // console.log('ForumTopTabs:', !!ForumTopTabs);
+    // console.log('SearchInput:', !!SearchInput);
+    // console.log('Button:', !!Button);
+    // console.log('Plus Icon:', !!Plus);
 return (
     <SafeAreaView className="flex-1 bg-white pt-12">
       {/* 1. HEADER CHÍNH */}
@@ -169,7 +171,7 @@ return (
 
         {/* 5. MAIN FEED */}
         {loading ? (
-          <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#3b82f6" /></View>
+          <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color={AppColors.status.info} /></View>
         ) : (
           <FlatList
             data={displayedPosts}

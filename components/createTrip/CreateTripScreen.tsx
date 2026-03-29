@@ -282,35 +282,17 @@ export const CreateTripScreen = ({
   };
 
   const handleDatePickerChange = (event: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') {
-      if (event.type === 'dismissed') {
-        setShowDatePicker(false);
-        return;
-      }
-
-      if (selected) {
-        const formatted = formatDateInput(selected);
-        if (datePickerTarget === 'start') setStartDate(formatted);
-        else setEndDate(formatted);
-      }
-
-      setShowDatePicker(false);
-      return;
-    }
-
     if (event.type === 'dismissed') {
       setShowDatePicker(false);
       return;
     }
-    if (selected) {
-      setDraftDate(selected);
-    }
-  };
 
-  const confirmDateSelection = () => {
-    const formatted = formatDateInput(draftDate);
-    if (datePickerTarget === 'start') setStartDate(formatted);
-    else setEndDate(formatted);
+    if (selected) {
+      const formatted = formatDateInput(selected);
+      if (datePickerTarget === 'start') setStartDate(formatted);
+      else setEndDate(formatted);
+    }
+
     setShowDatePicker(false);
   };
 
@@ -594,16 +576,33 @@ export const CreateTripScreen = ({
 
       const normalizedJourneyDays = Math.max(1, journeyRangeDays);
 
+      const formatMinutesAsHHmm = (minutes: number) => {
+        const safe = ((Math.round(minutes) % (24 * 60)) + 24 * 60) % (24 * 60);
+        const hours = Math.floor(safe / 60);
+        const mins = safe % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+      };
+
       if (!seededStops && selectedPlaceIds.length) {
+        const dayStopCounts = new Map<number, number>();
+
         for (let i = 0; i < selectedPlaceIds.length; i += 1) {
           const placeId = selectedPlaceIds[i];
+          const dayIndex = i % normalizedJourneyDays;
+          const placedStopsForDay = dayStopCounts.get(dayIndex) || 0;
+          const startMinutes = 8 * 60 + placedStopsForDay * 120;
+          const endMinutes = startMinutes + 120;
+
           const relatedPlace = places.find((p) => p._id === placeId);
           await JourneyService.addStop(journeyId, {
-            day_index: i % normalizedJourneyDays,
+            day_index: dayIndex,
             place_id: placeId,
-            end_time: '18:00',
+            start_time: formatMinutesAsHHmm(startMinutes),
+            end_time: formatMinutesAsHHmm(endMinutes),
             estimated_cost: relatedPlace?.estimated_cost_vnd || 0,
           });
+
+          dayStopCounts.set(dayIndex, placedStopsForDay + 1);
         }
         setSeededStops(true);
       }
@@ -803,46 +802,7 @@ export const CreateTripScreen = ({
         />
       </View>
 
-      {Platform.OS === 'ios' ? (
-        <Modal
-          visible={showDatePicker}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDatePicker(false)}
-        >
-          <Pressable
-            onPress={() => setShowDatePicker(false)}
-            style={{ flex: 1, backgroundColor: 'rgba(17,24,39,0.45)', justifyContent: 'center', paddingHorizontal: 20 }}
-          >
-            <Pressable
-              onPress={(event) => event.stopPropagation()}
-              style={{ backgroundColor: 'white', borderRadius: 16, padding: 14 }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 }}>
-                {datePickerTarget === 'start' ? 'Chon ngay bat dau' : 'Chon ngay ket thuc'}
-              </Text>
-
-              <DateTimePicker
-                value={draftDate}
-                mode="date"
-                display="spinner"
-                onChange={handleDatePickerChange}
-              />
-
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 10 }}>
-                <Button onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
-                  <Text style={{ color: '#6B7280', fontSize: 14, fontWeight: '600' }}>Huy</Text>
-                </Button>
-                <Button onPress={confirmDateSelection} activeOpacity={0.8}>
-                  <Text style={{ color: '#2B8EF0', fontSize: 14, fontWeight: '700' }}>Chon</Text>
-                </Button>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      ) : null}
-
-      {Platform.OS === 'android' && showDatePicker ? (
+      {showDatePicker ? (
         <DateTimePicker
           value={draftDate}
           mode="date"

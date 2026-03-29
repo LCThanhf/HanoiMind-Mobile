@@ -8,6 +8,7 @@ interface TripStopCardProps {
   stop: TripManageStop;
   moodLabel: string;
   onDelete: () => void;
+  onEditTime: () => void;
   onPress: () => void;
   deleting: boolean;
   showConnector: boolean;
@@ -18,7 +19,7 @@ const formatCostLabel = (cost: number) => {
   return `~${cost.toLocaleString('vi-VN')} VND`;
 };
 
-export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, showConnector }: TripStopCardProps) => {
+export const TripStopCard = ({ stop, moodLabel, onDelete, onEditTime, onPress, deleting, showConnector }: TripStopCardProps) => {
   return (
     <View className="flex-row mb-3">
       <View className="items-center mr-3" style={{ width: 14 }}>
@@ -46,6 +47,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
       <Button
         activeOpacity={0.9}
         onPress={onPress}
+        onLongPress={onEditTime}
         className="flex-1 rounded-2xl p-3"
         style={{
           backgroundColor: '#F8FAFC',

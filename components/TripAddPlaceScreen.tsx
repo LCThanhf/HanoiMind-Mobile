@@ -21,6 +21,22 @@ interface TripAddPlaceScreenProps {
   onPlaceAdded: () => void;
 }
 
+const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+const parseHHmmToMinutes = (value?: string | null) => {
+  if (!value) return null;
+  const match = value.trim().match(HHMM_REGEX);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const formatMinutesAsHHmm = (minutes: number) => {
+  const safe = ((Math.round(minutes) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hours = Math.floor(safe / 60);
+  const mins = safe % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
+
 const categoryLabel: Record<string, string> = {
   [PlaceCategory.RESTAURANT]: 'Nhà hàng',
   [PlaceCategory.CAFE]: 'Cà phê',
@@ -30,7 +46,7 @@ const categoryLabel: Record<string, string> = {
 };
 
 export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: TripAddPlaceScreenProps) => {
-  const { tripData, budgetSummary } = useTripDetailData(tripId);
+  const { tripData, budgetSummary, dayPlans } = useTripDetailData(tripId);
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
@@ -66,10 +82,17 @@ export const TripAddPlaceScreen = ({ tripId, dayNumber, onBack, onPlaceAdded }: 
   const handleAddPlace = async (place: Place) => {
     try {
       setAddingPlaceId(place._id);
+
+      const selectedDay = dayPlans.find((day) => day.dayNumber === dayNumber);
+      const lastStop = selectedDay?.stops?.[selectedDay.stops.length - 1];
+      const baseStartMinutes = parseHHmmToMinutes(lastStop?.endTimeRaw || lastStop?.endTimeLabel) ?? 8 * 60;
+      const defaultEndMinutes = baseStartMinutes + 120;
+
       await JourneyService.addStop(tripId, {
         day_index: Math.max(dayNumber - 1, 0),
         place_id: place._id,
-        end_time: '18:00',
+        start_time: formatMinutesAsHHmm(baseStartMinutes),
+        end_time: formatMinutesAsHHmm(defaultEndMinutes),
         estimated_cost: place.estimated_cost_vnd || 0,
       });
       onPlaceAdded();

@@ -48,7 +48,7 @@ export enum StopStatus {
 export enum CostType {
   SHARED = 'SHARED',
   PER_PERSON = 'PER_PERSON',
-  CUSTOM = 'CUSTOM' 
+  CUSTOM = 'CUSTOM'
 }
 
 // [MỚI] Enum định nghĩa Mood
@@ -161,7 +161,7 @@ export interface Journey {
   avatar?: string | null;
   tags: JourneyTag[];
   budget_analysis?: BudgetAnalysis;
-  
+
   // [MỚI BỔ SUNG]
   primary_mood?: JourneyMood | null;
   mood_votes?: MoodVote[];
@@ -183,7 +183,7 @@ export interface CreateJourneyPayload {
   primary_mood?: JourneyMood; // [MỚI BỔ SUNG] Cho luồng tạo Solo
 }
 
-export interface UpdateJourneyPayload extends Partial<CreateJourneyPayload> {}
+export interface UpdateJourneyPayload extends Partial<CreateJourneyPayload> { }
 
 export interface AddStopPayload {
   day_index: number;

@@ -1,10 +1,9 @@
-// src/components/forum/ForumPostCard.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ImageBackground, ActivityIndicator } from 'react-native';
-import { MapPin, MessageCircle, Eye, Heart, Navigation } from 'lucide-react-native';
+import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
-import { Button, StatItemView } from '../shared';
+import { Button, PillBadge, StatItemView } from '../shared';
 
 interface ForumPostCardProps {
   post?: ForumPost;
@@ -82,28 +81,51 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
     return null;
   }
 
-  return (
-    <View className="bg-white m-4 rounded-3xl shadow-sm overflow-hidden border border-gray-100">
-      {/* Header: Author info */}
+return (
+    <View className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100">
+      {/* Header: Author info & Badge */}
       <View className="flex-row items-center p-4">
-        <Image source={{ uri: post.author.avatar }} className="w-10 h-10 rounded-full" />
+        <Image 
+          source={{ uri: post.author.avatar || 'https://via.placeholder.com/150' }} 
+          className="w-10 h-10 rounded-full" 
+        />
         <View className="ml-3 flex-1">
           <Text className="font-bold text-gray-800">{post.author.fullName}</Text>
-          <Text className="text-xs text-gray-400">2 giờ trước</Text>
+          <Text className="text-xs text-gray-400">{post.updated_at}</Text>
         </View>
-        <View className="bg-success-soft px-2 py-1 rounded-md">
-          <Text className="text-[10px] text-success-strong font-bold">CÔNG KHAI</Text>
-        </View>
+        
+      {/* Badge trạng thái - Dùng prop thay vì className */}
+      <PillBadge 
+        label={post.status === 'PUBLISHED' ? "Công khai" : "Bạn bè"} 
+        backgroundColor="#DCFCE7" // Đây là màu success-soft
+        textColor="#15803D"       // Đây là màu success-strong
+        textSize={10}
+        textWeight="700"
+        // Nếu vẫn muốn tùy chỉnh thêm vị trí, dùng containerStyle của team:
+        containerStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
+      />
+        <TouchableOpacity className="ml-2">
+          <MoreVertical size={20} color="#9ca3af" />
+        </TouchableOpacity>
       </View>
 
-      {/* Body: Cover Image with Title Overlay */}
+      {/* Body: Image with Overlay Tags & Title */}
       <View className="px-4">
         <ImageBackground
-          source={{ uri: post.images[0] }} //lấy ảnh đầu tiên làm bìa hiển thị
-          className="w-full h-52 rounded-2xl overflow-hidden justify-end"
-          imageStyle={{ borderRadius: 16 }}
+          source={{ uri: post.images[0] }}
+          className="w-full h-56 rounded-[24px] overflow-hidden justify-end"
+          imageStyle={{ borderRadius: 24 }}
         >
+          {/* Overlay Gradient/Shadow để text dễ đọc */}
           <View className="bg-black/30 p-4">
+            {/* Hashtags nằm đè lên ảnh */}
+            <View className="flex-row space-x-2 mb-2">
+              {post.tag?.map((t, index) => (
+                <View key={index} className="bg-white/20 px-2 py-0.5 rounded-md border border-white/30">
+                  <Text className="text-white text-[10px] font-medium">#{post.tag}</Text>
+                </View>
+              ))}
+            </View>
             <Text className="text-white font-bold text-lg" numberOfLines={2}>
               {post.title}
             </Text>
@@ -111,31 +133,33 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
         </ImageBackground>
       </View>
 
-      {/* Content snippet & Tags */}
+      {/* Content & Location/Journey Pills */}
       <View className="p-4">
-        <Text className="text-gray-600 text-sm mb-3" numberOfLines={2}>{post.content}</Text>
+        <Text className="text-gray-600 text-sm mb-4 leading-5" numberOfLines={2}>
+          {post.content}
+        </Text>
 
-        <View className="flex-row flex-wrap gap-2 mb-4">
-          <View className="flex-row items-center bg-primary-soft px-2 py-1 rounded-full">
-            <MapPin size={12} color="#3b82f6" />
-            <Text className="text-[10px] text-primary-strong ml-1">Lũng Cú, Hà Giang</Text>
+        <View className="flex-row space-x-2 mb-4">
+          <View className="flex-row items-center bg-primary-soft px-3 py-1.5 rounded-xl border border-primary-soft">
+            <MapPin size={14} color="#3b82f6" />
+            <Text className="text-[11px] text-primary-strong font-semibold ml-1">Phố cổ Hội An</Text>
           </View>
-          <View className="flex-row items-center bg-green-50 px-2 py-1 rounded-full">
-            <Navigation size={12} color="#10b981" />
-            <Text className="text-[10px] text-success-strong ml-1">Chuyến đi Hà Giang...</Text>
+          <View className="flex-row items-center bg-success-soft px-3 py-1.5 rounded-xl border border-success-soft">
+            <Navigation size={14} color="#10b981" />
+            <Text className="text-[11px] text-success-strong font-semibold ml-1">Hội An thong dong</Text>
           </View>
         </View>
 
         {/* Footer Stats */}
         <View className="flex-row justify-between items-center border-t border-gray-50 pt-3">
-          <View className="flex-row space-x-4">
-            <StatItemView icon={<Heart size={16} color="#666" />} value={post.stats.likes} />
-            <StatItemView icon={<MessageCircle size={16} color="#666" />} value={post.stats.comments} />
-            <StatItemView icon={<Eye size={16} color="#666" />} value={post.stats.views} />
+          <View className="flex-row space-x-5">
+            <StatItemView icon={<Heart size={18} color="#666" />} value={post.stats.likes} />
+            <StatItemView icon={<MessageCircle size={18} color="#666" />} value={post.stats.comments} />
+            <StatItemView icon={<Eye size={18} color="#666" />} value={post.stats.views} />
           </View>
-          <Button>
+          <TouchableOpacity>
             <Text className="text-primary font-bold text-xs">Chi tiết</Text>
-          </Button>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

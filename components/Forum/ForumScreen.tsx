@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
 import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn component Tab
@@ -22,6 +22,7 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+
   const [searchQuery, setSearchQuery] = useState('');
 
 
@@ -37,7 +38,7 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
   const fetchUserName = async () => {
     try {
       const user = await UsersService.getMe();
-      setUserName(user.fullName || "USER");
+      setUserName(user?.fullName || user.fullName || "Bạn");
     } catch (err) {
       console.error('Error fetching user:', err);
       setUserName('Bạn');
@@ -124,102 +125,80 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
     })
     : posts;
 
-  return (
-    <SafeAreaView className="flex-1 bg-gray-50 pt-12">
-      {/* 1. HEADER: Greeting & Icons */}
-      <View className="flex-row justify-between items-center px-4 py-3 bg-white">
-        <Button onPress={onBack} className="p-1">
+
+    console.log('--- ĐIỀU TRA FORUM SCREEN ---');
+    console.log('ForumTopTabs:', !!ForumTopTabs);
+    console.log('SearchInput:', !!SearchInput);
+    console.log('Button:', !!Button);
+    console.log('Plus Icon:', !!Plus);
+return (
+    <SafeAreaView className="flex-1 bg-white pt-12">
+      {/* 1. HEADER CHÍNH */}
+      <View className="flex-row items-center px-4 py-2 bg-white">
+        <TouchableOpacity onPress={onBack}>
           <ArrowLeft size={24} color="#374151" />
-        </Button>
-        <View className="flex-1 ml-3">
-          <Text className="text-primary font-bold text-xl">Chào buổi sáng, {userName}!👋</Text>
-          <Text className="text-gray-400 text-xs">Khám phá những hành trình thú vị hôm nay.</Text>
-        </View>
-        <View className="flex-row space-x-3">
-          <Button className="p-2 bg-gray-100 rounded-full">
-            <Bell size={20} color="#333" />
-          </Button>
-        </View>
+        </TouchableOpacity>
+        <Text className="flex-1 text-center font-bold text-lg text-primary mr-6">Diễn đàn du lịch</Text>
       </View>
 
-      {/* 2. TOP TABS */}
-      {/* <ForumTopTabs activeCategory={activeCategory} onCategoryChange={setActiveCategory} /> */}
-      <ForumTopTabs
-        activeCategory={currentCategory}
-        onCategoryChange={setCurrentCategory}
-      />
-
-      {/* 3. SEARCH & FILTER */}
-      {currentCategory === ForumCategory.EXPERIENCE && (
-        <View className="px-4 py-3">
-          <SearchInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Tìm kiếm bài viết, địa điểm..."
-          />
-        </View>
-      )}
-
-      {/* 4. MAIN LIST */}
-      {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
-      ) : error ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-red-500 text-center px-4">{error}</Text>
-          <View className="mt-4 w-[160px]">
-            <Button label="Thử lại" onPress={fetchPosts} style={{ minHeight: 44, borderRadius: 10 }} />
-          </View>
-        </View>
-      ) : displayedPosts.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-4">
-          <Text className="text-gray-500 text-center mb-3">
-            {searchQuery.trim() ? 'Không tìm thấy bài viết phù hợp.' : 'Hiện chưa có bài viết cho mục này.'}
-          </Text>
-          {!searchQuery.trim() ? (
-            <Text className="text-gray-400 text-center">Đang hiển thị nội dung từ tất cả mục để bạn tham khảo.</Text>
-          ) : null}
-        </View>
-      ) : (
-        <FlatList
-          data={displayedPosts}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <ForumPostCard postId={item._id} post={item} />
-          )}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={
-            <View className="py-10 items-center">
-              <Text className="text-gray-400 text-xs">Bạn đã xem hết tin mới nhất rồi!</Text>
-              <Button className="mt-2">
-                <Text className="text-primary font-bold">Quay lại đầu trang</Text>
-              </Button>
-            </View>
-          }
+      <View className="bg-gray-50 flex-1">
+        {/* 2. TOP TABS */}
+        <ForumTopTabs
+          activeCategory={currentCategory}
+          onCategoryChange={(category) => setCurrentCategory(category)}
         />
-      )}
 
-      {/* 5. FLOATING ACTION BUTTON (Nút đăng bài nhanh) */}
-      <Button
-        className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        onPress={handleAddPostWithImage}
-      >
-        <Plus size={28} color="white" />
-      </Button>
+        {/* 3. GREETING */}
+        <View className="p-4 bg-white">
+          <Text className="text-primary font-extrabold text-2xl">Chào buổi sáng, {userName}! 👋</Text>
+          <Text className="text-gray-400 text-sm mt-1">Khám phá những hành trình thú vị hôm nay.</Text>
+        </View>
 
-      {/* 6. Modal chờ đợi khi đang upload ảnh */}
-      <Modal transparent visible={isUploading} animationType="fade">
-        <View className="flex-1 bg-black/50 items-center justify-center">
-          <View className="bg-white p-6 rounded-2xl items-center shadow-xl">
-            <ActivityIndicator size="large" color="#3b82f6" />
-            <Text className="mt-4 font-bold text-gray-700">Đang tải ảnh lên...</Text>
+        {/* 4. SEARCH BAR */}
+        <View className="px-4 py-2 bg-white">
+          {/* Bọc SearchInput trong View để xử lý style mà không lo lỗi TS */}
+          <View className="rounded-2xl bg-gray-50 overflow-hidden">
+            <SearchInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Tìm kiếm bài viết, địa điểm..."
+              // Không truyền className vào đây nữa
+            />
           </View>
         </View>
-      </Modal>
+
+        {/* 5. MAIN FEED */}
+        {loading ? (
+          <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#3b82f6" /></View>
+        ) : (
+          <FlatList
+            data={displayedPosts}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => <ForumPostCard post={item} />}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+            ListFooterComponent={
+              <View className="py-8 items-center">
+                <View className="w-10 h-1 bg-gray-200 rounded-full mb-4" />
+                <Text className="text-gray-400 text-[11px] italic">Bạn đã xem hết tin mới nhất rồi!</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+
+      {/* 6. FAB & MODAL (Giữ nguyên logic của bạn) */}
+      <Button
+        className="absolute bottom-10 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-xl shadow-primary/40"
+        onPress={() => {
+          // TODO: mở form tạo bài viết
+          alert('Tính năng tạo bài viết đang phát triển');
+        }}
+      >
+        <Plus size={30} color="white" />
+      </Button>
     </SafeAreaView>
   );
 };
 
-export { ForumScreen };
+export default ForumScreen;

@@ -18,7 +18,7 @@ import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen';
 import { NotificationScreen } from './components/NotificationScreen';
-import { ForumScreen } from './components/Forum/ForumScreen';
+import ForumScreen from './components/Forum/ForumScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';

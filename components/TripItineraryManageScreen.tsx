@@ -120,7 +120,7 @@ export const TripItineraryManageScreen = ({
 
     const allPlaceIds = Array.from(new Set(dayPlans.flatMap((day) => day.stops.map((stop) => stop.placeId)).filter(Boolean)));
     const totalDays = Math.max(dayPlans.length, 1);
-    const totalBudget = Math.max(budgetSummary.limit || budgetSummary.planned || 0, 500000);
+    const totalBudget = budgetSummary.limit || budgetSummary.planned || 0;
     const selectedMood: AiMood = (journey.tags?.length ? moodMap[journey.tags[0]] : undefined) || 'NATURE_EXPLORE';
     const inferredMode: 'solo' | 'group' = (journey.planned_members_count || 1) > 1 ? 'group' : 'solo';
     const computedDailyBudget = Math.max(Math.floor(totalBudget / totalDays), 150000);

@@ -510,10 +510,6 @@ export const CreateTripScreen = ({
     }
 
     const budgetLimit = parseBudgetValue(budget);
-    if (budgetLimit !== undefined && budgetLimit < 500000) {
-      Alert.alert('Ngân sách chưa hợp lệ', 'Ngân sách tối thiểu là 500.000 VND.');
-      return false;
-    }
 
     const { start_date, end_date } = buildIsoDateRange(startDate, endDate);
     if (!start_date || !end_date) {

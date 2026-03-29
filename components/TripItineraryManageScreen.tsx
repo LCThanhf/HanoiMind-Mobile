@@ -47,8 +47,6 @@ const moodBadgeLabelMap: Partial<Record<JourneyTag, string>> = {
   [JourneyTag.CULTURE]: 'Culture',
 };
 
-const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
 const formatDateToHHmm = (date: Date) => {
   const hours = date.getHours();
   const minutes = date.getMinutes();
@@ -56,14 +54,16 @@ const formatDateToHHmm = (date: Date) => {
 };
 
 const toMinutesFromHHmm = (value: string) => {
-  const match = value.match(HHMM_REGEX);
+  // Try to find HH:mm anywhere in the string (e.g., '14:00', '14:00:00', 'T14:00', ' 14:00 ')
+  const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
   if (!match) return null;
   return Number(match[1]) * 60 + Number(match[2]);
 };
 
 const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
   const now = new Date();
-  const fromHHmm = typeof value === 'string' ? value.trim().match(HHMM_REGEX) : null;
+  const fromHHmm = typeof value === 'string' ? value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/) : null;
+  
   if (fromHHmm) {
     now.setHours(Number(fromHHmm[1]), Number(fromHHmm[2]), 0, 0);
     return now;

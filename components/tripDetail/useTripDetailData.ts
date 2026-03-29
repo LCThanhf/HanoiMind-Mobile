@@ -120,22 +120,24 @@ const getTripStatus = (journey: Journey) => {
 
 const DEFAULT_DAY_START_MINUTES = 8 * 60;
 const DEFAULT_STOP_DURATION_MINUTES = 120;
-const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
 const parseTimeToMinutes = (time?: string | null): number | null => {
   if (!time || typeof time !== 'string') return null;
   const trimmed = time.trim();
   if (!trimmed) return null;
 
-  const hhmmMatch = trimmed.match(HHMM_REGEX);
-  if (hhmmMatch) {
-    const hours = Number(hhmmMatch[1]);
-    const minutes = Number(hhmmMatch[2]);
+  // Cố gắng tìm HH:mm ở bất kỳ đâu trong chuỗi (ví dụ: '14:00', '14:00:00', 'T14:00', ' 14:00 ')
+  const strictMatch = trimmed.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (strictMatch) {
+    const hours = Number(strictMatch[1]);
+    const minutes = Number(strictMatch[2]);
     return hours * 60 + minutes;
   }
 
+  // Backup cho các tình huống parse date
   const isoDate = new Date(trimmed);
   if (Number.isNaN(isoDate.getTime())) return null;
+  
+  // Rất hiếm khi vào luồng này nếu match ở trên đã xử lý toàn bộ định dạng chuẩn
   return isoDate.getHours() * 60 + isoDate.getMinutes();
 };
 
@@ -157,13 +159,26 @@ const toDurationLabel = (startTime?: string | null, endTime?: string | null) => 
   return `${String(rounded).replace('.', ',')} giờ`;
 };
 
-const formatTimeLabel = (time: string | null | undefined, fallbackOffsetMinutes: number) => {
-  const parsedMinutes = parseTimeToMinutes(time);
-  if (parsedMinutes !== null) {
-    return formatMinutesAsHHmm(parsedMinutes);
+const resolveStopTimes = (
+  startTimeRaw: string | null | undefined,
+  endTimeRaw: string | null | undefined,
+  fallbackOffsetMinutes: number
+) => {
+  let startMinutes = parseTimeToMinutes(startTimeRaw);
+  let endMinutes = parseTimeToMinutes(endTimeRaw);
+
+  if (startMinutes === null) {
+    startMinutes = DEFAULT_DAY_START_MINUTES + fallbackOffsetMinutes;
   }
 
-  return formatMinutesAsHHmm(DEFAULT_DAY_START_MINUTES + fallbackOffsetMinutes);
+  if (endMinutes === null || endMinutes <= startMinutes) {
+    endMinutes = startMinutes + DEFAULT_STOP_DURATION_MINUTES;
+  }
+
+  return {
+    startTimeLabel: formatMinutesAsHHmm(startMinutes),
+    endTimeLabel: formatMinutesAsHHmm(endMinutes),
+  };
 };
 
 const toCoordinates = (place: any) => {
@@ -308,14 +323,15 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
           const p = placeMap.get(stop.place_id);
           const pCost = p?.estimated_cost_vnd || p?.estimated_cost || 0;
           const sCost = stop.estimated_cost || pCost;
+          const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
 
           return {
             id: stop._id,
             stopId: stop._id,
             placeId: stop.place_id,
             dayNumber: day.day_number,
-            time: formatTimeLabel(stop.start_time, index * DEFAULT_STOP_DURATION_MINUTES),
-            endTime: formatTimeLabel(stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES + DEFAULT_STOP_DURATION_MINUTES),
+            time: times.startTimeLabel,
+            endTime: times.endTimeLabel,
             title: placeMap.get(stop.place_id)?.name || `Địa điểm ${index + 1}`,
             description: stop.note || `Chi phí dự kiến: ${sCost.toLocaleString('vi-VN')} đ`,
             status: stop.status,
@@ -339,6 +355,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
           const placeCost = place?.estimated_cost_vnd || place?.estimated_cost || 0;
           const stopCost = stop.estimated_cost || placeCost;
           totalStopsCost += stopCost;
+          const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
 
           return {
             id: stop._id,
@@ -352,8 +369,8 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
             estimatedCost: stopCost,
             startTimeRaw: stop.start_time,
             endTimeRaw: stop.end_time,
-            startTimeLabel: formatTimeLabel(stop.start_time, index * DEFAULT_STOP_DURATION_MINUTES),
-            endTimeLabel: formatTimeLabel(stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES + DEFAULT_STOP_DURATION_MINUTES),
+            startTimeLabel: times.startTimeLabel,
+            endTimeLabel: times.endTimeLabel,
             durationLabel: toDurationLabel(stop.start_time, stop.end_time),
             status: stop.status,
           };

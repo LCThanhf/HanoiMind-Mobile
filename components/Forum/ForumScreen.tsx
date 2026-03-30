@@ -55,24 +55,22 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
         page: 1,
         limit: 10,
         sortBy: PostSortBy.LATEST,
-        category: currentCategory
+        category: currentCategory,
       });
 
       const postsData = response.data || [];
+      console.log('[ForumScreen] fetchPosts', { currentCategory, count: postsData.length, postsData });
+
+      // Chỉ hiển thị đúng category, không fallback sang tất cả để tránh nhầm lẫn nội dung tab
+      setPosts(postsData);
+
       if (postsData.length === 0) {
-        // Nếu category hiện tại chưa có bài, thử fetch tất cả để không để trắng
-        const fallback = await ForumService.findAll({
-          page: 1,
-          limit: 10,
-          sortBy: PostSortBy.LATEST
-        });
-        setPosts(fallback.data || []);
-      } else {
-        setPosts(postsData);
+        setError('Chưa có bài viết ở danh mục này.');
       }
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError('Không thể tải bài viết');
+      setPosts([]);
     } finally {
       setLoading(false);
     }

@@ -124,7 +124,7 @@ return (
             <View className="flex-row space-x-2 mb-2">
               {post.tag?.map((t, index) => (
                 <View key={index} className="bg-white/20 px-2 py-0.5 rounded-md border border-white/30">
-                  <Text className="text-white text-[10px] font-medium">#{post.tag}</Text>
+                  <Text className="text-white text-[10px] font-medium">#{t}</Text>
                 </View>
               ))}
             </View>

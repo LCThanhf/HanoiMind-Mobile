@@ -18,9 +18,15 @@ export interface TripManageStop {
   address?: string;
   image?: string;
   rating?: number;
+  placeCategory?: string;
   lat?: number | null;
   lng?: number | null;
   estimatedCost: number;
+  checkinDayIndex?: number | null;
+  checkinTime?: string | null;
+  checkoutDayIndex?: number | null;
+  checkoutTime?: string | null;
+  isHotelStop?: boolean;
   startTimeRaw?: string | null;
   endTimeRaw?: string | null;
   startTimeLabel: string;
@@ -136,7 +142,7 @@ const parseTimeToMinutes = (time?: string | null): number | null => {
   // Backup cho các tình huống parse date
   const isoDate = new Date(trimmed);
   if (Number.isNaN(isoDate.getTime())) return null;
-  
+
   // Rất hiếm khi vào luồng này nếu match ở trên đã xử lý toàn bộ định dạng chuẩn
   return isoDate.getHours() * 60 + isoDate.getMinutes();
 };
@@ -146,6 +152,21 @@ const formatMinutesAsHHmm = (value: number) => {
   const hours = Math.floor(safe / 60);
   const minutes = safe % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const toDayIndexNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value));
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.floor(parsed));
+    }
+  }
+
+  return null;
 };
 
 const toDurationLabel = (startTime?: string | null, endTime?: string | null) => {
@@ -356,17 +377,45 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
           const stopCost = stop.estimated_cost || placeCost;
           totalStopsCost += stopCost;
           const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
+          const resolvedCategory =
+            (typeof place?.category === 'string' && place.category) ||
+            (typeof (stop as any).category === 'string' && (stop as any).category) ||
+            '';
+          const normalizedCategory = String(resolvedCategory || '').toUpperCase();
+          const mappedTitle = place?.name || (stop as any).place_name || `Địa điểm ${index + 1}`;
+          const normalizedTitle = mappedTitle.toUpperCase();
+          const mappedCheckinDay = toDayIndexNumber((stop as any).checkin_day_index ?? (stop as any).checkinDayIndex);
+          const mappedCheckoutDay = toDayIndexNumber((stop as any).checkout_day_index ?? (stop as any).checkoutDayIndex);
+          const mappedCheckinTime = (stop as any).checkin_time || (stop as any).checkinTime || stop.start_time || null;
+          const mappedCheckoutTime = (stop as any).checkout_time || (stop as any).checkoutTime || null;
+          const hasHotelMeta = mappedCheckinDay !== null || mappedCheckoutDay !== null || !!mappedCheckoutTime;
+          const hasHotelKeyword =
+            normalizedTitle.includes('HOTEL') ||
+            normalizedTitle.includes('RESORT') ||
+            normalizedTitle.includes('HOSTEL') ||
+            normalizedTitle.includes('HOMESTAY') ||
+            normalizedTitle.includes('GUEST HOUSE') ||
+            normalizedTitle.includes('KHACH SAN');
 
           return {
             id: stop._id,
             placeId: stop.place_id,
-            title: place?.name || `Địa điểm ${index + 1}`,
+            title: mappedTitle,
             address: place?.address,
             image: place?.images?.[0],
             rating: place?.rating,
+            placeCategory: resolvedCategory,
             lat,
             lng,
             estimatedCost: stopCost,
+            checkinDayIndex: mappedCheckinDay ?? day.day_number - 1,
+            checkinTime: mappedCheckinTime,
+            checkoutDayIndex: mappedCheckoutDay ?? (mappedCheckoutTime ? day.day_number - 1 : null),
+            checkoutTime: mappedCheckoutTime,
+            isHotelStop:
+              ['ACCOMMODATION', 'HOTEL', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE'].includes(normalizedCategory) ||
+              hasHotelMeta ||
+              hasHotelKeyword,
             startTimeRaw: stop.start_time,
             endTimeRaw: stop.end_time,
             startTimeLabel: times.startTimeLabel,

@@ -311,6 +311,7 @@ export const CreateTripScreen = ({
     }
 
     const desiredCount = Math.max(3, Math.min(12, daysCount * 2));
+    const seedPlaceId = selectedPlaceIds.length ? selectedPlaceIds[selectedPlaceIds.length - 1] : undefined;
 
     try {
       setIsAiSelectingPlaces(true);
@@ -326,6 +327,7 @@ export const CreateTripScreen = ({
         owner_id: resolvedOwnerId,
         start_date,
         end_date,
+        seed_place_id: seedPlaceId,
         max_places: desiredCount,
         hours_per_day: 8,
         mode: isSoloMode ? 'solo' : 'group',
@@ -357,7 +359,18 @@ export const CreateTripScreen = ({
       }
 
       if (finalIds.length) {
-        setSelectedPlaceIds(finalIds);
+        setSelectedPlaceIds((prev) => {
+          if (!prev.length) return finalIds;
+
+          const seen = new Set(prev);
+          const merged = [...prev];
+          for (const id of finalIds) {
+            if (seen.has(id)) continue;
+            merged.push(id);
+            seen.add(id);
+          }
+          return merged;
+        });
       }
     } catch (error) {
       Alert.alert(

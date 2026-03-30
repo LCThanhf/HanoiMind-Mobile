@@ -18,6 +18,7 @@ import { AIPlanRequest, AiMood } from '../services/aiService/ai.type';
 import { JourneyTag } from '../services/journeyService/journey.type';
 import { UsersService } from '../services/userService/user.service';
 import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './tripDetail/useTripDetailData';
+import { HotelEventCard } from './tripDetail/HotelEventCard';
 import { TripStopCard } from './tripDetail/TripStopCard';
 import { MainTab } from './BottomTabBar';
 import { Button, ScreenHeader } from './shared';
@@ -63,7 +64,7 @@ const toMinutesFromHHmm = (value: string) => {
 const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
   const now = new Date();
   const fromHHmm = typeof value === 'string' ? value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/) : null;
-  
+
   if (fromHHmm) {
     now.setHours(Number(fromHHmm[1]), Number(fromHHmm[2]), 0, 0);
     return now;
@@ -83,6 +84,13 @@ const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: numb
 };
 
 const addMinutes = (source: Date, minutes: number) => new Date(source.getTime() + minutes * 60 * 1000);
+
+const toHHmmLabel = (value?: string | null, fallback = '--:--') => {
+  if (!value) return fallback;
+  const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (!match) return fallback;
+  return `${String(Number(match[1])).padStart(2, '0')}:${match[2]}`;
+};
 
 interface EditingStopState {
   dayId: string;
@@ -121,6 +129,41 @@ export const TripItineraryManageScreen = ({
     if (!firstTag) return 'Healing';
     return moodBadgeLabelMap[firstTag] || 'Healing';
   }, [journey?.tags]);
+
+  const hotelMarkersByStopId = useMemo(() => {
+    const groupedByPlaceId = new Map<string, { firstStopId: string; lastStopId: string }>();
+
+    dayPlans.forEach((day) => {
+      day.stops.forEach((stop) => {
+        if (!stop.isHotelStop) return;
+
+        const existing = groupedByPlaceId.get(stop.placeId);
+        if (!existing) {
+          groupedByPlaceId.set(stop.placeId, { firstStopId: stop.id, lastStopId: stop.id });
+          return;
+        }
+
+        existing.lastStopId = stop.id;
+      });
+    });
+
+    const markers = new Map<string, { showCheckin: boolean; showCheckout: boolean }>();
+    groupedByPlaceId.forEach(({ firstStopId, lastStopId }) => {
+      markers.set(firstStopId, {
+        showCheckin: true,
+        showCheckout: firstStopId === lastStopId,
+      });
+
+      if (lastStopId !== firstStopId) {
+        markers.set(lastStopId, {
+          showCheckin: false,
+          showCheckout: true,
+        });
+      }
+    });
+
+    return markers;
+  }, [dayPlans]);
 
   const handleDeleteStop = (dayNumber: number, stopId: string) => {
     Alert.alert('Xóa địa điểm', 'Bạn có chắc muốn xóa địa điểm khỏi lịch trình?', [
@@ -459,18 +502,53 @@ export const TripItineraryManageScreen = ({
                 </View>
 
                 {day.stops.length ? (
-                  day.stops.map((item, idx) => (
-                    <TripStopCard
-                      key={item.id}
-                      stop={item}
-                      moodLabel={moodBadgeLabel}
-                      deleting={deletingStopId === item.id}
-                      showConnector={idx < day.stops.length - 1}
-                      onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
-                      onEditTime={() => handleOpenTimeEditor(day.dayId || String(day.dayNumber), day.dayNumber, item)}
-                      onPress={() => onOpenPlaceDetail(item.placeId)}
-                    />
-                  ))
+                  day.stops.map((item, idx) => {
+                    const hotelMarker = hotelMarkersByStopId.get(item.id);
+                    const showCheckin = !!hotelMarker?.showCheckin;
+                    const showCheckout = !!hotelMarker?.showCheckout;
+                    const checkinDayLabel = day.dayNumber;
+                    const checkoutDayLabel = day.dayNumber;
+                    const checkoutTimeLabel = toHHmmLabel(item.checkoutTime || item.endTimeRaw || item.endTimeLabel, item.endTimeLabel || '--:--');
+                    const checkinTimeLabel = toHHmmLabel(item.checkinTime || item.startTimeRaw || item.startTimeLabel, item.startTimeLabel || '--:--');
+
+                    return (
+                      <React.Fragment key={item.id}>
+                        <TripStopCard
+                          stop={item}
+                          moodLabel={moodBadgeLabel}
+                          deleting={deletingStopId === item.id}
+                          showConnector={idx < day.stops.length - 1}
+                          onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
+                          onEditTime={() => handleOpenTimeEditor(day.dayId || String(day.dayNumber), day.dayNumber, item)}
+                          onPress={() => onOpenPlaceDetail(item.placeId)}
+                        />
+
+                        {showCheckin || showCheckout ? (
+                          <>
+                            {showCheckin ? (
+                              <HotelEventCard
+                                type="checkin"
+                                dayLabel={checkinDayLabel}
+                                placeName={item.title}
+                                timeLabel={checkinTimeLabel}
+                                onPress={() => onOpenPlaceDetail(item.placeId)}
+                              />
+                            ) : null}
+
+                            {showCheckout ? (
+                              <HotelEventCard
+                                type="checkout"
+                                dayLabel={checkoutDayLabel}
+                                placeName={item.title}
+                                timeLabel={checkoutTimeLabel || undefined}
+                                onPress={() => onOpenPlaceDetail(item.placeId)}
+                              />
+                            ) : null}
+                          </>
+                        ) : null}
+                      </React.Fragment>
+                    );
+                  })
                 ) : (
                   <View
                     className="rounded-2xl px-4 py-3 mb-3"
@@ -557,8 +635,8 @@ export const TripItineraryManageScreen = ({
                     Sắp xếp thứ tự
                   </Text>
                   <View className="flex-row items-center">
-                    <Button 
-                      onPress={() => handleMoveStop('up')} 
+                    <Button
+                      onPress={() => handleMoveStop('up')}
                       disabled={isFirstOfAll || !!movingDirection || !!savingStopId}
                       className="items-center justify-center rounded-lg mr-2"
                       style={{ width: 40, height: 40, backgroundColor: isFirstOfAll ? '#F8FAFC' : '#EFF6FF' }}
@@ -571,8 +649,8 @@ export const TripItineraryManageScreen = ({
                         </Svg>
                       )}
                     </Button>
-                    <Button 
-                      onPress={() => handleMoveStop('down')} 
+                    <Button
+                      onPress={() => handleMoveStop('down')}
                       disabled={!!movingDirection || !!savingStopId}
                       className="items-center justify-center rounded-lg"
                       style={{ width: 40, height: 40, backgroundColor: '#EFF6FF' }}

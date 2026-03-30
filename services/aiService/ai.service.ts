@@ -2,14 +2,95 @@
 
 import { aiApiClient } from '../apiClient';
 import {
+  AiDayPlan,
   AIPlanRequest,
   AIPlanResponse,
+  AiStop,
   AiProposal,
   CreateJourneyFromRelatedRequest,
   CreateJourneyFromRelatedResponse,
   RequestAiPlanPayload,
   SuggestNextParams
 } from './ai.type';
+
+const HOTEL_CATEGORIES = new Set(['HOTEL', 'ACCOMMODATION', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE']);
+const HOTEL_NAME_HINTS = ['hotel', 'resort', 'hostel', 'homestay', 'guest house', 'khach san'];
+
+const isHotelStop = (stop: AiStop) => {
+  const category = String(stop.category || '').toUpperCase();
+  if (stop.is_hotel_anchor === true) return true;
+  if (HOTEL_CATEGORIES.has(category)) return true;
+
+  const placeName = String(stop.place_name || '').toLowerCase();
+  return HOTEL_NAME_HINTS.some((hint) => placeName.includes(hint));
+};
+
+const normalizeAiDays = (days?: AiDayPlan[] | null): AiDayPlan[] | null | undefined => {
+  if (days === null || days === undefined) return days;
+
+  const normalizedDays = days.map((day) => ({
+    ...day,
+    stops: (day.stops || []).map((stop) => ({ ...stop })),
+  }));
+
+  const hotelStopsByPlaceId = new Map<string, Array<{ dayIndex: number; stopIndex: number; stop: AiStop }>>();
+
+  normalizedDays.forEach((day, fallbackDayIndex) => {
+    const dayIndex = typeof day.day_number === 'number' ? Math.max(0, day.day_number - 1) : fallbackDayIndex;
+    day.stops.forEach((stop, stopIndex) => {
+      if (!isHotelStop(stop)) return;
+
+      const placeId = String(stop.place_id || '').trim();
+      if (!placeId) return;
+
+      const bucket = hotelStopsByPlaceId.get(placeId) || [];
+      bucket.push({ dayIndex, stopIndex, stop });
+      hotelStopsByPlaceId.set(placeId, bucket);
+    });
+  });
+
+  hotelStopsByPlaceId.forEach((bucket) => {
+    bucket.sort((left, right) => {
+      if (left.dayIndex !== right.dayIndex) {
+        return left.dayIndex - right.dayIndex;
+      }
+
+      const leftOrder = typeof left.stop.order === 'number' ? left.stop.order : left.stopIndex;
+      const rightOrder = typeof right.stop.order === 'number' ? right.stop.order : right.stopIndex;
+      return leftOrder - rightOrder;
+    });
+
+    const first = bucket[0];
+    const last = bucket[bucket.length - 1];
+
+    first.stop.checkin_day_index = first.dayIndex;
+    first.stop.checkin_time = first.stop.start_time ?? first.stop.end_time ?? null;
+    first.stop.is_hotel_anchor = true;
+
+    last.stop.checkout_day_index = last.dayIndex;
+    last.stop.checkout_time = last.stop.end_time ?? last.stop.start_time ?? null;
+    last.stop.is_hotel_anchor = true;
+  });
+
+  return normalizedDays;
+};
+
+const normalizeAiPlanResponse = (response: AIPlanResponse): AIPlanResponse => ({
+  ...response,
+  days: normalizeAiDays(response.days) || response.days,
+});
+
+const normalizeCreateJourneyFromRelatedResponse = (
+  response: CreateJourneyFromRelatedResponse
+): CreateJourneyFromRelatedResponse => ({
+  ...response,
+  days: normalizeAiDays(response.days) ?? response.days,
+});
+
+const normalizeProposal = (proposal: AiProposal): AiProposal => ({
+  ...proposal,
+  days: normalizeAiDays(proposal.days) || proposal.days,
+});
 
 const ensureAiBackendConfigured = () => {
   const baseUrl = aiApiClient.defaults.baseURL;
@@ -27,7 +108,8 @@ export const AiService = {
   ): Promise<CreateJourneyFromRelatedResponse> => {
     try {
       ensureAiBackendConfigured();
-      return await aiApiClient.post('/journeys/auto-create-related', payload);
+      const response = await aiApiClient.post('/journeys/auto-create-related', payload);
+      return normalizeCreateJourneyFromRelatedResponse(response);
     } catch (error) {
       throw error;
     }
@@ -39,7 +121,8 @@ export const AiService = {
   runAiPlan: async (journeyId: string, payload: AIPlanRequest): Promise<AIPlanResponse> => {
     try {
       ensureAiBackendConfigured();
-      return await aiApiClient.post(`/journeys/${journeyId}/ai-plan`, payload);
+      const response = await aiApiClient.post(`/journeys/${journeyId}/ai-plan`, payload);
+      return normalizeAiPlanResponse(response);
     } catch (error) {
       throw error;
     }
@@ -50,7 +133,8 @@ export const AiService = {
    */
   createPlan: async (journeyId: string, payload: RequestAiPlanPayload): Promise<AiProposal> => {
     try {
-      return await aiApiClient.post(`/ai/planning/plan/${journeyId}`, payload);
+      const response = await aiApiClient.post(`/ai/planning/plan/${journeyId}`, payload);
+      return normalizeProposal(response);
     } catch (error) { throw error; }
   },
 
@@ -59,7 +143,8 @@ export const AiService = {
    */
   getProposals: async (journeyId: string): Promise<AiProposal[]> => {
     try {
-      return await aiApiClient.get(`/ai/planning/proposals/journey/${journeyId}`);
+      const response = await aiApiClient.get(`/ai/planning/proposals/journey/${journeyId}`);
+      return (response || []).map(normalizeProposal);
     } catch (error) { throw error; }
   },
 
@@ -68,7 +153,8 @@ export const AiService = {
    */
   getProposalDetail: async (proposalId: string): Promise<AiProposal> => {
     try {
-      return await aiApiClient.get(`/ai/planning/proposal/${proposalId}`);
+      const response = await aiApiClient.get(`/ai/planning/proposal/${proposalId}`);
+      return normalizeProposal(response);
     } catch (error) { throw error; }
   },
 
@@ -77,7 +163,8 @@ export const AiService = {
    */
   swapPlace: async (proposalId: string, data: { dayNumber: number; oldPlaceId: string; newPlaceId: string }): Promise<AiProposal> => {
     try {
-      return await aiApiClient.patch(`/ai/planning/proposal/${proposalId}/swap`, data);
+      const response = await aiApiClient.patch(`/ai/planning/proposal/${proposalId}/swap`, data);
+      return normalizeProposal(response);
     } catch (error) { throw error; }
   },
 

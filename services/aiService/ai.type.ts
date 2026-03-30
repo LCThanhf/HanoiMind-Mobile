@@ -15,6 +15,11 @@ export interface AiStop {
   final_score: number;
   travel_time_from_previous_minutes: number;
   distance_from_previous_km: number;
+  is_hotel_anchor?: boolean;
+  checkin_day_index?: number;
+  checkin_time?: string | null;
+  checkout_day_index?: number;
+  checkout_time?: string | null;
 }
 
 export interface AiDayPlan {

@@ -71,6 +71,49 @@ const formatDateRange = (start: string, end: string): string => {
 const formatCost = (value: number): string =>
   `${value.toLocaleString('vi-VN')} đ`;
 
+/**
+ * Weight multiplier per place category for budget distribution.
+ * Higher = gets a larger share of the unallocated budget.
+ */
+const categoryWeight = (category?: string): number => {
+  switch (category) {
+    case 'HOTEL':
+    case 'RESORT':
+    case 'ACCOMMODATION':
+      return 3.0;
+    case 'HOSTEL':
+    case 'HOMESTAY':
+    case 'GUEST_HOUSE':
+      return 2.0;
+    case 'RESTAURANT':
+    case 'BAR_PUB':
+      return 1.2;
+    case 'EXPERIENCE':
+    case 'ENTERTAINMENT':
+    case 'WELLNESS':
+      return 1.3;
+    case 'SHOPPING':
+    case 'LOCAL_MARKET':
+      return 1.5;
+    case 'CAFE':
+    case 'STREET_FOOD':
+      return 0.8;
+    case 'SIGHTSEEING':
+    case 'CULTURE':
+    case 'PARK':
+      return 0.7;
+    case 'TRANSPORT':
+      return 0.5;
+    case 'HEALTH':
+    case 'FINANCE':
+    case 'CONVENIENCE':
+    case 'LAUNDRY':
+      return 0.3;
+    default:
+      return 1.0;
+  }
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface StopCostCardProps {
@@ -79,8 +122,8 @@ interface StopCostCardProps {
 }
 
 const StopCostCard = ({ stop, onUpdatePress }: StopCostCardProps) => {
-  const isOverBudget =
-    stop.actualCost !== undefined && stop.actualCost > stop.estimatedCost;
+  const isUnderPaid =
+    stop.actualCost !== undefined && stop.actualCost < stop.estimatedCost;
 
   return (
     <CardContainer style={{ marginBottom: 12 }}>
@@ -117,7 +160,7 @@ const StopCostCard = ({ stop, onUpdatePress }: StopCostCardProps) => {
             <Svg width={11} height={11} viewBox="0 0 24 24" fill="none" style={{ marginRight: 3 }}>
               <Circle cx="12" cy="12" r="10" stroke={stop.isPrepaid ? '#16A34A' : '#2B8EF0'} strokeWidth="2.2" />
               <Path
-                d="M9 12l2 2 4-4"
+                d={stop.isPrepaid ? 'M9 12l2 2 4-4' : 'M12 8v4l3 3'}
                 stroke={stop.isPrepaid ? '#16A34A' : '#2B8EF0'}
                 strokeWidth="2.2"
                 strokeLinecap="round"
@@ -182,13 +225,13 @@ const StopCostCard = ({ stop, onUpdatePress }: StopCostCardProps) => {
                 paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: 6,
-                backgroundColor: isOverBudget ? '#FEE2E2' : '#DCFCE7',
+                backgroundColor: isUnderPaid ? '#FEE2E2' : '#DCFCE7',
               }}
             >
               <Text
                 style={{
                   fontSize: 15,
-                  color: isOverBudget ? '#DC2626' : '#16A34A',
+                  color: isUnderPaid ? '#DC2626' : '#16A34A',
                   fontWeight: '700',
                 }}
               >
@@ -357,11 +400,27 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
       // Build stop list with global sequence
       let seq = 1;
       const builtStops: StopCostItem[] = [];
+      // Parallel array tracking raw stop data needed for smart cost estimation
+      const rawStopMeta: Array<{
+        estimated_cost: number;
+        actual_cost: number;
+        place_id: string;
+        cost_type?: CostType;
+        participant_ids?: string[];
+      }> = [];
 
       for (const day of loadedJourney.days || []) {
         for (const stop of day.stops || []) {
           const firstPayer: PayerDetail | undefined = (stop.payers || [])[0];
           const payerProfile = firstPayer ? profileMap.get(firstPayer.user_id) : undefined;
+
+          rawStopMeta.push({
+            estimated_cost: stop.estimated_cost || 0,
+            actual_cost: stop.actual_cost && stop.actual_cost > 0 ? stop.actual_cost : 0,
+            place_id: stop.place_id,
+            cost_type: stop.cost_type,
+            participant_ids: stop.participant_ids,
+          });
 
           builtStops.push({
             dayId: day.id,
@@ -371,7 +430,7 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
             placeId: stop.place_id,
             placeName:
               placeMap.get(stop.place_id)?.name || `Địa điểm ${seq - 1}`,
-            estimatedCost: stop.estimated_cost || 0, // will be overridden below
+            estimatedCost: stop.estimated_cost || 0,
             actualCost:
               stop.actual_cost && stop.actual_cost > 0 ? stop.actual_cost : undefined,
             isPrepaid: stop.is_prepaid === true,
@@ -388,16 +447,81 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
         }
       }
 
-      // Auto-distribute budget evenly across all stops
-      const totalStops = builtStops.length;
-      const computed = computedLimit > 0 && totalStops > 0
-        ? Math.round(computedLimit / totalStops)
-        : 0;
-      setPerStopEstimated(computed);
+      // ── Smart per-stop cost estimation ──────────────────────────────────────
+      // Priority 1: stop already has estimated_cost from API / AI planning
+      // Priority 2: place has its own estimated_cost_vnd (scaled for PER_PERSON)
+      // Priority 3: category-weighted proportional share of remaining budget
+      const totalMembers = memberIds.length || 1;
 
-      if (computed > 0) {
-        builtStops.forEach((s) => { s.estimatedCost = computed; });
+      interface StopEstMeta {
+        hasEstimate: boolean;
+        estimate: number;
+        weight: number;
       }
+      const estMeta: StopEstMeta[] = rawStopMeta.map((raw) => {
+        // P0: already settled – actual cost is known, lock the estimate so adding
+        // new stops never shifts a previously-confirmed expected value.
+        if (raw.actual_cost > 0) {
+          // Prefer the server-saved estimated_cost; fall back to actual_cost itself.
+          return { hasEstimate: true, estimate: raw.estimated_cost > 0 ? raw.estimated_cost : raw.actual_cost, weight: 0 };
+        }
+        // P1
+        if (raw.estimated_cost > 0) {
+          return { hasEstimate: true, estimate: raw.estimated_cost, weight: 0 };
+        }
+        // P2
+        const place = placeMap.get(raw.place_id);
+        const placeEstimate: number = place?.estimated_cost_vnd || 0;
+        if (placeEstimate > 0) {
+          const participantCount = raw.participant_ids?.length || totalMembers;
+          const estimate =
+            raw.cost_type === CostType.PER_PERSON
+              ? placeEstimate * participantCount
+              : placeEstimate;
+          return { hasEstimate: true, estimate, weight: 0 };
+        }
+        // P3 – needs weighted budget share
+        return {
+          hasEstimate: false,
+          estimate: 0,
+          weight: categoryWeight(place?.category),
+        };
+      });
+
+      // Apply P1 & P2 estimates
+      estMeta.forEach((meta, i) => {
+        if (meta.hasEstimate) builtStops[i].estimatedCost = meta.estimate;
+      });
+
+      // Distribute remaining budget to P3 stops
+      const alreadyAllocated = estMeta
+        .filter((m) => m.hasEstimate)
+        .reduce((sum, m) => sum + m.estimate, 0);
+      const remainingBudget =
+        computedLimit > 0 ? Math.max(0, computedLimit - alreadyAllocated) : 0;
+      const totalWeight = estMeta.reduce((sum, m) => sum + m.weight, 0);
+
+      estMeta.forEach((meta, i) => {
+        if (!meta.hasEstimate) {
+          if (remainingBudget > 0 && totalWeight > 0) {
+            builtStops[i].estimatedCost = Math.round(
+              (meta.weight / totalWeight) * remainingBudget
+            );
+          } else if (computedLimit > 0 && builtStops.length > 0) {
+            // ultimate fallback: even split
+            builtStops[i].estimatedCost = Math.round(computedLimit / builtStops.length);
+          }
+        }
+      });
+
+      // perStopEstimated = average (used as placeholder in the edit screen)
+      const avgEstimated =
+        builtStops.length > 0
+          ? Math.round(
+              builtStops.reduce((sum, s) => sum + s.estimatedCost, 0) / builtStops.length
+            )
+          : 0;
+      setPerStopEstimated(avgEstimated);
 
       setStops(builtStops);
     } catch {
@@ -546,12 +670,14 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    paddingHorizontal: 12,
-                    paddingVertical: 7,
-                    borderRadius: 20,
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 12,
                     borderWidth: 1,
                     borderColor: '#E5E7EB',
                     backgroundColor: 'white',
+                    minWidth: 130,
                   }}
                 >
                   <Text
@@ -579,7 +705,8 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                   <View
                     style={{
                       position: 'absolute',
-                      top: 40,
+                      top: '105%',
+                      left: 0,
                       right: 0,
                       backgroundColor: 'white',
                       borderRadius: 12,
@@ -591,7 +718,6 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                       shadowOffset: { width: 0, height: 4 },
                       elevation: 8,
                       zIndex: 20,
-                      minWidth: 130,
                     }}
                   >
                     <TouchableOpacity
@@ -599,8 +725,21 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                         setSelectedDay(null);
                         setShowDayDropdown(false);
                       }}
-                      style={{ paddingHorizontal: 16, paddingVertical: 11 }}
+                      style={{ paddingHorizontal: 16, paddingVertical: 11, flexDirection: 'row', alignItems: 'center' }}
                     >
+                      <View style={{ width: 18, marginRight: 6, alignItems: 'center' }}>
+                        {selectedDay === null && (
+                          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                            <Path
+                              d="M5 13l4 4L19 7"
+                              stroke="#2B8EF0"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </Svg>
+                        )}
+                      </View>
                       <Text
                         style={{
                           fontSize: 13,
@@ -608,7 +747,7 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                           fontWeight: selectedDay === null ? '700' : '500',
                         }}
                       >
-                        {selectedDay === null ? '✓ ' : ''}Tất cả ngày
+                        Tất cả ngày
                       </Text>
                     </TouchableOpacity>
 
@@ -619,8 +758,21 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                           setSelectedDay(day);
                           setShowDayDropdown(false);
                         }}
-                        style={{ paddingHorizontal: 16, paddingVertical: 11 }}
+                        style={{ paddingHorizontal: 16, paddingVertical: 11, flexDirection: 'row', alignItems: 'center' }}
                       >
+                        <View style={{ width: 18, marginRight: 6, alignItems: 'center' }}>
+                          {selectedDay === day && (
+                            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                              <Path
+                                d="M5 13l4 4L19 7"
+                                stroke="#2B8EF0"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </Svg>
+                          )}
+                        </View>
                         <Text
                           style={{
                             fontSize: 13,
@@ -628,7 +780,7 @@ export const TripBudgetManageScreen = ({ tripId, onBack, onUpdateStop }: TripBud
                             fontWeight: selectedDay === day ? '700' : '500',
                           }}
                         >
-                          {selectedDay === day ? '✓ ' : ''}Ngày {day}
+                          Ngày {day}
                         </Text>
                       </TouchableOpacity>
                     ))}

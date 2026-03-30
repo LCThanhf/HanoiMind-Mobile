@@ -59,7 +59,15 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
       });
 
       const postsData = response.data || [];
-      console.log('[ForumScreen] fetchPosts', { currentCategory, count: postsData.length, postsData });
+      // console.log('[ForumScreen] fetchPosts', { currentCategory, count: postsData.length, postsData });
+
+      // Thay vì console.log(postsData)
+      console.table(postsData.map(post => ({ 
+          ID: post._id, 
+          Title: post.title, 
+          Category: post.category,
+          Status: post.status 
+      })));
 
       // Chỉ hiển thị đúng category, không fallback sang tất cả để tránh nhầm lẫn nội dung tab
       setPosts(postsData);

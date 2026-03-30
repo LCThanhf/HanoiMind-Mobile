@@ -100,7 +100,7 @@ export const ForumService = {
    */
   deletePost: async (id: string): Promise<any> => {
     try {
-      return await apiClient.delete(`/forum/forum/posts/${id}`);
+      return await apiClient.delete(`/forum/posts/${id}`);
     } catch (error) { throw error; }
   }
 

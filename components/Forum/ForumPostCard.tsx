@@ -80,20 +80,31 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
   }
 
   if (!post) {
-    return null;
+    return (
+      <View className="m-4 p-6 bg-white rounded-3xl border border-gray-100 items-center">
+        <Text className="text-gray-500">Bài viết không tồn tại hoặc đã bị xóa.</Text>
+      </View>
+    );
   }
 
-return (
+  const author = post.author || { id: '', fullName: 'Người dùng', avatar: '' };
+  const imageUri = Array.isArray(post.images) && post.images.length > 0
+    ? post.images[0]
+    : 'https://www.svgrepo.com/show/432141/no-image.svg';
+  const stats = post.stats || { likes: 0, comments: 0, views: 0 };
+  const tags = Array.isArray(post.tag) ? post.tag : [];
+
+  return (
     <View className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100">
       {/* Header: Author info & Badge */}
       <View className="flex-row items-center p-4">
-        <Image 
-          source={{ uri: post.author.avatar || 'https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg' }} 
-          className="w-10 h-10 rounded-full" 
+        <Image
+          source={{ uri: author.avatar || 'https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg' }}
+          className="w-10 h-10 rounded-full"
         />
         <View className="ml-3 flex-1">
-          <Text className="font-bold text-gray-800">{post.author.fullName}</Text>
-          <Text className="text-xs text-gray-400">{DateUtils.formatDateTime(post.created_at)}</Text>
+          <Text className="font-bold text-gray-800">{author.fullName}</Text>
+          <Text className="text-xs text-gray-400">{DateUtils.formatDateTime(post.created_at || new Date().toISOString())}</Text>
         </View>
         
       {/* Badge trạng thái - Dùng prop thay vì className */}
@@ -114,7 +125,7 @@ return (
       {/* Body: Image with Overlay Tags & Title */}
       <View className="px-4">
         <ImageBackground
-          source={{ uri: post.images[0] }}
+          source={{ uri: imageUri }}
           className="w-full h-56 rounded-[24px] overflow-hidden justify-end"
           imageStyle={{ borderRadius: 24 }}
         >
@@ -122,7 +133,7 @@ return (
           <View className="bg-black/30 p-4">
             {/* Hashtags nằm đè lên ảnh */}
             <View className="flex-row space-x-2 mb-2">
-              {post.tag?.map((t, index) => (
+              {tags.map((t, index) => (
                 <View key={index} className="bg-white/20 px-2 py-0.5 rounded-md border border-white/30">
                   <Text className="text-white text-[10px] font-medium">#{t}</Text>
                 </View>
@@ -155,9 +166,9 @@ return (
         {/* Footer Stats */}
         <View className="flex-row justify-between items-center border-t border-gray-50 pt-3">
           <View className="flex-row space-x-5">
-            <StatItemView icon={<Heart size={18} color="#666" />} value={post.stats.likes} />
-            <StatItemView icon={<MessageCircle size={18} color="#666" />} value={post.stats.comments} />
-            <StatItemView icon={<Eye size={18} color="#666" />} value={post.stats.views} />
+            <StatItemView icon={<Heart size={18} color="#666" />} value={stats.likes} />
+            <StatItemView icon={<MessageCircle size={18} color="#666" />} value={stats.comments} />
+            <StatItemView icon={<Eye size={18} color="#666" />} value={stats.views} />
           </View>
           <TouchableOpacity>
             <Text className="text-primary font-bold text-xs">Chi tiết</Text>

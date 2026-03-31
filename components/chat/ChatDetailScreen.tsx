@@ -46,7 +46,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
 
   const flatListRef = useRef<FlatList>(null);
-
+  const isFirstLoad = useRef(true);
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
@@ -83,9 +83,9 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         await ChatService.joinRoom({ room_id: roomId });
 
         const history = await ChatService.getMessages(roomId);
-        setMessages(history || []);
+        setMessages(history ? history.reverse() : []);
 
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
+        //setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
       } catch (error) {
         console.error('Lỗi khởi tạo màn hình Chat:', error);
       } finally {
@@ -106,8 +106,9 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
           nextMessages[matchingLocalIndex] = newMsg;
           return nextMessages;
         } else {
-          setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-          return [...prev, newMsg];
+          // XÓA DÒNG setTimeout scrollToEnd
+          // Đưa tin nhắn mới lên đầu mảng
+          return [newMsg, ...prev]; 
         }
       });
     });
@@ -124,8 +125,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     ChatService.onUpdatePoll((updatedPollMsg) => {
       setMessages((prev) => {
         const filteredMessages = prev.filter((msg) => (msg._id || msg.id) !== updatedPollMsg._id);
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-        return [...filteredMessages, updatedPollMsg];
+        // XÓA DÒNG setTimeout scrollToEnd
+        return [updatedPollMsg, ...filteredMessages]; // Đưa lên đầu
       });
     });
 
@@ -139,8 +140,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     const localId = `local_${Date.now()}`;
     ChatService.sendMessage({ room_id: roomId, content: content, type: 'TEXT' as any });
 
-    setMessages((prev) => [...prev, { _id: localId, content, sender_id: currentUserId, type: 'TEXT', created_at: new Date().toISOString(), reactions: [], seen_by: [] }]);
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    setMessages((prev) => [{ _id: localId, content, sender_id: currentUserId, type: 'TEXT', created_at: new Date().toISOString(), reactions: [], seen_by: [] }, ...prev]);
+    //setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   // --- XỬ LÝ ẢNH BẰNG CLOUDINARY UTILS ---
@@ -247,8 +248,8 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     const msgId = item._id || item.id;
     const isSelected = selectedMessageId === msgId;
 
-    const prevMsg = index > 0 ? messages[index - 1] : null;
-    const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
+    const nextMsg = index > 0 ? messages[index - 1] : null;
+    const prevMsg = index < messages.length - 1 ? messages[index + 1] : null;
     const showName = !isMe && (!prevMsg || prevMsg.sender_id !== item.sender_id);
     const showAvatar = !isMe && (!nextMsg || nextMsg.sender_id !== item.sender_id);
     const senderName = item.sender?.fullName || item.sender_name || 'Người dùng';
@@ -267,7 +268,16 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         <View className="w-full items-center my-4 px-4">
           <Button
             activeOpacity={0.9}
-            onLongPress={() => !isSending && setSelectedMessageId(isSelected ? null : msgId)}
+            onLongPress={() => {
+              if (!isSending) {
+                const isOpening = !isSelected;
+                setSelectedMessageId(isOpening ? msgId : null);
+                // Chủ động cuộn nhẹ lên nếu mở react ở tin nhắn cuối cùng
+                if (isOpening && index === messages.length - 1) {
+                  setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+                }
+              }
+            }}
             className="w-full max-w-[320px] bg-white rounded-3xl p-4 border border-gray-100"
             style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 }}
           >
@@ -338,7 +348,16 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
           <Button
             activeOpacity={0.8}
-            onLongPress={() => { if (!isSending) setSelectedMessageId(isSelected ? null : msgId); }}
+            onLongPress={() => {
+              if (!isSending) {
+                const isOpening = !isSelected;
+                setSelectedMessageId(isOpening ? msgId : null);
+                // Chủ động cuộn nhẹ lên nếu mở react ở tin nhắn cuối cùng
+                if (isOpening && index === messages.length - 1) {
+                  setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 400);
+                }
+              }
+            }}
             className={`relative ${isImage ? 'p-1' : 'px-4 py-2.5'} rounded-2xl ${isMe ? 'bg-[#2B8EF0]' : 'bg-gray-100'}`}
             style={{ opacity: isSending ? 0.7 : 1, maxWidth: isMe ? '75%' : '80%' }}
           >
@@ -378,7 +397,13 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#ffffff' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'}>
+    <View 
+      style={{ 
+        flex: 1, 
+        backgroundColor: '#ffffff', 
+        paddingBottom: isKeyboardVisible ? keyboardHeight+safeBottom : safeBottom 
+      }}
+    >
       {/* Header */}
       <View style={{ paddingTop: insets.top }} className="bg-white border-b border-gray-100 flex-row items-center justify-between px-2 pb-3 shadow-sm z-10">
         <View className="flex-row items-center flex-1">
@@ -402,19 +427,34 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         <FlatList
           ref={flatListRef}
           data={messages}
+          inverted
           keyExtractor={(item, index) => (item._id || item.id || index).toString()}
           renderItem={renderMessage}
           className="flex-1 py-4 bg-white"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingBottom: 15 }}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          
+          // 👉 1. Tăng số lượng render ban đầu để không bị kẹt ở đoạn B
+          initialNumToRender={100}
+          
+          // 👉 2. Xử lý cuộn mượt mà xuống đoạn C (cuối cùng)
+          onContentSizeChange={() => {
+            if (isFirstLoad.current && messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+              
+              // Sau nửa giây (khi giao diện đã ổn định), tắt cờ này đi
+              // Việc này đảm bảo lỗi "thả react bị nhảy list" không bị lặp lại
+              setTimeout(() => { isFirstLoad.current = false; }, 500);
+            }
+          }}
+          
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => setSelectedMessageId(null)}
         />
       )}
 
       {/* Bottom Input Area */}
-      <View className="flex-row items-center px-3 py-3 bg-white border-t border-gray-100" style={{ paddingBottom: isKeyboardVisible ? 12 : safeBottom }}>
+      <View className="flex-row items-center px-3 py-3 bg-white border-t border-gray-100" style={{ paddingBottom: isKeyboardVisible ? 12 : 0 }}>
 
         {/* Nút Tools: Image & Poll */}
         <View className="flex-row mr-2 items-center">
@@ -447,7 +487,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
       {/* 👉 MODAL TẠO POLL */}
       <Modal visible={isCreatePollVisible} transparent={true} animationType="slide" onRequestClose={() => setIsCreatePollVisible(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <Button activeOpacity={1} onPress={() => Keyboard.dismiss()} className="flex-1 bg-black/40 justify-end">
             <View className="bg-white rounded-t-3xl pt-5 px-5" style={{ paddingBottom: safeBottom + 20, maxHeight: '85%' }}>
 
@@ -496,6 +536,6 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         </View>
       )}
 
-    </KeyboardAvoidingView>
+    </View>
   );
 };

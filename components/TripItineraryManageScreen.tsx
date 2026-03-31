@@ -136,7 +136,57 @@ export const TripItineraryManageScreen = ({
   }, [journey?.tags]);
 
   const hotelMarkersByStopId = useMemo(() => {
-    const groupedByPlaceId = new Map<string, { firstStopId: string; lastStopId: string }>();
+    const explicitMarkers = new Map<
+      string,
+      {
+        showCheckin: boolean;
+        showCheckout: boolean;
+        checkinDayIndex?: number;
+        checkoutDayIndex?: number;
+        checkinTime?: string | null;
+        checkoutTime?: string | null;
+      }
+    >();
+    let hasExplicitHotelMeta = false;
+
+    dayPlans.forEach((day) => {
+      day.stops.forEach((stop) => {
+        if (!stop.isHotelStop) return;
+
+        const hasCheckinMeta = typeof stop.checkinDayIndex === 'number';
+        const hasCheckoutMeta = typeof stop.checkoutDayIndex === 'number';
+        if (!hasCheckinMeta && !hasCheckoutMeta) return;
+
+        hasExplicitHotelMeta = true;
+        const existing = explicitMarkers.get(stop.id) || {
+          showCheckin: false,
+          showCheckout: false,
+          checkinDayIndex: undefined,
+          checkoutDayIndex: undefined,
+          checkinTime: null,
+          checkoutTime: null,
+        };
+        explicitMarkers.set(stop.id, {
+          showCheckin: existing.showCheckin || hasCheckinMeta,
+          showCheckout: existing.showCheckout || hasCheckoutMeta,
+          checkinDayIndex:
+            typeof stop.checkinDayIndex === 'number' ? stop.checkinDayIndex : existing.checkinDayIndex,
+          checkoutDayIndex:
+            typeof stop.checkoutDayIndex === 'number' ? stop.checkoutDayIndex : existing.checkoutDayIndex,
+          checkinTime: stop.checkinTime || existing.checkinTime,
+          checkoutTime: stop.checkoutTime || existing.checkoutTime,
+        });
+      });
+    });
+
+    if (hasExplicitHotelMeta) {
+      return explicitMarkers;
+    }
+
+    const groupedByPlaceId = new Map<
+      string,
+      { firstStopId: string; lastStopId: string; firstDayIndex: number; lastDayIndex: number }
+    >();
 
     dayPlans.forEach((day) => {
       day.stops.forEach((stop) => {
@@ -144,25 +194,55 @@ export const TripItineraryManageScreen = ({
 
         const existing = groupedByPlaceId.get(stop.placeId);
         if (!existing) {
-          groupedByPlaceId.set(stop.placeId, { firstStopId: stop.id, lastStopId: stop.id });
+          const dayIndex = Math.max(0, day.dayNumber - 1);
+          groupedByPlaceId.set(stop.placeId, {
+            firstStopId: stop.id,
+            lastStopId: stop.id,
+            firstDayIndex: dayIndex,
+            lastDayIndex: dayIndex,
+          });
           return;
         }
 
         existing.lastStopId = stop.id;
+        existing.lastDayIndex = Math.max(0, day.dayNumber - 1);
       });
     });
 
-    const markers = new Map<string, { showCheckin: boolean; showCheckout: boolean }>();
-    groupedByPlaceId.forEach(({ firstStopId, lastStopId }) => {
+    const markers = new Map<
+      string,
+      {
+        showCheckin: boolean;
+        showCheckout: boolean;
+        checkinDayIndex?: number;
+        checkoutDayIndex?: number;
+        checkinTime?: string | null;
+        checkoutTime?: string | null;
+      }
+    >();
+
+    groupedByPlaceId.forEach(({ firstStopId, lastStopId, firstDayIndex, lastDayIndex }) => {
+      const inferredCheckoutDayIndex =
+        lastDayIndex > firstDayIndex ? lastDayIndex : Math.max(firstDayIndex, dayPlans.length - 1);
+      const canShowInferredCheckout = inferredCheckoutDayIndex > firstDayIndex;
+
       markers.set(firstStopId, {
         showCheckin: true,
-        showCheckout: firstStopId === lastStopId,
+        showCheckout: firstStopId === lastStopId && canShowInferredCheckout,
+        checkinDayIndex: firstDayIndex,
+        checkoutDayIndex: firstStopId === lastStopId ? inferredCheckoutDayIndex : undefined,
+        checkinTime: null,
+        checkoutTime: null,
       });
 
       if (lastStopId !== firstStopId) {
         markers.set(lastStopId, {
           showCheckin: false,
           showCheckout: true,
+          checkinDayIndex: undefined,
+          checkoutDayIndex: inferredCheckoutDayIndex,
+          checkinTime: null,
+          checkoutTime: null,
         });
       }
     });
@@ -530,10 +610,24 @@ export const TripItineraryManageScreen = ({
                     const hotelMarker = hotelMarkersByStopId.get(item.id);
                     const showCheckin = !!hotelMarker?.showCheckin;
                     const showCheckout = !!hotelMarker?.showCheckout;
-                    const checkinDayLabel = day.dayNumber;
-                    const checkoutDayLabel = day.dayNumber;
-                    const checkoutTimeLabel = toHHmmLabel(item.checkoutTime || item.endTimeRaw || item.endTimeLabel, item.endTimeLabel || '--:--');
-                    const checkinTimeLabel = toHHmmLabel(item.checkinTime || item.startTimeRaw || item.startTimeLabel, item.startTimeLabel || '--:--');
+                    const checkinDayLabel =
+                      typeof hotelMarker?.checkinDayIndex === 'number'
+                        ? hotelMarker.checkinDayIndex + 1
+                        : typeof item.checkinDayIndex === 'number'
+                          ? item.checkinDayIndex + 1
+                          : day.dayNumber;
+                    const checkoutDayLabel =
+                      typeof hotelMarker?.checkoutDayIndex === 'number'
+                        ? hotelMarker.checkoutDayIndex + 1
+                        : typeof item.checkoutDayIndex === 'number'
+                          ? item.checkoutDayIndex + 1
+                          : day.dayNumber;
+                    const checkoutRawTime = hotelMarker?.checkoutTime || item.checkoutTime;
+                    const checkoutTimeLabel = checkoutRawTime ? toHHmmLabel(checkoutRawTime, '') : undefined;
+                    const checkinTimeLabel = toHHmmLabel(
+                      hotelMarker?.checkinTime || item.checkinTime || item.startTimeRaw || item.startTimeLabel,
+                      item.startTimeLabel || '--:--'
+                    );
 
                     return (
                       <React.Fragment key={item.id}>

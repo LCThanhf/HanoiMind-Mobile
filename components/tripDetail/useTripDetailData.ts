@@ -202,19 +202,35 @@ const resolveStopTimes = (
   };
 };
 
-const toCoordinates = (place: any) => {
-  const coords = place?.location?.coordinates;
-  if (!Array.isArray(coords) || coords.length < 2) {
-    return { lat: null, lng: null };
+const toCoordinates = (place: any, stop?: any) => {
+  const sources = [
+    place?.location?.coordinates,
+    stop?.place_snapshot?.location?.coordinates,
+    stop?.location?.coordinates,
+  ];
+
+  for (const coords of sources) {
+    if (Array.isArray(coords) && coords.length >= 2) {
+      const lng = Number(coords[0]);
+      const lat = Number(coords[1]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        return { lat, lng };
+      }
+    }
   }
 
-  const lng = Number(coords[0]);
-  const lat = Number(coords[1]);
-  if (Number.isNaN(lat) || Number.isNaN(lng)) {
-    return { lat: null, lng: null };
+  const directLat = place?.lat ?? stop?.place_snapshot?.lat ?? stop?.lat;
+  const directLng = place?.lng ?? stop?.place_snapshot?.lng ?? stop?.lng;
+
+  if (directLat !== undefined && directLng !== undefined) {
+    const lat = Number(directLat);
+    const lng = Number(directLng);
+    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+      return { lat, lng };
+    }
   }
 
-  return { lat, lng };
+  return { lat: null, lng: null };
 };
 
 const safeNameFromId = (id: string) => `User ${id.slice(-4).toUpperCase()}`;
@@ -366,65 +382,73 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
 
       let totalStopsCost = 0;
 
-      const builtDayPlans: TripManageDay[] = (loadedJourney.days || []).map((day) => ({
-        dayId: day.id,
-        dayNumber: day.day_number,
-        date: day.date,
-        stops: (day.stops || []).map((stop, index) => {
-          const place = placeMap.get(stop.place_id);
-          const { lat, lng } = toCoordinates(place);
-          const placeCost = place?.estimated_cost_vnd || place?.estimated_cost || 0;
-          const stopCost = stop.estimated_cost || placeCost;
-          totalStopsCost += stopCost;
-          const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
-          const resolvedCategory =
-            (typeof place?.category === 'string' && place.category) ||
-            (typeof (stop as any).category === 'string' && (stop as any).category) ||
-            '';
-          const normalizedCategory = String(resolvedCategory || '').toUpperCase();
-          const mappedTitle = place?.name || (stop as any).place_name || `Địa điểm ${index + 1}`;
-          const normalizedTitle = mappedTitle.toUpperCase();
-          const mappedCheckinDay = toDayIndexNumber((stop as any).checkin_day_index ?? (stop as any).checkinDayIndex);
-          const mappedCheckoutDay = toDayIndexNumber((stop as any).checkout_day_index ?? (stop as any).checkoutDayIndex);
-          const mappedCheckinTime = (stop as any).checkin_time || (stop as any).checkinTime || stop.start_time || null;
-          const mappedCheckoutTime = (stop as any).checkout_time || (stop as any).checkoutTime || null;
-          const hasHotelMeta = mappedCheckinDay !== null || mappedCheckoutDay !== null || !!mappedCheckoutTime;
-          const hasHotelKeyword =
-            normalizedTitle.includes('HOTEL') ||
-            normalizedTitle.includes('RESORT') ||
-            normalizedTitle.includes('HOSTEL') ||
-            normalizedTitle.includes('HOMESTAY') ||
-            normalizedTitle.includes('GUEST HOUSE') ||
-            normalizedTitle.includes('KHACH SAN');
+      const builtDayPlans: TripManageDay[] = (loadedJourney.days || []).map((day) => {
+        const sortedStops = [...(day.stops || [])].sort((a, b) => {
+          const seqA = typeof a.sequence === 'number' ? a.sequence : 999;
+          const seqB = typeof b.sequence === 'number' ? b.sequence : 999;
+          return seqA - seqB;
+        });
 
-          return {
-            id: stop._id,
-            placeId: stop.place_id,
-            title: mappedTitle,
-            address: place?.address,
-            image: place?.images?.[0],
-            rating: place?.rating,
-            placeCategory: resolvedCategory,
-            lat,
-            lng,
-            estimatedCost: stopCost,
-            checkinDayIndex: mappedCheckinDay ?? day.day_number - 1,
-            checkinTime: mappedCheckinTime,
-            checkoutDayIndex: mappedCheckoutDay ?? (mappedCheckoutTime ? day.day_number - 1 : null),
-            checkoutTime: mappedCheckoutTime,
-            isHotelStop:
-              ['ACCOMMODATION', 'HOTEL', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE'].includes(normalizedCategory) ||
-              hasHotelMeta ||
-              hasHotelKeyword,
-            startTimeRaw: stop.start_time,
-            endTimeRaw: stop.end_time,
-            startTimeLabel: times.startTimeLabel,
-            endTimeLabel: times.endTimeLabel,
-            durationLabel: toDurationLabel(stop.start_time, stop.end_time),
-            status: stop.status,
-          };
-        }),
-      }));
+        return {
+          dayId: day.id,
+          dayNumber: day.day_number,
+          date: day.date,
+          stops: sortedStops.map((stop, index) => {
+            const place = placeMap.get(stop.place_id);
+            const { lat, lng } = toCoordinates(place, stop);
+            const placeCost = place?.estimated_cost_vnd || place?.estimated_cost || 0;
+            const stopCost = stop.estimated_cost || placeCost;
+            totalStopsCost += stopCost;
+            const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
+            const resolvedCategory =
+              (typeof place?.category === 'string' && place.category) ||
+              (typeof (stop as any).category === 'string' && (stop as any).category) ||
+              '';
+            const normalizedCategory = String(resolvedCategory || '').toUpperCase();
+            const mappedTitle = place?.name || (stop as any).place_name || `Địa điểm ${index + 1}`;
+            const normalizedTitle = mappedTitle.toUpperCase();
+            const mappedCheckinDay = toDayIndexNumber((stop as any).checkin_day_index ?? (stop as any).checkinDayIndex);
+            const mappedCheckoutDay = toDayIndexNumber((stop as any).checkout_day_index ?? (stop as any).checkoutDayIndex);
+            const mappedCheckinTime = (stop as any).checkin_time || (stop as any).checkinTime || stop.start_time || null;
+            const mappedCheckoutTime = (stop as any).checkout_time || (stop as any).checkoutTime || null;
+            const hasHotelMeta = mappedCheckinDay !== null || mappedCheckoutDay !== null || !!mappedCheckoutTime;
+            const hasHotelKeyword =
+              normalizedTitle.includes('HOTEL') ||
+              normalizedTitle.includes('RESORT') ||
+              normalizedTitle.includes('HOSTEL') ||
+              normalizedTitle.includes('HOMESTAY') ||
+              normalizedTitle.includes('GUEST HOUSE') ||
+              normalizedTitle.includes('KHACH SAN');
+
+            return {
+              id: stop._id,
+              placeId: stop.place_id,
+              title: mappedTitle,
+              address: place?.address,
+              image: place?.images?.[0],
+              rating: place?.rating,
+              placeCategory: resolvedCategory,
+              lat,
+              lng,
+              estimatedCost: stopCost,
+              checkinDayIndex: mappedCheckinDay,
+              checkinTime: mappedCheckinTime,
+              checkoutDayIndex: mappedCheckoutDay,
+              checkoutTime: mappedCheckoutTime,
+              isHotelStop:
+                ['ACCOMMODATION', 'HOTEL', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE'].includes(normalizedCategory) ||
+                hasHotelMeta ||
+                hasHotelKeyword,
+              startTimeRaw: stop.start_time,
+              endTimeRaw: stop.end_time,
+              startTimeLabel: times.startTimeLabel,
+              endTimeLabel: times.endTimeLabel,
+              durationLabel: toDurationLabel(stop.start_time, stop.end_time),
+              status: stop.status,
+            };
+          }),
+        };
+      });
 
       const memberCount = Math.max(mappedMembers.length, loadedJourney.planned_members_count || 0, 1);
       const journeyTags = loadedJourney.tags && loadedJourney.tags.length ? loadedJourney.tags : [JourneyTag.CHILL];

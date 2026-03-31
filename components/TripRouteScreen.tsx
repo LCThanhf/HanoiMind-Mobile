@@ -77,15 +77,13 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
     () =>
       dayPlans.map((day) => ({
         dayNumber: day.dayNumber,
-        stops: day.stops
-          .filter((stop) => isValidCoordinate(stop.lat) && isValidCoordinate(stop.lng))
-          .map((stop) => ({
-            id: stop.id,
-            title: stop.title,
-            lat: stop.lat as number,
-            lng: stop.lng as number,
-            startTimeLabel: stop.startTimeLabel,
-          })),
+        stops: day.stops.map((stop) => ({
+          id: stop.id,
+          title: stop.title,
+          lat: stop.lat as number,
+          lng: stop.lng as number,
+          startTimeLabel: stop.startTimeLabel,
+        })),
       })),
     [dayPlans]
   );
@@ -113,15 +111,45 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
   );
 
   const coordinates = useMemo(
-    () => (selectedDay?.stops || []).map((stop) => ({ latitude: stop.lat, longitude: stop.lng })),
+    () =>
+      (selectedDay?.stops || [])
+        .filter((stop) => isValidCoordinate(stop.lat) && isValidCoordinate(stop.lng))
+        .map((stop) => ({ latitude: stop.lat, longitude: stop.lng })),
     [selectedDay]
   );
+
+  const routeSegments = useMemo(() => {
+    if (!selectedDay || selectedDay.stops.length < 2) return [];
+
+    const segments: { start: RouteStop; end: RouteStop }[] = [];
+    for (let i = 1; i < selectedDay.stops.length; i++) {
+      const prevStop = selectedDay.stops[i - 1];
+      const currStop = selectedDay.stops[i];
+      if (
+        isValidCoordinate(prevStop.lat) &&
+        isValidCoordinate(prevStop.lng) &&
+        isValidCoordinate(currStop.lat) &&
+        isValidCoordinate(currStop.lng)
+      ) {
+        segments.push({ start: prevStop, end: currStop });
+      }
+    }
+    return segments;
+  }, [selectedDay]);
 
   const straightLineDistanceKm = useMemo(() => {
     if (!selectedDay || selectedDay.stops.length < 2) return 0;
 
     return selectedDay.stops.slice(1).reduce((total, stop, index) => {
       const prevStop = selectedDay.stops[index];
+      if (
+        !isValidCoordinate(prevStop.lat) ||
+        !isValidCoordinate(prevStop.lng) ||
+        !isValidCoordinate(stop.lat) ||
+        !isValidCoordinate(stop.lng)
+      ) {
+        return total;
+      }
       return total + getDistanceKm(prevStop.lat, prevStop.lng, stop.lat, stop.lng);
     }, 0);
   }, [selectedDay]);
@@ -259,30 +287,43 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                 longitudeDelta: 0.08,
               }}
             >
-              {coordinates.length >= 2 && <Polyline coordinates={coordinates} strokeColor="#3B82F6" strokeWidth={5} />}
-
-              {(selectedDay?.stops || []).map((stop, index) => (
-                <Marker
-                  key={stop.id}
-                  coordinate={{ latitude: stop.lat, longitude: stop.lng }}
-                  title={`${index + 1}. ${stop.title}`}
-                >
-                  <View
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 12,
-                      backgroundColor: '#3B82F6',
-                      borderWidth: 2,
-                      borderColor: '#FFFFFF',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>{index + 1}</Text>
-                  </View>
-                </Marker>
+              {routeSegments.map((segment, idx) => (
+                <Polyline
+                  key={`${segment.start.id}-${segment.end.id}-${idx}`}
+                  coordinates={[
+                    { latitude: segment.start.lat, longitude: segment.start.lng },
+                    { latitude: segment.end.lat, longitude: segment.end.lng },
+                  ]}
+                  strokeColor="#3B82F6"
+                  strokeWidth={5}
+                />
               ))}
+
+              {(selectedDay?.stops || []).map((stop, index) => {
+                if (!isValidCoordinate(stop.lat) || !isValidCoordinate(stop.lng)) return null;
+                return (
+                  <Marker
+                    key={stop.id}
+                    coordinate={{ latitude: stop.lat, longitude: stop.lng }}
+                    title={`${index + 1}. ${stop.title}`}
+                  >
+                    <View
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: '#3B82F6',
+                        borderWidth: 2,
+                        borderColor: '#FFFFFF',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>{index + 1}</Text>
+                    </View>
+                  </Marker>
+                );
+              })}
             </MapView>
           </View>
 
@@ -348,7 +389,15 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
             {selectedDay && selectedDay.stops.length >= 2 ? (
               selectedDay.stops.slice(1).map((stop, index) => {
                 const prev = selectedDay.stops[index];
-                const legDistance = getDistanceKm(prev.lat, prev.lng, stop.lat, stop.lng);
+                const validCoords =
+                  isValidCoordinate(prev.lat) &&
+                  isValidCoordinate(prev.lng) &&
+                  isValidCoordinate(stop.lat) &&
+                  isValidCoordinate(stop.lng);
+                const legDistance = validCoords
+                  ? getDistanceKm(prev.lat, prev.lng, stop.lat, stop.lng)
+                  : 0;
+
                 return (
                   <View
                     key={`${prev.id}-${stop.id}`}
@@ -369,7 +418,11 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                             </Text>
                             <Text className="text-[12px] text-gray-400 mx-2">•</Text>
                             <Text className="text-[12px] text-gray-500" style={{ fontWeight: '600' }}>
-                              {index === 0 ? 'Bắt đầu' : `${legDistance.toFixed(1)} km từ điểm ${index + 1}`}
+                              {!validCoords
+                                ? 'Chưa có tọa độ'
+                                : index === 0
+                                  ? 'Bắt đầu'
+                                  : `${legDistance.toFixed(1)} km từ điểm ${index + 1}`}
                             </Text>
                           </View>
                         </View>

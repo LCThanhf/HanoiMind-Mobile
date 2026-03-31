@@ -14,13 +14,15 @@ interface TripStopCardProps {
   showConnector: boolean;
 }
 
-const formatCostLabel = (cost: number) => {
-  if (!cost || cost <= 0) return '~Miễn phí';
-  return `~${cost.toLocaleString('vi-VN')} VND`;
+const formatCostLabel = (cost: number, isActual: boolean) => {
+  if (!cost || cost <= 0) return isActual ? '0 VND' : '~Miễn phí';
+  return isActual ? `${cost.toLocaleString('vi-VN')} VND` : `~${cost.toLocaleString('vi-VN')} VND`;
 };
 
 export const TripStopCard = ({ stop, moodLabel, onDelete, onEditTime, onPress, deleting, showConnector }: TripStopCardProps) => {
   const hasHotelStayInfo = stop.isHotelStop && !!stop.checkoutTime;
+  const hasActualCost = typeof stop.actualCost === 'number' && stop.actualCost > 0;
+  const displayedCost = hasActualCost ? stop.actualCost || 0 : stop.estimatedCost;
   const checkinDayLabel = typeof stop.checkinDayIndex === 'number' ? stop.checkinDayIndex + 1 : null;
   const checkoutDayLabel = typeof stop.checkoutDayIndex === 'number' ? stop.checkoutDayIndex + 1 : null;
 
@@ -137,7 +139,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onEditTime, onPress, d
                 />
               </Svg>
               <Text className="text-[11px] text-gray-600 ml-1" style={{ fontWeight: '400' }}>
-                {formatCostLabel(stop.estimatedCost)}
+                {formatCostLabel(displayedCost, hasActualCost)}
               </Text>
             </View>
 

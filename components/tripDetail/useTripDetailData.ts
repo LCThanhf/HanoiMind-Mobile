@@ -22,6 +22,7 @@ export interface TripManageStop {
   lat?: number | null;
   lng?: number | null;
   estimatedCost: number;
+  actualCost?: number;
   checkinDayIndex?: number | null;
   checkinTime?: string | null;
   checkoutDayIndex?: number | null;
@@ -235,10 +236,55 @@ const toCoordinates = (place: any, stop?: any) => {
 
 const safeNameFromId = (id: string) => `User ${id.slice(-4).toUpperCase()}`;
 
-const toBudgetSummary = (journey: Journey, rawBreakdown: any, totalStopsCost: number): BudgetSummary => {
-  const fromBreakdownPlanned = Number(
-    rawBreakdown?.total_planned || rawBreakdown?.planned_budget || rawBreakdown?.total_budget || 0
+const categoryWeight = (category?: string): number => {
+  switch (String(category || '').toUpperCase()) {
+    case 'HOTEL':
+    case 'RESORT':
+    case 'ACCOMMODATION':
+      return 3.0;
+    case 'HOSTEL':
+    case 'HOMESTAY':
+    case 'GUEST_HOUSE':
+      return 2.0;
+    case 'RESTAURANT':
+    case 'BAR_PUB':
+      return 1.2;
+    case 'EXPERIENCE':
+    case 'ENTERTAINMENT':
+    case 'WELLNESS':
+      return 1.3;
+    case 'SHOPPING':
+    case 'LOCAL_MARKET':
+      return 1.5;
+    case 'CAFE':
+    case 'STREET_FOOD':
+      return 0.8;
+    case 'SIGHTSEEING':
+    case 'CULTURE':
+    case 'PARK':
+      return 0.7;
+    case 'TRANSPORT':
+      return 0.5;
+    case 'HEALTH':
+    case 'FINANCE':
+    case 'CONVENIENCE':
+    case 'LAUNDRY':
+      return 0.3;
+    default:
+      return 1.0;
+  }
+};
+
+const toBudgetSummary = (journey: Journey, rawBreakdown: any, totalActualStopsCost: number): BudgetSummary => {
+  const fromBreakdownActual = Number(
+    rawBreakdown?.total_spent ||
+      rawBreakdown?.actual_spent ||
+      rawBreakdown?.total_actual ||
+      rawBreakdown?.spent ||
+      rawBreakdown?.total_fund_spent ||
+      0
   );
+  const fromJourneyActual = Number((journey as any)?.budget_analysis?.total_fund_spent || 0);
   const fromBreakdownLimit = Number(rawBreakdown?.budget_limit || 0);
 
   const limitCandidate =
@@ -246,13 +292,14 @@ const toBudgetSummary = (journey: Journey, rawBreakdown: any, totalStopsCost: nu
     Number((journey as any).budget_limit || (journey as any).budgetLimit || 0) ||
     Number(journey.total_budget || 0);
 
-  const plannedCandidate = Math.max(fromBreakdownPlanned || 0, totalStopsCost);
+  const actualCandidate = Math.max(fromBreakdownActual || 0, fromJourneyActual || 0, totalActualStopsCost || 0);
+  const consumedBudget = actualCandidate;
 
-  const remaining = limitCandidate > 0 ? Math.max(limitCandidate - plannedCandidate, 0) : 0;
+  const remaining = limitCandidate > 0 ? Math.max(limitCandidate - consumedBudget, 0) : 0;
 
   return {
-    limit: Math.max(limitCandidate, plannedCandidate),
-    planned: plannedCandidate,
+    limit: Math.max(limitCandidate, consumedBudget),
+    planned: consumedBudget,
     remaining,
   };
 };
@@ -352,6 +399,78 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
         });
       }
 
+      const breakdown = budgetResult.status === 'fulfilled' ? budgetResult.value : null;
+      const computedBudgetLimit =
+        Number((breakdown as any)?.budget_limit || 0) ||
+        Number((loadedJourney as any).budget_limit || (loadedJourney as any).budgetLimit || 0) ||
+        Number(loadedJourney.total_budget || 0);
+
+      const totalMembers = Math.max(memberIds.length, 1);
+      const allJourneyStops = (loadedJourney.days || []).flatMap((day) => day.stops || []);
+      const estimatedCostByStopId = new Map<string, number>();
+
+      const estimationMeta = allJourneyStops.map((stop) => {
+        const place = placeMap.get(stop.place_id);
+        const rawEstimated = Number(stop.estimated_cost || 0);
+        const rawActual = Number((stop as any).actual_cost || 0);
+
+        if (rawActual > 0) {
+          return {
+            stopId: stop._id,
+            hasEstimate: true,
+            estimate: rawEstimated > 0 ? rawEstimated : rawActual,
+            weight: 0,
+          };
+        }
+
+        if (rawEstimated > 0) {
+          return { stopId: stop._id, hasEstimate: true, estimate: rawEstimated, weight: 0 };
+        }
+
+        const placeEstimate = Number(place?.estimated_cost_vnd || place?.estimated_cost || 0);
+        if (placeEstimate > 0) {
+          const participantCount = Array.isArray((stop as any).participant_ids)
+            ? (stop as any).participant_ids.length || totalMembers
+            : totalMembers;
+          const normalizedCostType = String((stop as any).cost_type || '').toUpperCase();
+          const estimate = normalizedCostType === 'PER_PERSON' ? placeEstimate * participantCount : placeEstimate;
+          return { stopId: stop._id, hasEstimate: true, estimate, weight: 0 };
+        }
+
+        return {
+          stopId: stop._id,
+          hasEstimate: false,
+          estimate: 0,
+          weight: categoryWeight(place?.category),
+        };
+      });
+
+      estimationMeta.forEach((item) => {
+        if (item.hasEstimate) {
+          estimatedCostByStopId.set(item.stopId, item.estimate);
+        }
+      });
+
+      const allocatedEstimate = estimationMeta
+        .filter((item) => item.hasEstimate)
+        .reduce((sum, item) => sum + item.estimate, 0);
+
+      const remainingBudget = computedBudgetLimit > 0 ? Math.max(0, computedBudgetLimit - allocatedEstimate) : 0;
+      const unresolved = estimationMeta.filter((item) => !item.hasEstimate);
+      const totalWeight = unresolved.reduce((sum, item) => sum + item.weight, 0);
+
+      unresolved.forEach((item) => {
+        let estimate = 0;
+
+        if (remainingBudget > 0 && totalWeight > 0) {
+          estimate = Math.round((item.weight / totalWeight) * remainingBudget);
+        } else if (computedBudgetLimit > 0 && allJourneyStops.length > 0) {
+          estimate = Math.round(computedBudgetLimit / allJourneyStops.length);
+        }
+
+        estimatedCostByStopId.set(item.stopId, estimate);
+      });
+
       const itinerary: DayItinerary[] = (loadedJourney.days || []).map((day) => ({
         day: day.day_number,
         title: `Lịch trình ngày ${day.day_number}`,
@@ -359,7 +478,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
         activities: (day.stops || []).map((stop, index) => {
           const p = placeMap.get(stop.place_id);
           const pCost = p?.estimated_cost_vnd || p?.estimated_cost || 0;
-          const sCost = stop.estimated_cost || pCost;
+          const sCost = estimatedCostByStopId.get(stop._id) ?? Number(stop.estimated_cost || pCost || 0);
           const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
 
           return {
@@ -380,7 +499,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
         }),
       }));
 
-      let totalStopsCost = 0;
+      let totalActualStopsCost = 0;
 
       const builtDayPlans: TripManageDay[] = (loadedJourney.days || []).map((day) => {
         const sortedStops = [...(day.stops || [])].sort((a, b) => {
@@ -397,8 +516,9 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
             const place = placeMap.get(stop.place_id);
             const { lat, lng } = toCoordinates(place, stop);
             const placeCost = place?.estimated_cost_vnd || place?.estimated_cost || 0;
-            const stopCost = stop.estimated_cost || placeCost;
-            totalStopsCost += stopCost;
+            const stopCost = estimatedCostByStopId.get(stop._id) ?? Number(stop.estimated_cost || placeCost || 0);
+            const actualCost = Number((stop as any).actual_cost || 0);
+            if (actualCost > 0) totalActualStopsCost += actualCost;
             const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
             const resolvedCategory =
               (typeof place?.category === 'string' && place.category) ||
@@ -431,6 +551,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
               lat,
               lng,
               estimatedCost: stopCost,
+              actualCost: actualCost > 0 ? actualCost : undefined,
               checkinDayIndex: mappedCheckinDay,
               checkinTime: mappedCheckinTime,
               checkoutDayIndex: mappedCheckoutDay,
@@ -464,8 +585,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
 
       const firstStop = (loadedJourney.days || []).flatMap((day) => day.stops || [])[0];
       const firstPlace = firstStop ? placeMap.get(firstStop.place_id) : undefined;
-      const breakdown = budgetResult.status === 'fulfilled' ? budgetResult.value : null;
-      const budget = toBudgetSummary(loadedJourney, breakdown, totalStopsCost);
+      const budget = toBudgetSummary(loadedJourney, breakdown, totalActualStopsCost);
       setBudgetSummary(budget);
 
       const albumCount =

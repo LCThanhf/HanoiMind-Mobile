@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -474,7 +473,7 @@ export const TripItineraryManageScreen = ({
       });
       await refresh({ silent: true });
       closeTimeEditor();
-    } catch (err) {
+    } catch {
       Alert.alert('Không thể sắp xếp', 'Vui lòng thử lại sau.');
     } finally {
       setMovingDirection(null);
@@ -527,11 +526,11 @@ export const TripItineraryManageScreen = ({
                       />
                     </Svg>
                     <Text className="text-[14px] text-gray-700 ml-1.5" style={{ fontWeight: '600' }}>
-                      Ngân sách dự kiến
+                      Chi phí thực tế
                     </Text>
                   </View>
                   <Text className="text-[24px]" style={{ color: '#2B8EF0', fontWeight: '700' }}>
-                    {formatCurrencyVnd(budgetSummary.limit || budgetSummary.planned)}
+                    {formatCurrencyVnd(budgetSummary.planned)}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between mb-3">
@@ -552,7 +551,11 @@ export const TripItineraryManageScreen = ({
 
                 <View className="flex-row items-center justify-between mt-2">
                   <Text className="text-[12px] text-gray-600">Đã dùng: {formatCurrencyVnd(budgetSummary.planned)}</Text>
-                  {isGroupTrip && (
+                  <Text className="text-[12px] text-gray-600">Còn lại: {formatCurrencyVnd(budgetSummary.remaining)}</Text>
+                </View>
+
+                {isGroupTrip && (
+                  <View className="mt-2 items-end">
                     <Button
                       activeOpacity={0.85}
                       onPress={onOpenBudgetManage}
@@ -567,9 +570,8 @@ export const TripItineraryManageScreen = ({
                     >
                       <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '600' }}>Quản lí ngân sách</Text>
                     </Button>
-                  )}
-                  <Text className="text-[12px] text-gray-600">Còn lại: {formatCurrencyVnd(budgetSummary.remaining)}</Text>
-                </View>
+                  </View>
+                )}
               </View>
 
               <Button

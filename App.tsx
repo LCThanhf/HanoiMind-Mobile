@@ -63,6 +63,7 @@ export default function App() {
   const [selectedStopForUpdate, setSelectedStopForUpdate] = useState<StopCostItem | null>(null);
   const [membersForUpdate, setMembersForUpdate] = useState<MemberProfile[]>([]);
   const [perStopEstimatedForUpdate, setPerStopEstimatedForUpdate] = useState(0);
+  const [tripAddPlaceReturnState, setTripAddPlaceReturnState] = useState<'tripManageDetail' | 'tripDetail'>('tripManageDetail');
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
@@ -206,6 +207,11 @@ export default function App() {
               setAppState('main');
             }}
             onViewDetail={() => setAppState('tripManageDetail')}
+            onAddPlace={(dayNumber) => {
+              setSelectedTripDayNumber(dayNumber);
+              setTripAddPlaceReturnState('tripDetail');
+              setAppState('tripAddPlace');
+            }}
           />
         );
 
@@ -218,6 +224,7 @@ export default function App() {
             onOpenBudgetManage={() => setAppState('tripBudgetManage')}
             onAddPlace={(dayNumber) => {
               setSelectedTripDayNumber(dayNumber);
+              setTripAddPlaceReturnState('tripManageDetail');
               setAppState('tripAddPlace');
             }}
             onOpenPlaceDetail={(placeId) => {
@@ -238,8 +245,8 @@ export default function App() {
           <TripAddPlaceScreen
             tripId={selectedTripId}
             dayNumber={selectedTripDayNumber}
-            onBack={() => setAppState('tripManageDetail')}
-            onPlaceAdded={() => setAppState('tripManageDetail')}
+            onBack={() => setAppState(tripAddPlaceReturnState)}
+            onPlaceAdded={() => setAppState(tripAddPlaceReturnState)}
           />
         );
 

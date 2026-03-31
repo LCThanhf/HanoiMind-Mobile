@@ -18,9 +18,10 @@ const TimelineDot = () => (
 
 interface ItineraryTabProps {
     itinerary: DayItinerary[];
+    onAddPlace?: (dayNumber: number) => void;
 }
 
-export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
+export const ItineraryTab = ({ itinerary, onAddPlace }: ItineraryTabProps) => {
     if (!itinerary.length) {
         return (
             <View className="px-5 pb-6">
@@ -42,6 +43,10 @@ export const ItineraryTab = ({ itinerary }: ItineraryTabProps) => {
                 <View key={`${dayData.day}-${dayData.date || dayIndex}`} className="px-5 mb-6">
                     <SectionHeader
                         title={`Ngày ${dayData.day}: ${dayData.title}`}
+                        actionLabel="Thêm địa điểm"
+                        onActionPress={() => onAddPlace?.(dayData.day)}
+                        showActionIcon={false}
+                        actionColor="#2B8EF0"
                         showAccent={false}
                         paddingHorizontal={0}
                         paddingTop={0}

@@ -15,9 +15,10 @@ interface TripDetailScreenProps {
     tripId: string;
     onOpenProfile?: () => void;
     onViewDetail?: () => void;
+    onAddPlace?: (dayNumber: number) => void;
 }
 
-export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }: TripDetailScreenProps) => {
+export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, onAddPlace }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [tabWidth, setTabWidth] = useState(0);
     const [isLeaving, setIsLeaving] = useState(false);
@@ -169,16 +170,18 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                             <Text className="text-[20px] text-gray-900 flex-1 mr-3" style={{ fontWeight: '700' }}>
                                 {tripData.title}
                             </Text>
-                            <Button
-                                onPress={onViewDetail}
-                                activeOpacity={0.8}
-                                className="px-3 py-1.5 rounded-full"
-                                style={{ backgroundColor: '#EBF5FF' }}
-                            >
-                                <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '700' }}>
-                                    Xem chi tiết
-                                </Text>
-                            </Button>
+                            {onViewDetail ? (
+                                <Button
+                                    onPress={onViewDetail}
+                                    activeOpacity={0.8}
+                                    className="px-3 py-1.5 rounded-full"
+                                    style={{ backgroundColor: '#EBF5FF' }}
+                                >
+                                    <Text className="text-[12px]" style={{ color: '#2B8EF0', fontWeight: '700' }}>
+                                        Xem chi tiết
+                                    </Text>
+                                </Button>
+                            ) : null}
                         </View>
                         <View className="flex-row items-center">
                             <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -326,7 +329,12 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail }
                         </View>
                     </View>
 
-                    {activeSubTab === 'itinerary' && <ItineraryTab itinerary={tripData.itinerary} />}
+                    {activeSubTab === 'itinerary' && (
+                        <ItineraryTab
+                            itinerary={tripData.itinerary}
+                            onAddPlace={(dayNumber) => onAddPlace?.(dayNumber)}
+                        />
+                    )}
 
                     {activeSubTab === 'members' && (
                         <MembersTab

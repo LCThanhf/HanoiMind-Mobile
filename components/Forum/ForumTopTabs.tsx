@@ -23,6 +23,8 @@ export const ForumTopTabs: React.FC<Props> = ({ activeCategory, onCategoryChange
     { key: ForumCategory.REVIEW, label: CATEGORY_LABELS[ForumCategory.REVIEW] },
     { key: ForumCategory.EXPERIENCE, label: CATEGORY_LABELS[ForumCategory.EXPERIENCE] },
     { key: ForumCategory.FIND_BUDDY, label: CATEGORY_LABELS[ForumCategory.FIND_BUDDY] },
+    { key: ForumCategory.QNA, label: CATEGORY_LABELS[ForumCategory.QNA] },
+    { key: ForumCategory.OTHERS, label: CATEGORY_LABELS[ForumCategory.OTHERS] },
   ];
 
   return (

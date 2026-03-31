@@ -7,13 +7,40 @@ import {
   ReportReason
 } from './forum.type';
 
+const normalizeForumListResponse = (payload: unknown): { data: ForumPost[]; meta: any } => {
+  if (Array.isArray(payload)) {
+    return { data: payload as ForumPost[], meta: null };
+  }
+
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>;
+
+    if (Array.isArray(record.data)) {
+      return {
+        data: record.data as ForumPost[],
+        meta: record.meta ?? null,
+      };
+    }
+
+    if (Array.isArray(record.items)) {
+      return {
+        data: record.items as ForumPost[],
+        meta: record.meta ?? null,
+      };
+    }
+  }
+
+  return { data: [], meta: null };
+};
+
 export const ForumService = {
   /**
    * 1. Lấy danh sách bài viết (Có lọc, phân trang)
    */
-  findAll: async (filter: PostSearchFilter): Promise<{ data: ForumPost[], meta: any }> => {
+  findAll: async (filter: PostSearchFilter): Promise<{ data: ForumPost[]; meta: any }> => {
     try {
-      return await apiClient.get('/forum/posts', { params: filter });
+      const payload = await apiClient.get('/forum/posts', { params: filter });
+      return normalizeForumListResponse(payload);
     } catch (error) { throw error; }
   },
 
@@ -73,7 +100,7 @@ export const ForumService = {
    */
   deletePost: async (id: string): Promise<any> => {
     try {
-      return await apiClient.delete(`/forum/forum/posts/${id}`);
+      return await apiClient.delete(`/forum/posts/${id}`);
     } catch (error) { throw error; }
   }
 

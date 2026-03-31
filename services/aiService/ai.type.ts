@@ -3,6 +3,8 @@
 export interface AiStop {
   place_id: string;
   place_name: string;
+  start_time?: string | null;
+  end_time?: string | null;
   estimated_cost_vnd: number;
   estimated_duration_minutes: number;
   reason: string;
@@ -13,11 +15,18 @@ export interface AiStop {
   final_score: number;
   travel_time_from_previous_minutes: number;
   distance_from_previous_km: number;
+  is_hotel_anchor?: boolean;
+  checkin_day_index?: number;
+  checkin_time?: string | null;
+  checkout_day_index?: number;
+  checkout_time?: string | null;
 }
 
 export interface AiDayPlan {
   day_number: number;
   date: string;
+  start_time?: string | null;
+  end_time?: string | null;
   stops: AiStop[];
   total_estimated_cost_vnd: number;
   summary: string;
@@ -110,6 +119,8 @@ export interface AIPlanRequest {
 export interface AIPlanResponse {
   journey_id: string;
   journey_name: string;
+  start_time?: string | null;
+  end_time?: string | null;
   total_days: number;
   mode: 'solo' | 'group';
   mood_used?: AiMood | null;

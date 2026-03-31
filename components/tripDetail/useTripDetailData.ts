@@ -18,9 +18,17 @@ export interface TripManageStop {
   address?: string;
   image?: string;
   rating?: number;
+  placeCategory?: string;
   lat?: number | null;
   lng?: number | null;
   estimatedCost: number;
+  checkinDayIndex?: number | null;
+  checkinTime?: string | null;
+  checkoutDayIndex?: number | null;
+  checkoutTime?: string | null;
+  isHotelStop?: boolean;
+  startTimeRaw?: string | null;
+  endTimeRaw?: string | null;
   startTimeLabel: string;
   endTimeLabel?: string;
   durationLabel: string;
@@ -28,6 +36,7 @@ export interface TripManageStop {
 }
 
 export interface TripManageDay {
+  dayId?: string;
   dayNumber: number;
   date?: string;
   stops: TripManageStop[];
@@ -115,23 +124,82 @@ const getTripStatus = (journey: Journey) => {
   return 'Chuyến đã sắp tới';
 };
 
-const toDurationLabel = (startTime?: string | null, endTime?: string | null) => {
-  if (!startTime || !endTime) return '2 giờ';
-  const start = new Date(startTime).getTime();
-  const end = new Date(endTime).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return '2 giờ';
+const DEFAULT_DAY_START_MINUTES = 8 * 60;
+const DEFAULT_STOP_DURATION_MINUTES = 120;
+const parseTimeToMinutes = (time?: string | null): number | null => {
+  if (!time || typeof time !== 'string') return null;
+  const trimmed = time.trim();
+  if (!trimmed) return null;
 
-  const durationHours = (end - start) / (60 * 60 * 1000);
+  // Cố gắng tìm HH:mm ở bất kỳ đâu trong chuỗi (ví dụ: '14:00', '14:00:00', 'T14:00', ' 14:00 ')
+  const strictMatch = trimmed.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (strictMatch) {
+    const hours = Number(strictMatch[1]);
+    const minutes = Number(strictMatch[2]);
+    return hours * 60 + minutes;
+  }
+
+  // Backup cho các tình huống parse date
+  const isoDate = new Date(trimmed);
+  if (Number.isNaN(isoDate.getTime())) return null;
+
+  // Rất hiếm khi vào luồng này nếu match ở trên đã xử lý toàn bộ định dạng chuẩn
+  return isoDate.getHours() * 60 + isoDate.getMinutes();
+};
+
+const formatMinutesAsHHmm = (value: number) => {
+  const safe = ((Math.round(value) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hours = Math.floor(safe / 60);
+  const minutes = safe % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const toDayIndexNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value));
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.floor(parsed));
+    }
+  }
+
+  return null;
+};
+
+const toDurationLabel = (startTime?: string | null, endTime?: string | null) => {
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+  if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) return '2 giờ';
+
+  const durationHours = (endMinutes - startMinutes) / 60;
   const rounded = Math.max(0.5, Math.round(durationHours * 2) / 2);
   if (Number.isInteger(rounded)) return `${rounded} giờ`;
   return `${String(rounded).replace('.', ',')} giờ`;
 };
 
-const formatTimeLabel = (time: string | null | undefined, fallbackHour: number) => {
-  if (!time) return `${String(8 + fallbackHour).padStart(2, '0')}:00`;
-  const parsed = new Date(time);
-  if (Number.isNaN(parsed.getTime())) return `${String(8 + fallbackHour).padStart(2, '0')}:00`;
-  return `${String(parsed.getHours()).padStart(2, '0')}:${String(parsed.getMinutes()).padStart(2, '0')}`;
+const resolveStopTimes = (
+  startTimeRaw: string | null | undefined,
+  endTimeRaw: string | null | undefined,
+  fallbackOffsetMinutes: number
+) => {
+  let startMinutes = parseTimeToMinutes(startTimeRaw);
+  let endMinutes = parseTimeToMinutes(endTimeRaw);
+
+  if (startMinutes === null) {
+    startMinutes = DEFAULT_DAY_START_MINUTES + fallbackOffsetMinutes;
+  }
+
+  if (endMinutes === null || endMinutes <= startMinutes) {
+    endMinutes = startMinutes + DEFAULT_STOP_DURATION_MINUTES;
+  }
+
+  return {
+    startTimeLabel: formatMinutesAsHHmm(startMinutes),
+    endTimeLabel: formatMinutesAsHHmm(endMinutes),
+  };
 };
 
 const toCoordinates = (place: any) => {
@@ -151,7 +219,7 @@ const toCoordinates = (place: any) => {
 
 const safeNameFromId = (id: string) => `User ${id.slice(-4).toUpperCase()}`;
 
-const toBudgetSummary = (journey: Journey, rawBreakdown: any): BudgetSummary => {
+const toBudgetSummary = (journey: Journey, rawBreakdown: any, totalStopsCost: number): BudgetSummary => {
   const fromBreakdownPlanned = Number(
     rawBreakdown?.total_planned || rawBreakdown?.planned_budget || rawBreakdown?.total_budget || 0
   );
@@ -162,10 +230,7 @@ const toBudgetSummary = (journey: Journey, rawBreakdown: any): BudgetSummary => 
     Number((journey as any).budget_limit || (journey as any).budgetLimit || 0) ||
     Number(journey.total_budget || 0);
 
-  const plannedCandidate =
-    fromBreakdownPlanned ||
-    Number(journey.total_budget || 0) ||
-    Number(journey.cost_per_person || 0) * Math.max(journey.planned_members_count || 1, 1);
+  const plannedCandidate = Math.max(fromBreakdownPlanned || 0, totalStopsCost);
 
   const remaining = limitCandidate > 0 ? Math.max(limitCandidate - plannedCandidate, 0) : 0;
 
@@ -275,42 +340,86 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
         day: day.day_number,
         title: `Lịch trình ngày ${day.day_number}`,
         date: day.date,
-        activities: (day.stops || []).map((stop, index) => ({
-          id: stop._id,
-          stopId: stop._id,
-          placeId: stop.place_id,
-          dayNumber: day.day_number,
-          time: formatTimeLabel(stop.start_time, index),
-          endTime: formatTimeLabel(stop.end_time, index + 1),
-          title: placeMap.get(stop.place_id)?.name || `Địa điểm ${index + 1}`,
-          description: stop.note || `Chi phí dự kiến: ${(stop.estimated_cost || 0).toLocaleString('vi-VN')} đ`,
-          status: stop.status,
-          estimatedCost: stop.estimated_cost || 0,
-          image: placeMap.get(stop.place_id)?.images?.[0],
-          address: placeMap.get(stop.place_id)?.address,
-          rating: placeMap.get(stop.place_id)?.rating,
-        })),
+        activities: (day.stops || []).map((stop, index) => {
+          const p = placeMap.get(stop.place_id);
+          const pCost = p?.estimated_cost_vnd || p?.estimated_cost || 0;
+          const sCost = stop.estimated_cost || pCost;
+          const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
+
+          return {
+            id: stop._id,
+            stopId: stop._id,
+            placeId: stop.place_id,
+            dayNumber: day.day_number,
+            time: times.startTimeLabel,
+            endTime: times.endTimeLabel,
+            title: placeMap.get(stop.place_id)?.name || `Địa điểm ${index + 1}`,
+            description: stop.note || `Chi phí dự kiến: ${sCost.toLocaleString('vi-VN')} đ`,
+            status: stop.status,
+            estimatedCost: sCost,
+            image: placeMap.get(stop.place_id)?.images?.[0],
+            address: placeMap.get(stop.place_id)?.address,
+            rating: placeMap.get(stop.place_id)?.rating,
+          };
+        }),
       }));
 
+      let totalStopsCost = 0;
+
       const builtDayPlans: TripManageDay[] = (loadedJourney.days || []).map((day) => ({
+        dayId: day.id,
         dayNumber: day.day_number,
         date: day.date,
         stops: (day.stops || []).map((stop, index) => {
           const place = placeMap.get(stop.place_id);
           const { lat, lng } = toCoordinates(place);
+          const placeCost = place?.estimated_cost_vnd || place?.estimated_cost || 0;
+          const stopCost = stop.estimated_cost || placeCost;
+          totalStopsCost += stopCost;
+          const times = resolveStopTimes(stop.start_time, stop.end_time, index * DEFAULT_STOP_DURATION_MINUTES);
+          const resolvedCategory =
+            (typeof place?.category === 'string' && place.category) ||
+            (typeof (stop as any).category === 'string' && (stop as any).category) ||
+            '';
+          const normalizedCategory = String(resolvedCategory || '').toUpperCase();
+          const mappedTitle = place?.name || (stop as any).place_name || `Địa điểm ${index + 1}`;
+          const normalizedTitle = mappedTitle.toUpperCase();
+          const mappedCheckinDay = toDayIndexNumber((stop as any).checkin_day_index ?? (stop as any).checkinDayIndex);
+          const mappedCheckoutDay = toDayIndexNumber((stop as any).checkout_day_index ?? (stop as any).checkoutDayIndex);
+          const mappedCheckinTime = (stop as any).checkin_time || (stop as any).checkinTime || stop.start_time || null;
+          const mappedCheckoutTime = (stop as any).checkout_time || (stop as any).checkoutTime || null;
+          const hasHotelMeta = mappedCheckinDay !== null || mappedCheckoutDay !== null || !!mappedCheckoutTime;
+          const hasHotelKeyword =
+            normalizedTitle.includes('HOTEL') ||
+            normalizedTitle.includes('RESORT') ||
+            normalizedTitle.includes('HOSTEL') ||
+            normalizedTitle.includes('HOMESTAY') ||
+            normalizedTitle.includes('GUEST HOUSE') ||
+            normalizedTitle.includes('KHACH SAN');
 
           return {
             id: stop._id,
             placeId: stop.place_id,
-            title: place?.name || `Địa điểm ${index + 1}`,
+            title: mappedTitle,
             address: place?.address,
             image: place?.images?.[0],
             rating: place?.rating,
+            placeCategory: resolvedCategory,
             lat,
             lng,
-            estimatedCost: stop.estimated_cost || 0,
-            startTimeLabel: formatTimeLabel(stop.start_time, index),
-            endTimeLabel: formatTimeLabel(stop.end_time, index + 1),
+            estimatedCost: stopCost,
+            checkinDayIndex: mappedCheckinDay ?? day.day_number - 1,
+            checkinTime: mappedCheckinTime,
+            checkoutDayIndex: mappedCheckoutDay ?? (mappedCheckoutTime ? day.day_number - 1 : null),
+            checkoutTime: mappedCheckoutTime,
+            isHotelStop:
+              ['ACCOMMODATION', 'HOTEL', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE'].includes(normalizedCategory) ||
+              hasHotelMeta ||
+              hasHotelKeyword,
+            startTimeRaw: stop.start_time,
+            endTimeRaw: stop.end_time,
+            startTimeLabel: times.startTimeLabel,
+            endTimeLabel: times.endTimeLabel,
             durationLabel: toDurationLabel(stop.start_time, stop.end_time),
             status: stop.status,
           };
@@ -332,7 +441,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
       const firstStop = (loadedJourney.days || []).flatMap((day) => day.stops || [])[0];
       const firstPlace = firstStop ? placeMap.get(firstStop.place_id) : undefined;
       const breakdown = budgetResult.status === 'fulfilled' ? budgetResult.value : null;
-      const budget = toBudgetSummary(loadedJourney, breakdown);
+      const budget = toBudgetSummary(loadedJourney, breakdown, totalStopsCost);
       setBudgetSummary(budget);
 
       const albumCount =
@@ -368,7 +477,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
     } finally {
       setIsLoading(false);
     }
-  }, [tripId, tripData]);
+  }, [tripId]);
 
   useEffect(() => {
     refresh();

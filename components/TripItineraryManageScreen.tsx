@@ -2,10 +2,14 @@ import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
+  Platform,
+  Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { JourneyService } from '../services/journeyService/journey.service';
@@ -13,7 +17,8 @@ import { AiService } from '../services/aiService/ai.service';
 import { AIPlanRequest, AiMood } from '../services/aiService/ai.type';
 import { JourneyTag } from '../services/journeyService/journey.type';
 import { UsersService } from '../services/userService/user.service';
-import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
+import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './tripDetail/useTripDetailData';
+import { HotelEventCard } from './tripDetail/HotelEventCard';
 import { TripStopCard } from './tripDetail/TripStopCard';
 import { MainTab } from './BottomTabBar';
 import { Button, ScreenHeader } from './shared';
@@ -45,6 +50,56 @@ const moodBadgeLabelMap: Partial<Record<JourneyTag, string>> = {
   [JourneyTag.CULTURE]: 'Culture',
 };
 
+const formatDateToHHmm = (date: Date) => {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const toMinutesFromHHmm = (value: string) => {
+  // Try to find HH:mm anywhere in the string (e.g., '14:00', '14:00:00', 'T14:00', ' 14:00 ')
+  const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
+  const now = new Date();
+  const fromHHmm = typeof value === 'string' ? value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/) : null;
+
+  if (fromHHmm) {
+    now.setHours(Number(fromHHmm[1]), Number(fromHHmm[2]), 0, 0);
+    return now;
+  }
+
+  if (value) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  const hours = Math.floor(fallbackMinutes / 60);
+  const minutes = fallbackMinutes % 60;
+  now.setHours(hours, minutes, 0, 0);
+  return now;
+};
+
+const addMinutes = (source: Date, minutes: number) => new Date(source.getTime() + minutes * 60 * 1000);
+
+const toHHmmLabel = (value?: string | null, fallback = '--:--') => {
+  if (!value) return fallback;
+  const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (!match) return fallback;
+  return `${String(Number(match[1])).padStart(2, '0')}:${match[2]}`;
+};
+
+interface EditingStopState {
+  dayId: string;
+  dayNumber: number;
+  stop: TripManageStop;
+}
+
 export const TripItineraryManageScreen = ({
   tripId,
   onBack,
@@ -58,8 +113,14 @@ export const TripItineraryManageScreen = ({
   const insets = useSafeAreaInsets();
   const { isLoading, error, tripData, dayPlans, budgetSummary, journey, refresh } = useTripDetailData(tripId);
   const [deletingStopId, setDeletingStopId] = useState<string>('');
+  const [savingStopId, setSavingStopId] = useState<string>('');
   const [optimizing, setOptimizing] = useState(false);
   const [requesterUserId, setRequesterUserId] = useState<string>('');
+  const [editingStop, setEditingStop] = useState<EditingStopState | null>(null);
+  const [draftStartTime, setDraftStartTime] = useState<Date>(() => parseTimeToDate('08:00', 8 * 60));
+  const [draftEndTime, setDraftEndTime] = useState<Date>(() => parseTimeToDate('10:00', 10 * 60));
+  const [androidPickerField, setAndroidPickerField] = useState<'start' | 'end' | null>(null);
+  const [movingDirection, setMovingDirection] = useState<'up' | 'down' | null>(null);
 
   const progress = useMemo(() => {
     if (!budgetSummary.limit) return 0;
@@ -73,6 +134,41 @@ export const TripItineraryManageScreen = ({
     if (!firstTag) return 'Healing';
     return moodBadgeLabelMap[firstTag] || 'Healing';
   }, [journey?.tags]);
+
+  const hotelMarkersByStopId = useMemo(() => {
+    const groupedByPlaceId = new Map<string, { firstStopId: string; lastStopId: string }>();
+
+    dayPlans.forEach((day) => {
+      day.stops.forEach((stop) => {
+        if (!stop.isHotelStop) return;
+
+        const existing = groupedByPlaceId.get(stop.placeId);
+        if (!existing) {
+          groupedByPlaceId.set(stop.placeId, { firstStopId: stop.id, lastStopId: stop.id });
+          return;
+        }
+
+        existing.lastStopId = stop.id;
+      });
+    });
+
+    const markers = new Map<string, { showCheckin: boolean; showCheckout: boolean }>();
+    groupedByPlaceId.forEach(({ firstStopId, lastStopId }) => {
+      markers.set(firstStopId, {
+        showCheckin: true,
+        showCheckout: firstStopId === lastStopId,
+      });
+
+      if (lastStopId !== firstStopId) {
+        markers.set(lastStopId, {
+          showCheckin: false,
+          showCheckout: true,
+        });
+      }
+    });
+
+    return markers;
+  }, [dayPlans]);
 
   const handleDeleteStop = (dayNumber: number, stopId: string) => {
     Alert.alert('Xóa địa điểm', 'Bạn có chắc muốn xóa địa điểm khỏi lịch trình?', [
@@ -125,7 +221,7 @@ export const TripItineraryManageScreen = ({
 
     const allPlaceIds = Array.from(new Set(dayPlans.flatMap((day) => day.stops.map((stop) => stop.placeId)).filter(Boolean)));
     const totalDays = Math.max(dayPlans.length, 1);
-    const totalBudget = Math.max(budgetSummary.limit || budgetSummary.planned || 0, 500000);
+    const totalBudget = budgetSummary.limit || budgetSummary.planned || 0;
     const selectedMood: AiMood = (journey.tags?.length ? moodMap[journey.tags[0]] : undefined) || 'NATURE_EXPLORE';
     const inferredMode: 'solo' | 'group' = (journey.planned_members_count || 1) > 1 ? 'group' : 'solo';
     const computedDailyBudget = Math.max(Math.floor(totalBudget / totalDays), 150000);
@@ -153,9 +249,14 @@ export const TripItineraryManageScreen = ({
 
     try {
       setOptimizing(true);
-      await AiService.runAiPlan(tripId, payload);
+      const aiResult = await AiService.runAiPlan(tripId, payload);
       await refresh({ silent: true });
-      Alert.alert('Thành công', 'Đã tối ưu lại lịch trình bằng AI.');
+
+      const generatedStops = (aiResult.days || []).reduce((total, day) => total + (day.stops?.length || 0), 0);
+      Alert.alert(
+        'Đã nhận kết quả AI',
+        `AI đã tạo đề xuất ${generatedStops} điểm dừng. Ứng dụng đã đồng bộ lại dữ liệu từ backend chính.`
+      );
     } catch (e: any) {
       const apiMessage =
         e?.response?.data?.message ||
@@ -170,6 +271,139 @@ export const TripItineraryManageScreen = ({
       setOptimizing(false);
     }
   };
+
+  const handleOpenTimeEditor = (dayId: string, dayNumber: number, stop: TripManageStop) => {
+    const fallbackStart = 8 * 60;
+    const startSeed = stop.startTimeRaw || stop.startTimeLabel;
+    const endSeed = stop.endTimeRaw || stop.endTimeLabel || undefined;
+
+    const nextStart = parseTimeToDate(startSeed, fallbackStart);
+    const nextEnd = parseTimeToDate(endSeed, fallbackStart + 120);
+
+    setDraftStartTime(nextStart);
+    setDraftEndTime(nextEnd.getTime() > nextStart.getTime() ? nextEnd : addMinutes(nextStart, 120));
+    setAndroidPickerField(null);
+    setEditingStop({ dayId, dayNumber, stop });
+  };
+
+  const closeTimeEditor = () => {
+    setAndroidPickerField(null);
+    setEditingStop(null);
+  };
+
+  const handleAndroidPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (event.type === 'dismissed') {
+      setAndroidPickerField(null);
+      return;
+    }
+
+    if (!selected || !androidPickerField) {
+      setAndroidPickerField(null);
+      return;
+    }
+
+    if (androidPickerField === 'start') {
+      setDraftStartTime(selected);
+      if (selected.getTime() >= draftEndTime.getTime()) {
+        setDraftEndTime(addMinutes(selected, 120));
+      }
+    } else {
+      setDraftEndTime(selected);
+    }
+
+    setAndroidPickerField(null);
+  };
+
+  const handleSaveStopTime = async () => {
+    if (!editingStop) return;
+
+    const startTime = formatDateToHHmm(draftStartTime);
+    const endTime = formatDateToHHmm(draftEndTime);
+    const startMinutes = toMinutesFromHHmm(startTime);
+    const endMinutes = toMinutesFromHHmm(endTime);
+
+    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+      Alert.alert('Giờ chưa hợp lệ', 'Giờ kết thúc phải sau giờ bắt đầu.');
+      return;
+    }
+
+    try {
+      setSavingStopId(editingStop.stop.id);
+      await JourneyService.updateStop(tripId, editingStop.dayId, editingStop.stop.id, {
+        start_time: startTime,
+        end_time: endTime,
+      });
+      await refresh({ silent: true });
+      closeTimeEditor();
+      Alert.alert('Đã cập nhật', 'Đã lưu khung giờ cho địa điểm.');
+    } catch {
+      Alert.alert('Không thể cập nhật giờ', 'Vui lòng thử lại sau.');
+    } finally {
+      setSavingStopId('');
+    }
+  };
+
+  const handleMoveStop = async (direction: 'up' | 'down') => {
+    if (!editingStop || movingDirection) return;
+
+    const currentDayIndex = dayPlans.findIndex((d) => d.dayNumber === editingStop.dayNumber);
+    if (currentDayIndex === -1) return;
+
+    const currentDay = dayPlans[currentDayIndex];
+    const currentStopIndex = currentDay.stops.findIndex((s) => s.id === editingStop.stop.id);
+    if (currentStopIndex === -1) return;
+
+    let fromDayNum = currentDay.dayNumber;
+    let toDayNum = currentDay.dayNumber;
+    let oldIndex = currentStopIndex;
+    let newIndex = currentStopIndex;
+
+    if (direction === 'up') {
+      if (currentStopIndex > 0) {
+        newIndex = currentStopIndex - 1;
+      } else {
+        if (currentDayIndex === 0) return; // Không thể lên nữa
+        const prevDay = dayPlans[currentDayIndex - 1];
+        toDayNum = prevDay.dayNumber;
+        newIndex = Math.max(0, prevDay.stops.length);
+      }
+    } else {
+      if (currentStopIndex < currentDay.stops.length - 1) {
+        newIndex = currentStopIndex + 1;
+      } else {
+        if (currentDayIndex < dayPlans.length - 1) {
+          const nextDay = dayPlans[currentDayIndex + 1];
+          toDayNum = nextDay.dayNumber;
+          newIndex = 0;
+        } else {
+          // Tạo sang ngày mới
+          toDayNum = currentDay.dayNumber + 1;
+          newIndex = 0;
+        }
+      }
+    }
+
+    try {
+      setMovingDirection(direction);
+      await JourneyService.moveStop({
+        journey_id: tripId,
+        from_day_number: fromDayNum,
+        to_day_number: toDayNum,
+        old_index: oldIndex,
+        new_index: newIndex,
+      });
+      await refresh({ silent: true });
+      closeTimeEditor();
+    } catch (err) {
+      Alert.alert('Không thể sắp xếp', 'Vui lòng thử lại sau.');
+    } finally {
+      setMovingDirection(null);
+    }
+  };
+
+  const currentDayIndex = editingStop ? dayPlans.findIndex(d => d.dayNumber === editingStop.dayNumber) : -1;
+  const currentStopIndex = editingStop ? dayPlans[currentDayIndex]?.stops.findIndex(s => s.id === editingStop.stop.id) : -1;
+  const isFirstOfAll = currentDayIndex === 0 && currentStopIndex === 0;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -254,6 +488,7 @@ export const TripItineraryManageScreen = ({
                       <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '600' }}>Quản lí ngân sách</Text>
                     </Button>
                   )}
+                  <Text className="text-[12px] text-gray-600">Còn lại: {formatCurrencyVnd(budgetSummary.remaining)}</Text>
                 </View>
               </View>
 
@@ -291,17 +526,53 @@ export const TripItineraryManageScreen = ({
                 </View>
 
                 {day.stops.length ? (
-                  day.stops.map((item, idx) => (
-                    <TripStopCard
-                      key={item.id}
-                      stop={item}
-                      moodLabel={moodBadgeLabel}
-                      deleting={deletingStopId === item.id}
-                      showConnector={idx < day.stops.length - 1}
-                      onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
-                      onPress={() => onOpenPlaceDetail(item.placeId)}
-                    />
-                  ))
+                  day.stops.map((item, idx) => {
+                    const hotelMarker = hotelMarkersByStopId.get(item.id);
+                    const showCheckin = !!hotelMarker?.showCheckin;
+                    const showCheckout = !!hotelMarker?.showCheckout;
+                    const checkinDayLabel = day.dayNumber;
+                    const checkoutDayLabel = day.dayNumber;
+                    const checkoutTimeLabel = toHHmmLabel(item.checkoutTime || item.endTimeRaw || item.endTimeLabel, item.endTimeLabel || '--:--');
+                    const checkinTimeLabel = toHHmmLabel(item.checkinTime || item.startTimeRaw || item.startTimeLabel, item.startTimeLabel || '--:--');
+
+                    return (
+                      <React.Fragment key={item.id}>
+                        <TripStopCard
+                          stop={item}
+                          moodLabel={moodBadgeLabel}
+                          deleting={deletingStopId === item.id}
+                          showConnector={idx < day.stops.length - 1}
+                          onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
+                          onEditTime={() => handleOpenTimeEditor(day.dayId || String(day.dayNumber), day.dayNumber, item)}
+                          onPress={() => onOpenPlaceDetail(item.placeId)}
+                        />
+
+                        {showCheckin || showCheckout ? (
+                          <>
+                            {showCheckin ? (
+                              <HotelEventCard
+                                type="checkin"
+                                dayLabel={checkinDayLabel}
+                                placeName={item.title}
+                                timeLabel={checkinTimeLabel}
+                                onPress={() => onOpenPlaceDetail(item.placeId)}
+                              />
+                            ) : null}
+
+                            {showCheckout ? (
+                              <HotelEventCard
+                                type="checkout"
+                                dayLabel={checkoutDayLabel}
+                                placeName={item.title}
+                                timeLabel={checkoutTimeLabel || undefined}
+                                onPress={() => onOpenPlaceDetail(item.placeId)}
+                              />
+                            ) : null}
+                          </>
+                        ) : null}
+                      </React.Fragment>
+                    );
+                  })
                 ) : (
                   <View
                     className="rounded-2xl px-4 py-3 mb-3"
@@ -358,9 +629,123 @@ export const TripItineraryManageScreen = ({
               )}
             </Button>
             <Text className="text-[11px] text-gray-500 mt-2" style={{ fontWeight: '500' }}>
-              * Bạn có thể sắp xếp lịch trình bằng cách thêm hoặc xóa địa điểm.
+              * Bạn có thể sắp xếp lịch trình bằng cách thêm hoặc xóa địa điểm. Nhấn giữ để thay đổi giờ
             </Text>
           </View>
+
+          <Modal visible={!!editingStop} transparent animationType="fade" onRequestClose={closeTimeEditor}>
+            <Pressable
+              onPress={closeTimeEditor}
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(15, 23, 42, 0.42)',
+                justifyContent: 'center',
+                paddingHorizontal: 20,
+              }}
+            >
+              <Pressable
+                onPress={(event) => event.stopPropagation()}
+                style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16 }}
+              >
+                <Text className="text-[16px] text-gray-900" style={{ fontWeight: '700' }}>
+                  Tùy chỉnh địa điểm
+                </Text>
+                <Text className="text-[12px] text-gray-500 mt-1 mb-2" style={{ fontWeight: '500' }}>
+                  {editingStop?.stop.title || 'Địa điểm'} • Ngày {editingStop?.dayNumber}
+                </Text>
+
+                <View className="flex-row items-center justify-between mb-4 pb-4" style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                  <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
+                    Sắp xếp thứ tự
+                  </Text>
+                  <View className="flex-row items-center">
+                    <Button
+                      onPress={() => handleMoveStop('up')}
+                      disabled={isFirstOfAll || !!movingDirection || !!savingStopId}
+                      className="items-center justify-center rounded-lg mr-2"
+                      style={{ width: 40, height: 40, backgroundColor: isFirstOfAll ? '#F8FAFC' : '#EFF6FF' }}
+                    >
+                      {movingDirection === 'up' ? (
+                        <ActivityIndicator size="small" color="#3B82F6" />
+                      ) : (
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                          <Path d="M18 15l-6-6-6 6" stroke={isFirstOfAll ? "#CBD5E1" : "#3B82F6"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                      )}
+                    </Button>
+                    <Button
+                      onPress={() => handleMoveStop('down')}
+                      disabled={!!movingDirection || !!savingStopId}
+                      className="items-center justify-center rounded-lg"
+                      style={{ width: 40, height: 40, backgroundColor: '#EFF6FF' }}
+                    >
+                      {movingDirection === 'down' ? (
+                        <ActivityIndicator size="small" color="#3B82F6" />
+                      ) : (
+                        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                          <Path d="M6 9l6 6 6-6" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                      )}
+                    </Button>
+                  </View>
+                </View>
+
+                <View className="mt-4">
+                  <View className="flex-row items-center justify-between mb-3">
+                    <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
+                      Bắt đầu: <Text style={{ color: '#111827', fontWeight: '700' }}>{formatDateToHHmm(draftStartTime)}</Text>
+                    </Text>
+                    <Button onPress={() => setAndroidPickerField('start')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Text className="text-[14px]" style={{ color: '#2563EB', fontWeight: '700' }}>
+                        Đổi giờ
+                      </Text>
+                    </Button>
+                  </View>
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-[14px] text-gray-700" style={{ fontWeight: '600' }}>
+                      Kết thúc: <Text style={{ color: '#111827', fontWeight: '700' }}>{formatDateToHHmm(draftEndTime)}</Text>
+                    </Text>
+                    <Button onPress={() => setAndroidPickerField('end')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Text className="text-[14px]" style={{ color: '#2563EB', fontWeight: '700' }}>
+                        Đổi giờ
+                      </Text>
+                    </Button>
+                  </View>
+                </View>
+
+                <View className="flex-row items-center justify-end mt-5">
+                  <Button onPress={closeTimeEditor} className="mr-4" disabled={!!savingStopId}>
+                    <Text className="text-[14px] text-gray-500" style={{ fontWeight: '600' }}>
+                      Hủy
+                    </Text>
+                  </Button>
+                  <Button
+                    onPress={handleSaveStopTime}
+                    disabled={!!savingStopId}
+                    className="rounded-lg px-4"
+                    style={{ height: 38, backgroundColor: '#2B8EF0', justifyContent: 'center' }}
+                  >
+                    {savingStopId ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text className="text-[14px] text-white" style={{ fontWeight: '700' }}>
+                        Lưu giờ
+                      </Text>
+                    )}
+                  </Button>
+                </View>
+              </Pressable>
+            </Pressable>
+          </Modal>
+
+          {androidPickerField ? (
+            <DateTimePicker
+              value={androidPickerField === 'start' ? draftStartTime : draftEndTime}
+              mode="time"
+              display="default"
+              onChange={handleAndroidPickerChange}
+            />
+          ) : null}
         </>
       )}
     </SafeAreaView>

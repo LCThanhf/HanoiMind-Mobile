@@ -8,6 +8,7 @@ interface TripStopCardProps {
   stop: TripManageStop;
   moodLabel: string;
   onDelete: () => void;
+  onEditTime: () => void;
   onPress: () => void;
   deleting: boolean;
   showConnector: boolean;
@@ -18,7 +19,11 @@ const formatCostLabel = (cost: number) => {
   return `~${cost.toLocaleString('vi-VN')} VND`;
 };
 
-export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, showConnector }: TripStopCardProps) => {
+export const TripStopCard = ({ stop, moodLabel, onDelete, onEditTime, onPress, deleting, showConnector }: TripStopCardProps) => {
+  const hasHotelStayInfo = stop.isHotelStop && !!stop.checkoutTime;
+  const checkinDayLabel = typeof stop.checkinDayIndex === 'number' ? stop.checkinDayIndex + 1 : null;
+  const checkoutDayLabel = typeof stop.checkoutDayIndex === 'number' ? stop.checkoutDayIndex + 1 : null;
+
   return (
     <View className="flex-row mb-3">
       <View className="items-center mr-3" style={{ width: 14 }}>
@@ -46,6 +51,7 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
       <Button
         activeOpacity={0.9}
         onPress={onPress}
+        onLongPress={onEditTime}
         className="flex-1 rounded-2xl p-3"
         style={{
           backgroundColor: '#F8FAFC',
@@ -147,6 +153,14 @@ export const TripStopCard = ({ stop, moodLabel, onDelete, onPress, deleting, sho
                 </Text>
               </View>
             </View>
+
+            {hasHotelStayInfo ? (
+              <View className="mt-2 rounded-xl px-3 py-2" style={{ backgroundColor: '#FFF7ED' }}>
+                <Text className="text-[10px]" style={{ color: '#9A3412', fontWeight: '600' }}>
+                  Khách sạn: Check-in{checkinDayLabel ? ` ngày ${checkinDayLabel}` : ''} {stop.checkinTime || stop.startTimeLabel} • Check-out{checkoutDayLabel ? ` ngày ${checkoutDayLabel}` : ''} {stop.checkoutTime}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </Button>

@@ -48,6 +48,7 @@ export interface ForumPost {
     views: number;
     comments: number;
   };
+  liked_by?: string[];
   author: AuthorMinified;
   is_pinned: boolean;
   status: PostStatus;

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
+import { UsersService } from '../../services/userService/user.service';
 import { Button, PillBadge, StatItemView } from '../shared';
 import { AppColors } from 'utils/theme';
 import { DateUtils } from 'utils/dateUtils';
@@ -16,6 +18,54 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [likesCount, setLikesCount] = useState<number>(initialPost?.stats?.likes || 0);
+  const [likeLoading, setLikeLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const user = await UsersService.getMe();
+        if (user && user._id) {
+          setCurrentUserId(user._id);
+        }
+      } catch (err) {
+        console.error('Error getting current user:', err);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (post) {
+      setLikesCount(post.stats?.likes ?? 0);
+    }
+  }, [post]);
+
+  const isLiked = Boolean(currentUserId && post?.liked_by?.includes(currentUserId));
+
+  const handleToggleLike = async () => {
+    if (!post?._id || !currentUserId || likeLoading) return;
+
+    const previousLikes = likesCount;
+    const newLikeState = !isLiked;
+
+    setLikesCount((prev) => (newLikeState ? prev + 1 : Math.max(0, prev - 1)));
+    setLikeLoading(true);
+
+    try {
+      const updated = await ForumService.toggleLike(post._id);
+      setPost(updated);
+
+      setLikesCount(updated.stats?.likes ?? (newLikeState ? previousLikes + 1 : Math.max(0, previousLikes - 1)));
+    } catch (err) {
+      console.error('Error toggling like:', err);
+      setLikesCount(previousLikes);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   useEffect(() => {
     const loadPost = async () => {
@@ -164,9 +214,18 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
         </View>
 
         {/* Footer Stats */}
-        <View className="flex-row justify-between items-center border-t border-gray-50 pt-3">
-          <View className="flex-row space-x-5">
-            <StatItemView icon={<Heart size={18} color="#666" />} value={stats.likes} />
+         <View className="flex-row justify-between px-4 items-center border-t border-gray-50 pt-3">
+          <View className="flex-row gap-x-8">
+            <TouchableOpacity
+              onPress={handleToggleLike}
+              disabled={!currentUserId || likeLoading}
+              className="flex-row items-center"
+            >
+              <Heart size={18} fill={isLiked ? '#ef4444' : 'none'} />
+              <Text className="text-xs text-gray-500 ml-1 font-medium">
+                {likeLoading ? '...' : likesCount}
+              </Text>
+            </TouchableOpacity>
             <StatItemView icon={<MessageCircle size={18} color="#666" />} value={stats.comments} />
             <StatItemView icon={<Eye size={18} color="#666" />} value={stats.views} />
           </View>

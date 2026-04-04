@@ -572,16 +572,20 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
       });
 
       const memberCount = Math.max(mappedMembers.length, loadedJourney.planned_members_count || 0, 1);
-      const journeyTags = loadedJourney.tags && loadedJourney.tags.length ? loadedJourney.tags : [JourneyTag.CHILL];
-      const moodVotes = journeyTags.map((tag, index) => {
-        const mood = moodLabelMap[tag] || moodLabelMap[JourneyTag.CHILL]!;
-        return {
-          id: mood.id,
-          title: mood.title,
-          desc: mood.desc,
-          votes: index === 0 ? memberCount : 0,
-        };
-      });
+      // Luôn hiển thị đủ 4 mood cố định, mood nào khớp với tag của journey thì có votes
+      const FIXED_MOODS = [
+        { id: 'relax', tag: JourneyTag.RELAX, title: 'Reset & Healing', desc: 'Tập trung vào sự tĩnh lặng, thiền định và hồi phục năng lượng.' },
+        { id: 'foodie', tag: JourneyTag.FOODIE, title: 'Food Adventure', desc: 'Khám phá ẩm thực địa phương và những quán ăn nức tiếng.' },
+        { id: 'nature', tag: JourneyTag.NATURE, title: 'Nature & Relax', desc: 'Hòa mình vào thiên nhiên hoang sơ và tận hưởng không khí trong lành.' },
+        { id: 'chill', tag: JourneyTag.CHILL, title: 'Fun & Entertainment', desc: 'Những hoạt động sôi nổi, vui chơi giải trí và tiệc tùng.' },
+      ];
+      const journeyTags = loadedJourney.tags || [];
+      const moodVotes = FIXED_MOODS.map((mood) => ({
+        id: mood.id,
+        title: mood.title,
+        desc: mood.desc,
+        votes: journeyTags.includes(mood.tag) ? memberCount : 0,
+      }));
 
       const firstStop = (loadedJourney.days || []).flatMap((day) => day.stops || [])[0];
       const firstPlace = firstStop ? placeMap.get(firstStop.place_id) : undefined;
@@ -590,6 +594,46 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
 
       const albumCount =
         albumResult.status === 'fulfilled' && Array.isArray(albumResult.value) ? albumResult.value.length : 0;
+
+      // Map mood enum -> title hiển thị (fallback khi backend cũ không lưu mood_title)
+      const MOOD_TITLE_MAP: Record<string, string> = {
+        RESET_HEALING: 'Reset & Healing',
+        FOOD_ADVENTURE: 'Food Adventure',
+        NATURE_RELAX: 'Nature & Relax',
+        FUN_ENTERTAINMENT: 'Fun & Entertainment',
+      };
+
+      // Enrich mood_votes với tên/avatar từ profileMap và mood_title đúng
+      const rawMoodVotes = (loadedJourney as any).mood_votes || [];
+
+      // Fetch thêm profile của những user trong mood_votes nhưng chưa có trong profileMap
+      const extraUserIds = rawMoodVotes
+        .map((v: any) => v.user_id)
+        .filter((id: string) => id && !profileMap.has(id));
+      if (extraUserIds.length > 0) {
+        const extraResults = await Promise.allSettled(
+          extraUserIds.map((id: string) => UsersService.getPublicProfile(id))
+        );
+        extraResults.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            profileMap.set(extraUserIds[index], {
+              name: result.value.fullName,
+              avatar: result.value.avatar,
+            });
+          }
+        });
+      }
+
+      const moodVoteEntries = rawMoodVotes.map((vote: any) => {
+        const profile = profileMap.get(vote.user_id);
+        return {
+          ...vote,
+          user_name: profile?.name || vote.user_name || 'Thành viên',
+          user_avatar: profile?.avatar || vote.user_avatar,
+          // Luôn dùng map để hiển thị đúng title, kể cả backend cũ
+          mood_title: MOOD_TITLE_MAP[vote.mood] || vote.mood_title || vote.mood || 'Khác',
+        };
+      });
 
       const nextTripData: TripData = {
         title: loadedJourney.name,
@@ -601,6 +645,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
         members: mappedMembers,
         inviteCode: loadedJourney.invite_code,
         moodVotes,
+        moodVoteEntries,
       };
 
       if (albumCount > 0) {

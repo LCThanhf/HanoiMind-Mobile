@@ -349,6 +349,8 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, 
                             options={tripData.moodVotes}
                             membersCount={tripData.members.length}
                             tripName={tripData.title}
+                            tripId={tripId}
+                            moodVoteEntries={tripData.moodVoteEntries || []}
                         />
                     )}
 

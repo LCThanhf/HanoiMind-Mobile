@@ -37,6 +37,15 @@ export interface MoodVoteOption {
     votes: number;
 }
 
+export interface MoodVoteEntry {
+    user_id: string;
+    user_name: string;
+    user_avatar?: string;
+    mood: string;
+    mood_title: string;
+    voted_at: string;
+}
+
 export interface TripData {
     title: string;
     location: string;
@@ -47,4 +56,5 @@ export interface TripData {
     members: TripMemberView[];
     inviteCode?: string;
     moodVotes: MoodVoteOption[];
+    moodVoteEntries?: MoodVoteEntry[];
 }

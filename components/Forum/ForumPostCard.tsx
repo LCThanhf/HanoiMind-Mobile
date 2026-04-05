@@ -14,9 +14,10 @@ import { PostFooter } from './PostFooter';
 interface ForumPostCardProps {
   post?: ForumPost;
   postId?: string;
+  onPress?: () => void;
 }
 
-export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps) => {
+export const ForumPostCard = ({ post: initialPost, postId, onPress }: ForumPostCardProps) => {
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
@@ -205,7 +206,11 @@ useEffect(() => {
 
 
   return (
-    <View className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100">
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.8 : 1}
+      onPress={onPress}
+      className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100"
+    >
       <PostHeader 
         author={author}
         status={post.status} 
@@ -230,6 +235,6 @@ useEffect(() => {
         onLikePress={handleToggleLike}
         disabledLike={!currentUserId || likeLoading}
       />
-    </View>
+    </TouchableOpacity>
   );
 };

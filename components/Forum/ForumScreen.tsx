@@ -18,7 +18,7 @@ import { Modal } from 'react-native'; // Để hiện màn hình chờ
 import { processImage, upImageToCloudinary } from '../../utils/uploadImage';
 import { Button, SearchInput } from '../shared';
 
-const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
+const ForumScreen = ({ onBack, onOpenPost }: { onBack?: () => void; onOpenPost?: (postId: string) => void }) => {
   const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
   const [userName, setUserName] = useState<string>('');
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -182,7 +182,12 @@ return (
           <FlatList
             data={displayedPosts}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => <ForumPostCard post={item} />}
+            renderItem={({ item }) => (
+              <ForumPostCard
+                post={item}
+                onPress={() => onOpenPost?.(item._id)}
+              />
+            )}
             contentContainerStyle={{ paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
             ListFooterComponent={

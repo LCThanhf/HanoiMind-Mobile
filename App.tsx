@@ -19,6 +19,7 @@ import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen';
 import { NotificationScreen } from './components/NotificationScreen';
 import ForumScreen from './components/Forum/ForumScreen';
+import { ForumPostDetailScreen } from './components/Forum/ForumPostDetailScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
@@ -46,6 +47,7 @@ type AppState =
   | 'mapScreen'
   | 'notifications'
   | 'forum'
+  | 'forumDetail'
   | 'chatDetail'
   | 'chatSettings';
 
@@ -67,6 +69,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
+  const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
 
   const shouldShowBottomTabBar =
     appState === 'main' ||
@@ -339,7 +342,23 @@ export default function App() {
         );
 
       case 'forum':
-        return <ForumScreen onBack={() => setAppState('main')} />;
+        return (
+          <ForumScreen
+            onBack={() => setAppState('main')}
+            onOpenPost={(postId: string) => {
+              setSelectedForumPostId(postId);
+              setAppState('forumDetail');
+            }}
+          />
+        );
+
+      case 'forumDetail':
+        return (
+          <ForumPostDetailScreen
+            postId={selectedForumPostId}
+            onBack={() => setAppState('forum')}
+          />
+        );
 
       case 'reviewPlace':
         return (

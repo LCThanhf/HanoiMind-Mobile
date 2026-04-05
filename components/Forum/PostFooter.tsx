@@ -9,26 +9,50 @@ interface PostFooterProps {
   isLiked: boolean;
   likeLoading: boolean;
   commentsCount: number;
+  placeNames: string[];
+  journeyId?: string;
   viewsCount: number;
   onLikePress: () => void;
   disabledLike: boolean;
 }
 
 export const PostFooter = ({ 
+  placeNames = [],
+  journeyId ,
   likesCount, isLiked, likeLoading, commentsCount, viewsCount, onLikePress, disabledLike 
 }: PostFooterProps) => (
-  <View className="p-4">
-    {/* Tags Địa điểm */}
-    <View className="flex-row space-x-2 mb-4">
-      <View className="flex-row items-center bg-primary-soft px-3 py-1.5 rounded-xl border border-primary-soft">
-        <MapPin size={14} color="#3b82f6" />
-        <Text className="text-[11px] text-primary-strong font-semibold ml-1">Phố cổ Hội An</Text>
+
+<View className="p-4">
+  {/* Tags Địa điểm - Render động từ mảng placeNames */}
+  <View className="flex-row flex-wrap gap-2 mb-4">
+    {placeNames && placeNames.length > 0 ? (
+      placeNames.map((name, index) => (
+        <View 
+          key={index} 
+          className="flex-row items-center bg-success-soft px-3 py-1.5 rounded-xl border border-success-soft"
+        >
+          <MapPin size={14} color={AppColors.map.pin} />
+          <Text className="text-[11px] text-success-strong font-semibold ml-1">
+            {name}
+          </Text>
+        </View>
+      ))
+    ) : (
+      /* Nếu đang load hoặc không có địa điểm thì hiện cái này cho đỡ trống */
+      <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+        <MapPin size={14} color={AppColors.text.secondary} />
+        <Text className="text-[11px] text-gray-400 font-semibold ml-1">Đang cập nhật...</Text>
       </View>
+    )}
+
+    {/* Giữ lại cái tag Navigation nếu ông muốn hiện Journey/Hành trình */}
+    {journeyId && (
       <View className="flex-row items-center bg-success-soft px-3 py-1.5 rounded-xl border border-success-soft">
-        <Navigation size={14} color={AppColors.status.success} />
-        <Text className="text-[11px] text-success-strong font-semibold ml-1">H</Text>
+        <Navigation size={14} color={AppColors.map.pin} />
+        <Text className="text-[11px] text-success-strong font-semibold ml-1">Hành trình</Text>
       </View>
-    </View>
+    )}
+  </View>
 
     {/* Chỉ số tương tác */}
     <View className="flex-row justify-between items-center border-t border-gray-50 pt-3 px-2">

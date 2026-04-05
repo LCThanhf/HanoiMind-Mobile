@@ -5,6 +5,7 @@ import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'luc
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
+import { PlacesService } from '../../services/placeService/place.service';
 import { Button, PillBadge, StatItemView } from '../shared';
 import { PostHeader } from './PostHeader';
 import { PostContent } from './PostContent';
@@ -145,6 +146,64 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
   const stats = post.stats || { likes: 0, comments: 0, views: 0 };
   const tags = Array.isArray(post.tag) ? post.tag : [];
 
+// Khai báo state lưu mảng tên địa điểm
+const [placeNames, setPlaceNames] = useState<string[]>([]);
+
+
+useEffect(() => {
+  const loadPlaceNames = async () => {
+    
+    // Kiểm tra cả place_ids lẫn places (API có thể trả về places object thay vì place_ids string)
+    const placeIds = post?.place_ids;
+    const places = (post as any)?.places;
+    
+    
+    // Nếu dữ liệu đã có sẵn trong places object
+    if (places && Array.isArray(places) && places.length > 0) {
+      const directNames = places.map((p: any) => p?.name || "Không tìm thấy tên");
+      setPlaceNames(directNames);
+      return;
+    }
+    
+    // Nếu chỉ có place_ids, phải gọi API để lấy tên
+    if (!placeIds || placeIds.length === 0) {
+      setPlaceNames([]);
+      return;
+    }
+
+
+    try {
+      const namePromises = placeIds.map(async (id) => {
+        try {
+          if (!id) {
+            return "ID trống";
+          }
+
+          // apiClient đã unwrap response, nên res là Place object trực tiếp
+          const res = await PlacesService.findOne(id);
+        
+          
+          // res là Place object: { _id, name, ... }
+          const placeName = (res as any)?.name || "Không tìm thấy tên";
+          
+          return placeName;
+        } catch (err) {
+          return "Lỗi API";
+        }
+      });
+
+      const names = await Promise.all(namePromises);
+      setPlaceNames(names);
+      
+    } catch (err) {
+      setPlaceNames([]);
+    }
+  };
+
+  loadPlaceNames();
+}, [post?.place_ids?.join(','), (post as any)?.places?.length]); // Trigger nếu place_ids hoặc places thay đổi
+
+
   return (
     <View className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100">
       <PostHeader 
@@ -161,6 +220,8 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
       />
 
       <PostFooter 
+        placeNames={placeNames}
+        journeyId={post.journey_id}
         likesCount={likesCount}
         isLiked={isLiked}
         likeLoading={likeLoading}

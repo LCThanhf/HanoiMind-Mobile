@@ -6,8 +6,8 @@ import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
 import { Button, PillBadge, StatItemView } from '../shared';
-import { AppColors } from 'utils/theme';
-import { DateUtils } from 'utils/dateUtils';
+import { AppColors } from '../../utils/theme';
+import { DateUtils } from '../../utils/dateUtils';
 
 interface ForumPostCardProps {
   post?: ForumPost;
@@ -159,7 +159,7 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
         
       {/* Badge trạng thái - Dùng prop thay vì className */}
       <PillBadge 
-        label={post.status === 'PUBLISHED' ? "Công khai" : "Bạn bè"} 
+        label = {post.status === "PUBLISHED" ? "Công Khai" : post.status=== "DRAFT" ? "Nháp" : post.status === "HIDDEN" ? " Chỉ mình tôi" : "Không xác định"}
         backgroundColor="#DCFCE7" // Đây là màu success-soft
         textColor="#15803D"       // Đây là màu success-strong
         textSize={10}
@@ -167,9 +167,9 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
         // Nếu vẫn muốn tùy chỉnh thêm vị trí, dùng containerStyle của team:
         containerStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
       />
-        <TouchableOpacity className="ml-2">
+        {/* <TouchableOpacity className="ml-2">
           <MoreVertical size={20} color="#9ca3af" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Body: Image with Overlay Tags & Title */}

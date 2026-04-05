@@ -6,8 +6,8 @@ import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn compone
 import { ForumPost, ForumCategory, PostStatus, PostSortBy } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
-import { AppColors } from 'utils/theme';  
-import { DateUtils } from 'utils/dateUtils';
+import { AppColors } from '../../utils/theme';  
+import { DateUtils } from '../../utils/dateUtils';
 
 // 1. Thêm các thư viện xử lý ảnh
 import * as ImagePicker from 'expo-image-picker';

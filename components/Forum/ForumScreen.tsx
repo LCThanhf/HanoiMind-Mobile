@@ -18,7 +18,7 @@ import { Modal } from 'react-native'; // Để hiện màn hình chờ
 import { processImage, upImageToCloudinary } from '../../utils/uploadImage';
 import { Button, SearchInput } from '../shared';
 
-const ForumScreen = ({ onBack, onOpenPost }: { onBack?: () => void; onOpenPost?: (postId: string) => void }) => {
+const ForumScreen = ({ onBack, onOpenPost, onCreatePost }: { onBack?: () => void; onOpenPost?: (postId: string) => void; onCreatePost?: () => void }) => {
   const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
   const [userName, setUserName] = useState<string>('');
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -204,8 +204,11 @@ return (
       <Button
         className="absolute bottom-10 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-xl shadow-primary/40"
         onPress={() => {
-          // TODO: mở form tạo bài viết
-          alert('Tính năng tạo bài viết đang phát triển');
+          if (onCreatePost) {
+            onCreatePost();
+          } else {
+            alert('Tính năng tạo bài viết đang phát triển');
+          }
         }}
       >
         <Plus size={30} color="white" />

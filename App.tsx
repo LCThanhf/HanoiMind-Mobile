@@ -20,6 +20,7 @@ import { MapScreen } from './components/MapScreen';
 import { NotificationScreen } from './components/NotificationScreen';
 import ForumScreen from './components/Forum/ForumScreen';
 import { ForumPostDetailScreen } from './components/Forum/ForumPostDetailScreen';
+import { CreatePostScreen } from './components/Forum/CreatePostScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
@@ -47,6 +48,7 @@ type AppState =
   | 'mapScreen'
   | 'notifications'
   | 'forum'
+  | 'forumCreate'
   | 'forumDetail'
   | 'chatDetail'
   | 'chatSettings';
@@ -349,6 +351,15 @@ export default function App() {
               setSelectedForumPostId(postId);
               setAppState('forumDetail');
             }}
+            onCreatePost={() => setAppState('forumCreate')}
+          />
+        );
+
+      case 'forumCreate':
+        return (
+          <CreatePostScreen
+            onBack={() => setAppState('forum')}
+            mode="create"
           />
         );
 

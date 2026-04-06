@@ -3,6 +3,7 @@ import apiClient from '../apiClient';
 import { Notification } from './notification.type';
 
 let socket: Socket | null = null;
+const listeners = new Set<(notif: Notification) => void>();
 
 // Lấy Base URL từ env và xử lý để lấy domain cho Socket
 // Thường Socket sẽ nối vào domain chính (bỏ phần /api/v1/)
@@ -13,7 +14,11 @@ export const NotificationService = {
   /**
    * 1. Khởi tạo kết nối Socket cho thông báo (Real-time)
    */
-  connectSocket: (token: string, onNewNotification: (notif: Notification) => void) => {
+  connectSocket: (token: string, onNewNotification?: (notif: Notification) => void) => {
+    if (onNewNotification) {
+      listeners.add(onNewNotification);
+    }
+
     if (socket) return;
 
     // Kết nối tới namespace /notifications đã định nghĩa ở Backend
@@ -24,7 +29,7 @@ export const NotificationService = {
 
     // Lắng nghe sự kiện 'new_notification' từ Gateway
     socket.on('new_notification', (notification: Notification) => {
-      onNewNotification(notification);
+      listeners.forEach((listener) => listener(notification));
     });
 
     socket.on('connect', () => console.log('Connected to Notification Socket'));
@@ -35,6 +40,17 @@ export const NotificationService = {
   },
 
   /**
+   * Đăng ký lắng nghe thông báo realtime
+   */
+  subscribe: (listener: (notif: Notification) => void) => {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+
+  /**
    * Ngắt kết nối Socket
    */
   disconnectSocket: () => {
@@ -42,6 +58,7 @@ export const NotificationService = {
       socket.disconnect();
       socket = null;
     }
+    listeners.clear();
   },
 
   /**

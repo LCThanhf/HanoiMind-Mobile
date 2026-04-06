@@ -16,11 +16,12 @@ import { FriendRequest, FriendStatus, FriendUser } from '../services/friendServi
 import { UsersService } from '../services/userService/user.service';
 import { UserSearchResult } from '../services/userService/user.type';
 
-type FriendsTab = 'friends' | 'requests' | 'find';
+export type FriendsTab = 'friends' | 'requests' | 'find';
 
 interface FriendsManageScreenProps {
   onBack: () => void;
   onOpenUserProfile: (userId: string) => void;
+  initialTab?: FriendsTab;
 }
 
 const TabButton = ({
@@ -186,8 +187,8 @@ const SearchRow = ({
   );
 };
 
-export const FriendsManageScreen = ({ onBack, onOpenUserProfile }: FriendsManageScreenProps) => {
-  const [activeTab, setActiveTab] = useState<FriendsTab>('friends');
+export const FriendsManageScreen = ({ onBack, onOpenUserProfile, initialTab = 'friends' }: FriendsManageScreenProps) => {
+  const [activeTab, setActiveTab] = useState<FriendsTab>(initialTab);
 
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<FriendUser[]>([]);
@@ -220,6 +221,10 @@ export const FriendsManageScreen = ({ onBack, onOpenUserProfile }: FriendsManage
   useEffect(() => {
     loadFriendsData();
   }, [loadFriendsData]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {

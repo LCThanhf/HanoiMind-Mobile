@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import './global.css';
@@ -30,6 +31,8 @@ import { TripRouteScreen } from './components/TripRouteScreen';
 import { TripBudgetManageScreen, MemberProfile, StopCostItem } from './components/TripBudgetManageScreen';
 import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
+import { NotificationService } from './services/notificationService/notification.service';
+import { FriendsTab } from './components/FriendsManageScreen';
 
 type AppState =
   | 'starter'
@@ -65,6 +68,7 @@ export default function App() {
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string>('');
   const [selectedChatName, setSelectedChatName] = useState<string>('');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [friendsManageInitialTab, setFriendsManageInitialTab] = useState<FriendsTab>('friends');
   const [selectedStopForUpdate, setSelectedStopForUpdate] = useState<StopCostItem | null>(null);
   const [membersForUpdate, setMembersForUpdate] = useState<MemberProfile[]>([]);
   const [perStopEstimatedForUpdate, setPerStopEstimatedForUpdate] = useState(0);
@@ -72,6 +76,23 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const ensureNotificationSocket = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      if (token) {
+        NotificationService.connectSocket(token);
+      }
+    };
+
+    ensureNotificationSocket();
+  }, [appState]);
+
+  useEffect(() => {
+    return () => {
+      NotificationService.disconnectSocket();
+    };
+  }, []);
 
   const shouldShowBottomTabBar =
     appState === 'main' ||
@@ -98,7 +119,10 @@ export default function App() {
             if (key === 'trips') { setActiveTab('trips'); setAppState('main'); }
             else if (key === 'messages') { setActiveTab('chat'); setAppState('main'); }
             else if (key === 'notifications') { setAppState('notifications'); }
-            else if (key === 'friends') { setAppState('friendsManage'); }
+            else if (key === 'friends') {
+              setFriendsManageInitialTab('friends');
+              setAppState('friendsManage');
+            }
           }}
         />
       );
@@ -357,6 +381,7 @@ export default function App() {
       case 'friendsManage':
         return (
           <FriendsManageScreen
+            initialTab={friendsManageInitialTab}
             onBack={() => setAppState('main')}
             onOpenUserProfile={(userId) => {
               setSelectedUserId(userId);
@@ -404,6 +429,10 @@ export default function App() {
           <NotificationScreen
             activeTab={activeTab}
             onBack={() => setAppState('main')}
+            onOpenFriendRequests={() => {
+              setFriendsManageInitialTab('requests');
+              setAppState('friendsManage');
+            }}
             onTabChange={(tab) => {
               setActiveTab(tab);
               setAppState('main');

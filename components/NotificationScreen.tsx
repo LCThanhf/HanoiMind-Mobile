@@ -1,8 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
-    Image,
     ScrollView,
     Text,
     View,
@@ -14,7 +12,7 @@ import { Notification as ApiNotification, NotificationType } from '../services/n
 import { MainTab } from './BottomTabBar';
 import { Button, AvatarCircle } from './shared';
 
-type NotificationKind = 'avatar' | 'chat' | 'trip';
+type NotificationKind = 'avatar' | 'chat' | 'trip' | 'friend';
 
 interface NotificationItem {
     id: string;
@@ -24,6 +22,7 @@ interface NotificationItem {
     unread?: boolean;
     kind: NotificationKind;
     avatar?: string;
+    type: NotificationType;
 }
 
 function formatTimeAgo(createdAt: string): string {
@@ -38,6 +37,7 @@ function formatTimeAgo(createdAt: string): string {
 
 function kindFromType(type: NotificationType, hasSenderAvatar: boolean): NotificationKind {
     if (type === NotificationType.NEW_MESSAGE) return 'chat';
+    if (type === NotificationType.FRIEND_REQUEST) return 'friend';
     if (type === NotificationType.JOURNEY_UPDATE) return 'trip';
     if (type === NotificationType.PAYMENT) return 'trip';
     return hasSenderAvatar ? 'avatar' : 'trip';
@@ -51,6 +51,7 @@ function mapApiToItem(notif: ApiNotification): NotificationItem {
         unread: !notif.is_read,
         kind: kindFromType(notif.type, !!notif.sender_avatar),
         avatar: notif.sender_avatar,
+        type: notif.type,
     };
 }
 
@@ -91,6 +92,38 @@ const NotificationLeading = ({ item }: { item: NotificationItem }) => {
         );
     }
 
+    if (item.kind === 'friend') {
+        return (
+            <View
+                style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: '#DCFCE7',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                    <Path
+                        d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                        stroke="#16A34A"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <Path
+                        d="M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M23 11h-6"
+                        stroke="#16A34A"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </Svg>
+            </View>
+        );
+    }
+
     return (
         <View
             style={{
@@ -114,12 +147,12 @@ interface NotificationScreenProps {
     activeTab: MainTab;
     onBack: () => void;
     onTabChange: (tab: MainTab) => void;
+    onOpenFriendRequests?: () => void;
 }
 
-export const NotificationScreen = ({ activeTab, onBack, onTabChange }: NotificationScreenProps) => {
+export const NotificationScreen = ({ activeTab, onBack, onTabChange, onOpenFriendRequests }: NotificationScreenProps) => {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const socketConnected = useRef(false);
 
     useEffect(() => {
         let mounted = true;
@@ -138,40 +171,35 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange }: Notificat
             }
         };
 
-        const connectRealtime = async () => {
-            if (socketConnected.current) return;
-            const token = await AsyncStorage.getItem('accessToken');
-            if (token) {
-                socketConnected.current = true;
-                NotificationService.connectSocket(token, (notif: ApiNotification) => {
-                    if (mounted) {
-                        setNotifications((prev) => [mapApiToItem(notif), ...prev]);
-                    }
-                });
-            }
-        };
-
         fetchNotifications();
-        connectRealtime();
+        const unsubscribe = NotificationService.subscribe((notif: ApiNotification) => {
+            if (mounted) {
+                setNotifications((prev) => [mapApiToItem(notif), ...prev]);
+            }
+        });
 
         return () => {
             mounted = false;
-            socketConnected.current = false;
-            NotificationService.disconnectSocket();
+            unsubscribe();
         };
     }, []);
 
     const handleTap = useCallback(async (item: NotificationItem) => {
-        if (!item.unread) return;
-        try {
-            await NotificationService.markAsRead(item.id);
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
-            );
-        } catch (err) {
-            console.error('Failed to mark as read:', err);
+        if (item.unread) {
+            try {
+                await NotificationService.markAsRead(item.id);
+                setNotifications((prev) =>
+                    prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
+                );
+            } catch (err) {
+                console.error('Failed to mark as read:', err);
+            }
         }
-    }, []);
+
+        if (item.type === NotificationType.FRIEND_REQUEST) {
+            onOpenFriendRequests?.();
+        }
+    }, [onOpenFriendRequests]);
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-[#F8FAFC]">

@@ -18,6 +18,8 @@ import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen';
 import { NotificationScreen } from './components/NotificationScreen';
+import { FriendsManageScreen } from './components/FriendsManageScreen';
+import { OtherUserProfileScreen } from './components/OtherUserProfileScreen';
 import ForumScreen from './components/Forum/ForumScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
@@ -46,6 +48,8 @@ type AppState =
   | 'mapScreen'
   | 'notifications'
   | 'forum'
+  | 'friendsManage'
+  | 'otherUserProfile'
   | 'chatDetail'
   | 'chatSettings';
 
@@ -60,6 +64,7 @@ export default function App() {
   const [selectedPlaceData, setSelectedPlaceData] = useState<Place | null>(null);
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string>('');
   const [selectedChatName, setSelectedChatName] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedStopForUpdate, setSelectedStopForUpdate] = useState<StopCostItem | null>(null);
   const [membersForUpdate, setMembersForUpdate] = useState<MemberProfile[]>([]);
   const [perStopEstimatedForUpdate, setPerStopEstimatedForUpdate] = useState(0);
@@ -93,6 +98,7 @@ export default function App() {
             if (key === 'trips') { setActiveTab('trips'); setAppState('main'); }
             else if (key === 'messages') { setActiveTab('chat'); setAppState('main'); }
             else if (key === 'notifications') { setAppState('notifications'); }
+            else if (key === 'friends') { setAppState('friendsManage'); }
           }}
         />
       );
@@ -141,6 +147,11 @@ export default function App() {
             setSelectedChatName(chatName);
             setPreviousState('main');
             setAppState('chatDetail');
+          }}
+          onOpenUserProfile={(userId) => {
+            setSelectedUserId(userId);
+            setPreviousState('main');
+            setAppState('otherUserProfile');
           }}
         />
       );
@@ -340,6 +351,32 @@ export default function App() {
             roomId={selectedChatRoomId}
             chatName={selectedChatName}
             onBack={() => setAppState('chatDetail')}
+          />
+        );
+
+      case 'friendsManage':
+        return (
+          <FriendsManageScreen
+            onBack={() => setAppState('main')}
+            onOpenUserProfile={(userId) => {
+              setSelectedUserId(userId);
+              setPreviousState('friendsManage');
+              setAppState('otherUserProfile');
+            }}
+          />
+        );
+
+      case 'otherUserProfile':
+        return (
+          <OtherUserProfileScreen
+            userId={selectedUserId}
+            onBack={() => setAppState(previousState)}
+            onMessage={(roomId, chatName) => {
+              setSelectedChatRoomId(roomId);
+              setSelectedChatName(chatName);
+              setPreviousState('otherUserProfile');
+              setAppState('chatDetail');
+            }}
           />
         );
 

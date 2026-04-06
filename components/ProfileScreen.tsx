@@ -66,6 +66,30 @@ const profileItems = [
     ),
   },
   {
+    key: 'friends',
+    title: 'Bạn bè',
+    subtitle: 'Quản lý bạn bè và lời mời kết bạn',
+    accent: '#E0E7FF',
+    icon: (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+          stroke="#4F46E5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M23 11h-6"
+          stroke="#4F46E5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    ),
+  },
+  {
     key: 'notifications',
     title: 'Thông báo',
     subtitle: '',

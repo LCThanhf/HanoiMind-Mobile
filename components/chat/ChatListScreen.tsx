@@ -11,12 +11,23 @@ import { UsersService } from '../../services/userService/user.service';
 
 interface ChatListScreenProps {
   onChatClick: (roomId: string, chatName: string) => void;
+  onOpenUserProfile?: (userId: string) => void;
 }
 
 // ==========================================
 // COMPONENT CON: Danh sách Avatar ngang (Dữ liệu bóc từ Conversations)
 // ==========================================
-const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any, users: any[], onUserClick: Function }) => {
+const ActiveUsersList = ({
+  currentUser,
+  users,
+  onUserClick,
+  onOpenUserProfile,
+}: {
+  currentUser: any;
+  users: any[];
+  onUserClick: Function;
+  onOpenUserProfile?: (userId: string) => void;
+}) => {
   // Gộp "You" vào đầu danh sách
   const listData = [
     { isYou: true, ...currentUser, fullName: 'You' },
@@ -41,6 +52,11 @@ const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any
               activeOpacity={0.8}
               onPress={() => {
                 if (!item.isYou) onUserClick(item);
+              }}
+              onLongPress={() => {
+                if (!item.isYou && (item._id || item.id)) {
+                  onOpenUserProfile?.(item._id || item.id);
+                }
               }}
             >
               <View className="relative">
@@ -75,9 +91,20 @@ const ActiveUsersList = ({ currentUser, users, onUserClick }: { currentUser: any
 // ==========================================
 // COMPONENT CON: Xử lý hiển thị từng dòng Chat (Lịch sử)
 // ==========================================
-const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUserId: string | null, onChatClick: Function }) => {
+const ChatItem = ({
+  item,
+  currentUserId,
+  onChatClick,
+  onOpenUserProfile,
+}: {
+  item: any;
+  currentUserId: string | null;
+  onChatClick: Function;
+  onOpenUserProfile?: (userId: string) => void;
+}) => {
   const [chatName, setChatName] = useState(() => item.type === 'JOURNEY' ? 'Đang tải chuyến đi...' : 'Đang tải người dùng...');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [partnerId, setPartnerId] = useState<string>('');
 
   useEffect(() => {
     const fetchDetailData = async () => {
@@ -93,6 +120,7 @@ const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUser
           const partnerId = item.participant_ids.find((id: string) => id !== currentUserId);
 
           if (partnerId) {
+            setPartnerId(partnerId);
             const userProfile: any = await UsersService.getPublicProfile(partnerId);
             if (userProfile) {
               const name = userProfile.fullName || userProfile.full_name || userProfile.name || 'Người dùng ẩn danh';
@@ -123,6 +151,11 @@ const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUser
     <Button
       activeOpacity={0.7}
       onPress={() => roomId && onChatClick(roomId, chatName)}
+      onLongPress={() => {
+        if (item.type === 'DIRECT' && partnerId) {
+          onOpenUserProfile?.(partnerId);
+        }
+      }}
       className="flex-row items-center p-4 border-b border-gray-50 bg-white mx-2 rounded-2xl mb-1"
     >
       <View className="rounded-full overflow-hidden" style={{ width: 56, height: 56 }}>
@@ -142,13 +175,26 @@ const ChatItem = ({ item, currentUserId, onChatClick }: { item: any, currentUser
 // ==========================================
 // COMPONENT CON: Xử lý hiển thị kết quả tìm kiếm User
 // ==========================================
-const SearchUserItem = ({ user, onStartChat }: { user: any, onStartChat: Function }) => {
+const SearchUserItem = ({
+  user,
+  onStartChat,
+  onOpenUserProfile,
+}: {
+  user: any;
+  onStartChat: Function;
+  onOpenUserProfile?: (userId: string) => void;
+}) => {
   const avatarUrl = user.avatar || user.profile_picture;
 
   return (
     <Button
       activeOpacity={0.7}
       onPress={() => onStartChat(user)}
+      onLongPress={() => {
+        if (user.id || user._id) {
+          onOpenUserProfile?.(user.id || user._id);
+        }
+      }}
       className="flex-row items-center p-4 border-b border-gray-100 bg-white"
     >
       <View className="rounded-full overflow-hidden" style={{ width: 48, height: 48 }}>
@@ -167,7 +213,7 @@ const SearchUserItem = ({ user, onStartChat }: { user: any, onStartChat: Functio
 // ==========================================
 // MÀN HÌNH CHÍNH
 // ==========================================
-export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
+export const ChatListScreen = ({ onChatClick, onOpenUserProfile }: ChatListScreenProps) => {
   const insets = useSafeAreaInsets();
 
   const [conversations, setConversations] = useState<any[]>([]);
@@ -342,7 +388,11 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
             data={searchResults}
             keyExtractor={(item) => item.id?.toString() || item._id?.toString()}
             renderItem={({ item }) => (
-              <SearchUserItem user={item} onStartChat={handleStartDirectChat} />
+              <SearchUserItem
+                user={item}
+                onStartChat={handleStartDirectChat}
+                onOpenUserProfile={onOpenUserProfile}
+              />
             )}
             keyboardShouldPersistTaps="handled"
             ListEmptyComponent={
@@ -367,6 +417,7 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
                 currentUser={myProfile}
                 users={activeUsers}
                 onUserClick={handleStartDirectChat}
+                onOpenUserProfile={onOpenUserProfile}
               />
             }
             renderItem={({ item }) => (
@@ -374,6 +425,7 @@ export const ChatListScreen = ({ onChatClick }: ChatListScreenProps) => {
                 item={item}
                 currentUserId={currentUserId || ''}
                 onChatClick={onChatClick}
+                onOpenUserProfile={onOpenUserProfile}
               />
             )}
             showsVerticalScrollIndicator={false}

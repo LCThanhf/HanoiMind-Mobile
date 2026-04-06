@@ -3,6 +3,16 @@ import { View, Text } from 'react-native';
 import { DayItinerary } from './types';
 import { CardContainer, SectionHeader } from '../shared';
 
+const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 const TimelineDot = () => (
     <View
         style={{
@@ -42,7 +52,7 @@ export const ItineraryTab = ({ itinerary, onAddPlace }: ItineraryTabProps) => {
             {itinerary.map((dayData, dayIndex) => (
                 <View key={`${dayData.day}-${dayData.date || dayIndex}`} className="px-5 mb-6">
                     <SectionHeader
-                        title={`Ngày ${dayData.day}: ${dayData.title}`}
+                        title={`${dayData.title}${dayData.date ? ` (${formatDate(dayData.date)})` : ''}`}
                         actionLabel="Thêm địa điểm"
                         onActionPress={() => onAddPlace?.(dayData.day)}
                         showActionIcon={false}

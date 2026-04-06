@@ -71,6 +71,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
+  const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
 
   const shouldShowBottomTabBar =
@@ -346,6 +347,7 @@ export default function App() {
       case 'forum':
         return (
           <ForumScreen
+            refreshKey={forumRefreshKey}
             onBack={() => setAppState('main')}
             onOpenPost={(postId: string) => {
               setSelectedForumPostId(postId);
@@ -360,6 +362,7 @@ export default function App() {
           <CreatePostScreen
             onBack={() => setAppState('forum')}
             mode="create"
+            onSubmitSuccess={() => setForumRefreshKey((prev) => prev + 1)}
           />
         );
 

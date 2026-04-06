@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
@@ -18,7 +18,7 @@ import { Modal } from 'react-native'; // Để hiện màn hình chờ
 import { processImage, upImageToCloudinary } from '../../utils/uploadImage';
 import { Button, SearchInput } from '../shared';
 
-const ForumScreen = ({ onBack, onOpenPost, onCreatePost }: { onBack?: () => void; onOpenPost?: (postId: string) => void; onCreatePost?: () => void }) => {
+const ForumScreen = ({ onBack, onOpenPost, onCreatePost, refreshKey }: { onBack?: () => void; onOpenPost?: (postId: string) => void; onCreatePost?: () => void; refreshKey?: number }) => {
   const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
   const [userName, setUserName] = useState<string>('');
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -27,15 +27,13 @@ const ForumScreen = ({ onBack, onOpenPost, onCreatePost }: { onBack?: () => void
 
   const [searchQuery, setSearchQuery] = useState('');
 
-
-
   useEffect(() => {
     fetchUserName();
   }, []);
 
   useEffect(() => {
     fetchPosts();
-  }, [currentCategory]);
+  }, [currentCategory, refreshKey]);
 
   const fetchUserName = async () => {
     try {
@@ -132,7 +130,6 @@ const ForumScreen = ({ onBack, onOpenPost, onCreatePost }: { onBack?: () => void
       return title.includes(query) || content.includes(query);
     })
     : posts;
-
 
     // console.log('--- ĐIỀU TRA FORUM SCREEN ---');
     // console.log('ForumTopTabs:', !!ForumTopTabs);

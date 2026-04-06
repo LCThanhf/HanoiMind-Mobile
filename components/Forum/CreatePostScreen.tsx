@@ -14,11 +14,12 @@ import { ForumService } from '../../services/forumService/forum.service';
 interface CreatePostScreenProps {
   mode?: 'create' | 'edit';
   onBack?: () => void;
+  onSubmitSuccess?: () => void;
 }
 
 type PrivacyMode = 'public' | 'friends' | 'private';
 
-export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenProps) => {
+export const CreatePostScreen = ({ mode = 'create', onBack, onSubmitSuccess }: CreatePostScreenProps) => {
   // Form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -127,6 +128,7 @@ const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
     const result = await ForumService.createPost(payload as any);
 
     if (result) {
+      onSubmitSuccess?.();
       Alert.alert(
         'Thành công', 
         status === 'DRAFT' ? 'Đã lưu bản nháp!' : 'Bài viết của bạn đã được đăng!',

@@ -9,6 +9,7 @@ import { UsersService } from '../../services/userService/user.service';
 import { Journey } from '../../services/journeyService/journey.type';
 import { Place } from '../../services/placeService/place.type';
 import { User } from '../../services/userService/user.type';
+import { ForumService } from '../../services/forumService/forum.service';
 
 interface CreatePostScreenProps {
   mode?: 'create' | 'edit';
@@ -39,6 +40,7 @@ export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenPr
   const [mediaModalVisible, setMediaModalVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const headerTitle = mode === 'edit' ? 'Chỉnh sửa bài viết' : 'Bài viết mới';
   const submitLabel = mode === 'edit' ? 'Cập nhật' : 'Đăng';
@@ -100,6 +102,45 @@ export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenPr
     }
   };
 
+
+const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
+  // Validate cơ bản
+  if (!title.trim() || !content.trim()) {
+    Alert.alert('Thông báo', 'Vui lòng nhập tiêu đề và nội dung!');
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+
+    // Chuẩn bị payload theo CreatePostPayload interface
+    const payload = {
+      title: title.trim(),
+      content: content.trim(),
+      category: selectedCategory?.id || 'OTHERS', // Ép kiểu về ForumCategory
+      images: selectedImages,
+      place_ids: selectedPlace ? [selectedPlace._id] : [],
+      journey_id: selectedJourney?._id,
+      status: status, 
+    };
+
+    const result = await ForumService.createPost(payload as any);
+
+    if (result) {
+      Alert.alert(
+        'Thành công', 
+        status === 'DRAFT' ? 'Đã lưu bản nháp!' : 'Bài viết của bạn đã được đăng!',
+        [{ text: 'OK', onPress: () => onBack?.() }]
+      );
+    }
+  } catch (err) {
+    console.error('Lỗi khi xử lý bài viết:', err);
+    Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ. Vui lòng thử lại!');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   return (
     <View className="flex-1 bg-white">
       {/* Header with User Info */}
@@ -110,25 +151,24 @@ export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenPr
         
         <Text className="text-center font-bold text-gray-900">{headerTitle}</Text>
         
-        <Button
-          variant="link"
-          label={submitLabel}
-          onPress={() => {
-            if (!title.trim() || !content.trim()) {
-              Alert.alert('Thông báo', 'Vui lòng nhập tiêu đề và nội dung!');
-              return;
-            }
-            // TODO: submit
-          }}
-          textColor="#2B8EF0"
-          textStyle={{ fontWeight: '700', fontSize: 15 }}
-        />
+      <Button
+        variant="link"
+        label={submitLabel}
+        onPress={() => handleSubmit('PUBLISHED')} // Thay logic cũ bằng hàm này
+        disabled={isSubmitting} // Thêm disabled để tránh bấm nhiều lần
+        textColor="#2B8EF0"
+        textStyle={{ fontWeight: '700', fontSize: 15 }}
+      />
       </View>
 
       {/* User Info Bar */}
       {currentUser && (
         <View className="flex-row items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <AvatarCircle name={currentUser.avatar} size={40} />
+          <AvatarCircle 
+            name={currentUser.fullName} // Dùng tên để hiện chữ cái đầu dự phòng
+            uri={currentUser.avatar}     // Nếu component có nhận ảnh
+            size={40} 
+          />
           <View className="flex-1">
             <Text className="font-semibold text-gray-900">{currentUser.fullName}</Text>
           </View>
@@ -298,24 +338,16 @@ export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenPr
       <View className="flex-row gap-3 border-t border-gray-200 bg-white px-4 py-3">
         <Button
           variant="secondary"
-          label="Lưu bản nháp"
-          onPress={() => {
-            // TODO: save draft
-            Alert.alert('Thành công', 'Bài viết đã được lưu nháp!');
-            onBack?.();
-          }}
+          label={isSubmitting ? "..." : "Lưu bản nháp"}
+          onPress={() => handleSubmit('DRAFT')} // Gọi hàm lưu nháp
+          disabled={isSubmitting}
           style={{ borderRadius: 12, minHeight: 48 }}
           className="flex-1"
         />
         <Button
-          label="Đăng"
-          onPress={() => {
-            if (!title.trim() || !content.trim()) {
-              Alert.alert('Thông báo', 'Vui lòng nhập tiêu đề và nội dung!');
-              return;
-            }
-            // TODO: submit post
-          }}
+          label={isSubmitting ? "Đang đăng..." : "Đăng"}
+          onPress={() => handleSubmit('PUBLISHED')} // Gọi hàm đăng bài
+          disabled={isSubmitting}
           style={{ borderRadius: 12, minHeight: 48 }}
           className="flex-1"
         />
@@ -336,11 +368,11 @@ export const CreatePostScreen = ({ mode = 'create', onBack }: CreatePostScreenPr
         onSelect={(category) => setSelectedCategory(category)}
         selectedCategory={selectedCategory ?? undefined}
         categories={[
-          { id: 'review', label: '⭐ Review ' },
-          { id: 'tips', label: '💡 Mẹo & Kinh nghiệm' },
-          { id: 'story', label: '📖 Tìm bạn đồng hành' },
-          { id: 'question', label: '❓ Hỏi & Tìm tư vấn' },
-          { id: 'local', label: '💦 Khác' },
+          { id: 'REVIEW', label: '⭐ Review' },
+          { id: 'EXPERIENCE', label: '💡 Mẹo & Kinh nghiệm' },
+          { id: 'FIND_BUDDY', label: '📖 Tìm bạn đồng hành' },
+          { id: 'QNA', label: '❓ Hỏi & Tìm tư vấn' },
+          { id: 'OTHERS', label: '💦 Khác' },
         ]}
       />
 

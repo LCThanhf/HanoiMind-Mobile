@@ -89,6 +89,11 @@ export default function App() {
           onLogout={() => setAppState('starter')}
           onOpenProfile={() => setActiveTab('profile')}
           onTabChange={setActiveTab}
+          onNavigate={(key) => {
+            if (key === 'trips') { setActiveTab('trips'); setAppState('main'); }
+            else if (key === 'messages') { setActiveTab('chat'); setAppState('main'); }
+            else if (key === 'notifications') { setAppState('notifications'); }
+          }}
         />
       );
     }

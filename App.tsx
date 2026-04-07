@@ -349,6 +349,12 @@ export default function App() {
               setSelectedPlaceData(place);
               setAppState('mapScreen');
             }}
+            onStartChat={(roomId, chatName) => {
+              setSelectedChatRoomId(roomId);
+              setSelectedChatName(chatName);
+              setPreviousState('placeDetail');
+              setAppState('chatDetail');
+            }}
             refreshKey={placeDetailRefreshKey}
           />
         );

@@ -24,6 +24,23 @@ interface OtherUserProfileScreenProps {
   onMessage: (roomId: string, chatName: string) => void;
 }
 
+const getEntityId = (entity: unknown): string | null => {
+  if (!entity || typeof entity !== 'object') {
+    return null;
+  }
+
+  const candidate = entity as { _id?: unknown; id?: unknown };
+  if (typeof candidate._id === 'string' && candidate._id.trim()) {
+    return candidate._id;
+  }
+
+  if (typeof candidate.id === 'string' && candidate.id.trim()) {
+    return candidate.id;
+  }
+
+  return null;
+};
+
 export const OtherUserProfileScreen = ({ userId, onBack, onMessage }: OtherUserProfileScreenProps) => {
   const [loading, setLoading] = useState(true);
   const [sendingFriendRequest, setSendingFriendRequest] = useState(false);
@@ -68,18 +85,24 @@ export const OtherUserProfileScreen = ({ userId, onBack, onMessage }: OtherUserP
       return 'not-friend';
     }
 
-    if (myProfile._id === otherProfile._id) {
+    const myId = getEntityId(myProfile);
+    const otherId = getEntityId(otherProfile);
+    if (!otherId) {
+      return 'not-friend';
+    }
+
+    if (myId && myId === otherId) {
       return 'self';
     }
 
-    if (friends.some((item) => item._id === otherProfile._id)) {
+    if (friends.some((item) => getEntityId(item) === otherId)) {
       return 'friend';
     }
 
     const hasIncomingPending = requests.some(
       (item) =>
         item.status === FriendStatus.PENDING &&
-        (item.sender?._id === otherProfile._id || item.requester_id === otherProfile._id)
+        (getEntityId(item.sender) === otherId || item.requester_id === otherId)
     );
 
     if (hasIncomingPending) {
@@ -90,13 +113,15 @@ export const OtherUserProfileScreen = ({ userId, onBack, onMessage }: OtherUserP
   }, [friends, myProfile, otherProfile, requests]);
 
   const handleSendFriendRequest = async () => {
-    if (!otherProfile) {
+    const targetUserId = getEntityId(otherProfile);
+    if (!targetUserId) {
+      Alert.alert('Lỗi', 'Không xác định được người dùng để gửi lời mời kết bạn.');
       return;
     }
 
     try {
       setSendingFriendRequest(true);
-      await FriendService.sendRequest({ target_user_id: otherProfile._id });
+      await FriendService.sendRequest({ target_user_id: targetUserId });
       Alert.alert('Thành công', 'Đã gửi lời mời kết bạn.');
     } catch (error) {
       const err = error as AxiosError<{ message?: string | string[] }>;
@@ -116,7 +141,7 @@ export const OtherUserProfileScreen = ({ userId, onBack, onMessage }: OtherUserP
 
     try {
       setOpeningMessage(true);
-      const targetUserId = (otherProfile as any)._id || (otherProfile as any).id;
+      const targetUserId = getEntityId(otherProfile);
       if (!targetUserId) {
         Alert.alert('Lỗi', 'Không xác định được người dùng để mở chat.');
         return;

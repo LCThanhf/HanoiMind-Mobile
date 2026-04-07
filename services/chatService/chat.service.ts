@@ -4,10 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChatMessage, ChatConversation, SendMessagePayload } from './chat.type';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://sybausuzuka-berotravel-backend.hf.space/api/v1/';
-const SOCKET_URL = API_URL.replace('/api/v1/', '') + '/chat'; 
+const SOCKET_URL = API_URL.replace('/api/v1/', '') + '/chat';
 
 class ChatService {
   private socket: Socket | null = null;
+
+  private normalizeConversation(raw: any): ChatConversation {
+    const resolvedId = raw?._id || raw?.room_id || raw?.id;
+    return {
+      ...raw,
+      _id: resolvedId,
+      id: raw?.id,
+      room_id: raw?.room_id,
+    } as ChatConversation;
+  }
 
   // ==========================================
   // 1. API CALLS (REST)
@@ -15,7 +25,13 @@ class ChatService {
 
   async getConversations(): Promise<ChatConversation[]> {
     try {
-      return await apiClient.get('/chat/conversations');
+      const data = await apiClient.get('/chat/conversations');
+      if (!Array.isArray(data)) {
+        return [];
+      }
+      return data
+        .map((item: any) => this.normalizeConversation(item))
+        .filter((item) => Boolean(item._id));
     } catch (error) {
       throw error;
     }
@@ -33,7 +49,12 @@ class ChatService {
   /** [MỚI BỔ SUNG] Tạo hoặc lấy phòng chat 1-1 */
   async createDirectChat(receiverId: string): Promise<ChatConversation> {
     try {
-      return await apiClient.post('/chat/direct', { receiver_id: receiverId });
+      const data = await apiClient.post('/chat/direct', { receiver_id: receiverId });
+      const conversation = this.normalizeConversation(data);
+      if (!conversation._id) {
+        throw new Error('Phản hồi tạo phòng chat không có room id hợp lệ');
+      }
+      return conversation;
     } catch (error) {
       throw error;
     }

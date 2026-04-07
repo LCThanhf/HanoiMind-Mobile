@@ -39,6 +39,8 @@ export interface ChatMessage {
 
 export interface ChatConversation {
   _id: string;
+  id?: string;
+  room_id?: string;
   type: ConversationType;
   participant_ids: string[];
   journey_id?: string;

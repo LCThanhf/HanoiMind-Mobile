@@ -42,6 +42,36 @@ const TabButton = ({
   </Button>
 );
 
+const IconActionButton = ({
+  onPress,
+  disabled,
+  backgroundColor,
+  iconColor,
+  children,
+}: {
+  onPress: () => void;
+  disabled?: boolean;
+  backgroundColor: string;
+  iconColor: string;
+  children: React.ReactNode;
+}) => (
+  <Button
+    onPress={onPress}
+    disabled={disabled}
+    className="items-center justify-center rounded-2xl"
+    style={{
+      width: 52,
+      height: 52,
+      backgroundColor,
+      opacity: disabled ? 0.6 : 1,
+    }}
+  >
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </Svg>
+  </Button>
+);
+
 const FriendRow = ({
   friend,
   onOpenUserProfile,
@@ -61,20 +91,16 @@ const FriendRow = ({
       <Text className="text-[12px] text-gray-500">{friend.email}</Text>
     </View>
     <View className="flex-row" style={{ gap: 8 }}>
-      <Button
-        onPress={() => onOpenUserProfile(friend._id)}
-        className="px-3 py-2 rounded-xl"
-        style={{ backgroundColor: '#EBF5FF' }}
-      >
-        <Text style={{ color: '#2B8EF0', fontWeight: '700', fontSize: 12 }}>Hồ sơ</Text>
-      </Button>
-      <Button
-        onPress={() => onUnfriend(friend._id)}
-        className="px-3 py-2 rounded-xl"
-        style={{ backgroundColor: '#FEE2E2' }}
-      >
-        <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 12 }}>Hủy bạn</Text>
-      </Button>
+      <IconActionButton onPress={() => onOpenUserProfile(friend._id)} backgroundColor="#EBF5FF" iconColor="#2B8EF0">
+        <Path d="M20 21a8 8 0 0 0-16 0" />
+        <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+      </IconActionButton>
+      <IconActionButton onPress={() => onUnfriend(friend._id)} backgroundColor="#FEE2E2" iconColor="#EF4444">
+        <Path d="M20 21a8 8 0 0 0-16 0" />
+        <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+        <Path d="M19 8l4 4" />
+        <Path d="M23 8l-4 4" />
+      </IconActionButton>
     </View>
   </View>
 );
@@ -110,13 +136,10 @@ const RequestRow = ({
           </Text>
           <Text className="text-[12px] text-gray-500">Muốn kết bạn với bạn</Text>
         </View>
-        <Button
-          onPress={() => onOpenUserProfile(senderId)}
-          className="px-3 py-2 rounded-xl"
-          style={{ backgroundColor: '#EBF5FF' }}
-        >
-          <Text style={{ color: '#2B8EF0', fontWeight: '700', fontSize: 12 }}>Hồ sơ</Text>
-        </Button>
+        <IconActionButton onPress={() => onOpenUserProfile(senderId)} backgroundColor="#EBF5FF" iconColor="#2B8EF0">
+          <Path d="M20 21a8 8 0 0 0-16 0" />
+          <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+        </IconActionButton>
       </View>
 
       <View className="flex-row mt-3" style={{ gap: 8 }}>
@@ -164,24 +187,23 @@ const SearchRow = ({
         <Text className="text-[15px] text-gray-900" style={{ fontWeight: '700' }}>{user.fullName}</Text>
         {user.bio ? <Text className="text-[12px] text-gray-500">{user.bio}</Text> : null}
       </View>
-      <View style={{ gap: 8 }}>
-        <Button
-          onPress={() => onOpenUserProfile(userId)}
-          className="px-3 py-2 rounded-xl"
-          style={{ backgroundColor: '#EBF5FF' }}
-        >
-          <Text style={{ color: '#2B8EF0', fontWeight: '700', fontSize: 12 }}>Hồ sơ</Text>
-        </Button>
-        <Button
+      <View className="flex-row items-center" style={{ gap: 10 }}>
+        <IconActionButton onPress={() => onOpenUserProfile(userId)} backgroundColor="#EBF5FF" iconColor="#2B8EF0">
+          <Path d="M20 21a8 8 0 0 0-16 0" />
+          <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+        </IconActionButton>
+
+        <IconActionButton
           disabled={disabled}
           onPress={() => onSendRequest(userId)}
-          className="px-3 py-2 rounded-xl"
-          style={{ backgroundColor: disabled ? '#D1D5DB' : '#D7FBE8' }}
+          backgroundColor={disabled ? '#D1D5DB' : '#D7FBE8'}
+          iconColor={disabled ? '#6B7280' : '#15803D'}
         >
-          <Text style={{ color: disabled ? '#6B7280' : '#15803D', fontWeight: '700', fontSize: 12 }}>
-            {disabled ? 'Đã gửi' : 'Kết bạn'}
-          </Text>
-        </Button>
+          <Path d="M15 20a6 6 0 0 0-12 0" />
+          <Path d="M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7" />
+          <Path d="M18.5 6v3" />
+          <Path d="M17 7.5h3" />
+        </IconActionButton>
       </View>
     </View>
   );

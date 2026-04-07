@@ -247,7 +247,7 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, onStartChat, pl
 
     const handleContactOwner = async () => {
         const ownerId = place?.ownerId || (place as any)?.owner_id;
-        
+
         if (!ownerId) {
             Alert.alert('Thông báo', 'Địa điểm này chưa có thông tin chủ sở hữu để liên hệ.');
             return;
@@ -257,10 +257,14 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, onStartChat, pl
             setIsLoading(true);
             // Gọi service tạo/lấy phòng chat 1-1
             const conversation = await ChatService.createDirectChat(ownerId);
-            
+
             if (onStartChat && conversation) {
                 // Điều hướng sang màn hình chat với tên chủ sở hữu
-                onStartChat(conversation._id, ownerName || 'Chủ sở hữu');
+                const roomId = conversation._id || (conversation as any).room_id || (conversation as any).id;
+                if (!roomId) {
+                    throw new Error('Không nhận được room id từ API');
+                }
+                onStartChat(roomId, ownerName || 'Chủ sở hữu');
             }
         } catch (error) {
             Alert.alert('Lỗi', 'Không thể kết nối với chủ sở hữu lúc này.');

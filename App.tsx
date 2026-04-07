@@ -106,7 +106,9 @@ export default function App() {
     appState === 'reviewPlace' ||
     appState === 'notifications' ||
     appState === 'tripManageDetail' ||
-    appState === 'tripDetail';
+    appState === 'tripDetail' ||
+    appState === 'friendsManage' ||
+    appState === 'otherUserProfile';
 
   const handleBottomTabPress = (tab: MainTab) => {
     setActiveTab(tab);

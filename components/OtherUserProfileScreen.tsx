@@ -116,7 +116,13 @@ export const OtherUserProfileScreen = ({ userId, onBack, onMessage }: OtherUserP
 
     try {
       setOpeningMessage(true);
-      const room = await ChatService.createDirectChat(otherProfile._id);
+      const targetUserId = (otherProfile as any)._id || (otherProfile as any).id;
+      if (!targetUserId) {
+        Alert.alert('Lỗi', 'Không xác định được người dùng để mở chat.');
+        return;
+      }
+
+      const room = await ChatService.createDirectChat(targetUserId);
       if (room && room._id) {
         onMessage(room._id, otherProfile.fullName);
       } else {

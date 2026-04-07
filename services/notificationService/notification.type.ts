@@ -17,7 +17,7 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
-  metadata?: any; 
+  metadata?: any;
   is_read: boolean;
   created_at: string;
 }

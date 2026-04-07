@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import './global.css';
@@ -18,6 +19,8 @@ import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
 import { MapScreen } from './components/MapScreen';
 import { NotificationScreen } from './components/NotificationScreen';
+import { FriendsManageScreen } from './components/FriendsManageScreen';
+import { OtherUserProfileScreen } from './components/OtherUserProfileScreen';
 import ForumScreen from './components/Forum/ForumScreen';
 import { ForumPostDetailScreen } from './components/Forum/ForumPostDetailScreen';
 import { CreatePostScreen } from './components/Forum/CreatePostScreen';
@@ -30,6 +33,8 @@ import { TripRouteScreen } from './components/TripRouteScreen';
 import { TripBudgetManageScreen, MemberProfile, StopCostItem } from './components/TripBudgetManageScreen';
 import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
+import { NotificationService } from './services/notificationService/notification.service';
+import { FriendsTab } from './components/FriendsManageScreen';
 
 type AppState =
   | 'starter'
@@ -50,6 +55,8 @@ type AppState =
   | 'forum'
   | 'forumCreate'
   | 'forumDetail'
+  | 'friendsManage'
+  | 'otherUserProfile'
   | 'chatDetail'
   | 'chatSettings';
 
@@ -64,6 +71,8 @@ export default function App() {
   const [selectedPlaceData, setSelectedPlaceData] = useState<Place | null>(null);
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string>('');
   const [selectedChatName, setSelectedChatName] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [friendsManageInitialTab, setFriendsManageInitialTab] = useState<FriendsTab>('friends');
   const [selectedStopForUpdate, setSelectedStopForUpdate] = useState<StopCostItem | null>(null);
   const [membersForUpdate, setMembersForUpdate] = useState<MemberProfile[]>([]);
   const [perStopEstimatedForUpdate, setPerStopEstimatedForUpdate] = useState(0);
@@ -73,6 +82,23 @@ export default function App() {
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
+
+  useEffect(() => {
+    const ensureNotificationSocket = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      if (token) {
+        NotificationService.connectSocket(token);
+      }
+    };
+
+    ensureNotificationSocket();
+  }, [appState]);
+
+  useEffect(() => {
+    return () => {
+      NotificationService.disconnectSocket();
+    };
+  }, []);
 
   const shouldShowBottomTabBar =
     appState === 'main' ||
@@ -95,6 +121,15 @@ export default function App() {
           onLogout={() => setAppState('starter')}
           onOpenProfile={() => setActiveTab('profile')}
           onTabChange={setActiveTab}
+          onNavigate={(key) => {
+            if (key === 'trips') { setActiveTab('trips'); setAppState('main'); }
+            else if (key === 'messages') { setActiveTab('chat'); setAppState('main'); }
+            else if (key === 'notifications') { setAppState('notifications'); }
+            else if (key === 'friends') {
+              setFriendsManageInitialTab('friends');
+              setAppState('friendsManage');
+            }
+          }}
         />
       );
     }
@@ -142,6 +177,11 @@ export default function App() {
             setSelectedChatName(chatName);
             setPreviousState('main');
             setAppState('chatDetail');
+          }}
+          onOpenUserProfile={(userId) => {
+            setSelectedUserId(userId);
+            setPreviousState('main');
+            setAppState('otherUserProfile');
           }}
         />
       );
@@ -315,6 +355,12 @@ export default function App() {
               setSelectedPlaceData(place);
               setAppState('mapScreen');
             }}
+            onStartChat={(roomId, chatName) => {
+              setSelectedChatRoomId(roomId);
+              setSelectedChatName(chatName);
+              setPreviousState('placeDetail');
+              setAppState('chatDetail');
+            }}
             refreshKey={placeDetailRefreshKey}
           />
         );
@@ -341,6 +387,33 @@ export default function App() {
             roomId={selectedChatRoomId}
             chatName={selectedChatName}
             onBack={() => setAppState('chatDetail')}
+          />
+        );
+
+      case 'friendsManage':
+        return (
+          <FriendsManageScreen
+            initialTab={friendsManageInitialTab}
+            onBack={() => setAppState('main')}
+            onOpenUserProfile={(userId) => {
+              setSelectedUserId(userId);
+              setPreviousState('friendsManage');
+              setAppState('otherUserProfile');
+            }}
+          />
+        );
+
+      case 'otherUserProfile':
+        return (
+          <OtherUserProfileScreen
+            userId={selectedUserId}
+            onBack={() => setAppState(previousState)}
+            onMessage={(roomId, chatName) => {
+              setSelectedChatRoomId(roomId);
+              setSelectedChatName(chatName);
+              setPreviousState('otherUserProfile');
+              setAppState('chatDetail');
+            }}
           />
         );
 
@@ -395,6 +468,10 @@ export default function App() {
           <NotificationScreen
             activeTab={activeTab}
             onBack={() => setAppState('main')}
+            onOpenFriendRequests={() => {
+              setFriendsManageInitialTab('requests');
+              setAppState('friendsManage');
+            }}
             onTabChange={(tab) => {
               setActiveTab(tab);
               setAppState('main');

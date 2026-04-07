@@ -14,12 +14,24 @@ import { Button, AvatarCircle, ListActionRow } from './shared';
 // Import Service và Type
 import { UsersService } from '../services/userService/user.service';
 import { User } from '../services/userService/user.type';
+import { JourneyService } from '../services/journeyService/journey.service';
+import { FavoriteService } from '../services/favoriteService/favorite.service';
+import { FavoriteType } from '../services/favoriteService/favorite.type';
+import { FriendService } from '../services/friendService/friend.service';
+
+interface TravelStats {
+  completedTrips: number;
+  placesVisited: number;
+  friends: number;
+  favorites: number;
+}
 
 interface ProfileScreenProps {
   onLogout: () => void;
   onOpenProfile: () => void;
   activeTab: MainTab;
   onTabChange: (tab: MainTab) => void;
+  onNavigate?: (key: string) => void;
 }
 
 const profileItems = [
@@ -32,6 +44,48 @@ const profileItems = [
       <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
         <Rect x="3" y="5" width="18" height="16" rx="3" stroke="#2B8EF0" strokeWidth="2" />
         <Path d="M8 3v4M16 3v4M3 10h18" stroke="#2B8EF0" strokeWidth="2" strokeLinecap="round" />
+      </Svg>
+    ),
+  },
+  {
+    key: 'messages',
+    title: 'Tin nhắn',
+    subtitle: 'Hãy trò chuyện cùng nhóm bạn đồng hành',
+    accent: '#DCFCE7',
+    icon: (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"
+          stroke="#22C55E"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path d="M7 10h2M11 10h2M15 10h2" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" />
+      </Svg>
+    ),
+  },
+  {
+    key: 'friends',
+    title: 'Bạn bè',
+    subtitle: 'Quản lý bạn bè và lời mời kết bạn',
+    accent: '#E0E7FF',
+    icon: (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+          stroke="#4F46E5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 8v6M23 11h-6"
+          stroke="#4F46E5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </Svg>
     ),
   },
@@ -54,14 +108,46 @@ const profileItems = [
   },
 ];
 
-export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange }: ProfileScreenProps) => {
+export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange, onNavigate }: ProfileScreenProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<TravelStats | null>(null);
 
-  // Lấy thông tin người dùng khi vào màn hình
   useEffect(() => {
     fetchProfile();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    const [journeysResult, favoritesResult, friendsResult] = await Promise.allSettled([
+      JourneyService.findMy(),
+      FavoriteService.getMyFavorites(FavoriteType.PLACE),
+      FriendService.getMyFriends(),
+    ]);
+
+    const rawJourneys = journeysResult.status === 'fulfilled' ? journeysResult.value : [];
+    const journeys: any[] = Array.isArray(rawJourneys)
+      ? rawJourneys
+      : (rawJourneys as any)?.data ?? [];
+
+    const favorites = favoritesResult.status === 'fulfilled' ? favoritesResult.value : [];
+    const friends = friendsResult.status === 'fulfilled' ? friendsResult.value : [];
+
+    const now = new Date();
+    const completedJourneys = journeys.filter((j: any) => j.end_date && new Date(j.end_date) < now);
+
+    const completedTrips = completedJourneys.length;
+    const placesVisited = completedJourneys.reduce((total: number, j: any) =>
+      total + (j.days ?? []).reduce((d: number, day: any) =>
+        d + (day.stops ?? []).length, 0), 0);
+
+    setStats({
+      completedTrips,
+      placesVisited,
+      friends: friends.length,
+      favorites: favorites.length,
+    });
+  };
 
   const fetchProfile = async () => {
     try {
@@ -135,6 +221,44 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
           </Button>
         </View>
 
+        {/* Travel Stats */}
+        <View className="px-4 mb-4">
+          <View className="rounded-2xl border border-[#E5E7EB] bg-white overflow-hidden">
+            <View className="flex-row">
+              {/* Chuyến hoàn thành */}
+              <View className="flex-1 items-center py-4" style={{ borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
+                <Text className="text-[22px] font-bold text-[#111827]">
+                  {stats?.completedTrips ?? '—'}
+                </Text>
+                <Text className="text-[12px] text-[#6B7280] mt-1 text-center px-1">Chuyến hoàn thành</Text>
+              </View>
+              {/* Địa điểm đã ghé */}
+              <View className="flex-1 items-center py-4">
+                <Text className="text-[22px] font-bold text-[#111827]">
+                  {stats?.placesVisited ?? '—'}
+                </Text>
+                <Text className="text-[12px] text-[#6B7280] mt-1 text-center px-1">Địa điểm đã ghé</Text>
+              </View>
+            </View>
+            <View className="flex-row" style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+              {/* Bạn bè */}
+              <View className="flex-1 items-center py-4" style={{ borderRightWidth: 1, borderRightColor: '#E5E7EB' }}>
+                <Text className="text-[22px] font-bold text-[#111827]">
+                  {stats?.friends ?? '—'}
+                </Text>
+                <Text className="text-[12px] text-[#6B7280] mt-1 text-center px-1">Bạn đồng hành</Text>
+              </View>
+              {/* Yêu thích */}
+              <View className="flex-1 items-center py-4">
+                <Text className="text-[22px] font-bold text-[#111827]">
+                  {stats?.favorites ?? '—'}
+                </Text>
+                <Text className="text-[12px] text-[#6B7280] mt-1 text-center px-1">Địa điểm yêu thích</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Cụm chức năng */}
         <View className="px-4">
           <View className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
@@ -144,6 +268,7 @@ export const ProfileScreen = ({ onLogout, onOpenProfile, activeTab, onTabChange 
                 icon={item.icon}
                 title={item.title}
                 subtitle={item.subtitle}
+                onPress={() => onNavigate?.(item.key)}
                 iconContainerBackgroundColor={item.accent}
                 iconContainerSize={44}
                 horizontalPadding={16}

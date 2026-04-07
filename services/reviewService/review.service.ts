@@ -1,11 +1,11 @@
 import apiClient from '../apiClient';
-import { 
-  Review, 
-  ReviewStats, 
-  CreateReviewPayload, 
+import {
+  Review,
+  ReviewStats,
+  CreateReviewPayload,
   UpdateReviewPayload,
-  ReviewFilter, 
-  ReviewSortBy 
+  ReviewFilter,
+  ReviewSortBy
 } from './review.type';
 
 export const ReviewService = {
@@ -14,13 +14,13 @@ export const ReviewService = {
    * Hỗ trợ phân trang, sắp xếp và lọc (Tích cực/Tiêu cực)
    */
   findAllByPlace: async (
-    placeId: string, 
-    params: { 
-      page?: number; 
-      limit?: number; 
-      sort_by?: ReviewSortBy; 
-      sort_order?: 'ASC' | 'DESC'; 
-      filter?: ReviewFilter 
+    placeId: string,
+    params: {
+      page?: number;
+      limit?: number;
+      sort_by?: ReviewSortBy;
+      sort_order?: 'ASC' | 'DESC';
+      filter?: ReviewFilter
     }
   ): Promise<{ data: Review[], meta: any }> => {
     try {

@@ -73,6 +73,9 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
       try {
         setLoading(true);
 
+        // Khởi tạo socket connection trước
+        await ChatService.connect();
+
         let userId = await AsyncStorage.getItem('userId');
         if (!userId) {
           const myProfile = await UsersService.getMe();

@@ -5,7 +5,8 @@ export enum NotificationType {
   GROUP_INVITE = 'GROUP_INVITE', // Mời vào nhóm
   JOURNEY_UPDATE = 'JOURNEY_UPDATE', // Lịch trình thay đổi
   NEW_MESSAGE = 'NEW_MESSAGE',   // Tin nhắn mới
-  PAYMENT = 'PAYMENT'            // Nhắc nợ/Thanh toán
+  PAYMENT = 'PAYMENT',           // Nhắc nợ/Thanh toán
+  FRIEND_REQUEST = 'FRIEND_REQUEST' // Lời mời kết bạn
 }
 
 export interface Notification {

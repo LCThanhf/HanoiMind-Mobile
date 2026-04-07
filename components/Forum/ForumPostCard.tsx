@@ -1,21 +1,74 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
+import { UsersService } from '../../services/userService/user.service';
+import { PlacesService } from '../../services/placeService/place.service';
 import { Button, PillBadge, StatItemView } from '../shared';
-import { AppColors } from 'utils/theme';
-import { DateUtils } from 'utils/dateUtils';
+import { PostHeader } from './PostHeader';
+import { PostContent } from './PostContent';
+import { PostFooter } from './PostFooter';
 
 interface ForumPostCardProps {
   post?: ForumPost;
   postId?: string;
+  onPress?: () => void;
 }
 
-export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps) => {
+export const ForumPostCard = ({ post: initialPost, postId, onPress }: ForumPostCardProps) => {
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [likesCount, setLikesCount] = useState<number>(initialPost?.stats?.likes || 0);
+  const [likeLoading, setLikeLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const user = await UsersService.getMe();
+        if (user && user._id) {
+          setCurrentUserId(user._id);
+        }
+      } catch (err) {
+        console.error('Error getting current user:', err);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (post) {
+      setLikesCount(post.stats?.likes ?? 0);
+    }
+  }, [post]);
+
+  const isLiked = Boolean(currentUserId && post?.liked_by?.includes(currentUserId));
+
+  const handleToggleLike = async () => {
+    if (!post?._id || !currentUserId || likeLoading) return;
+
+    const previousLikes = likesCount;
+    const newLikeState = !isLiked;
+
+    setLikesCount((prev) => (newLikeState ? prev + 1 : Math.max(0, prev - 1)));
+    setLikeLoading(true);
+
+    try {
+      const updated = await ForumService.toggleLike(post._id);
+      setPost(updated);
+
+      setLikesCount(updated.stats?.likes ?? (newLikeState ? previousLikes + 1 : Math.max(0, previousLikes - 1)));
+    } catch (err) {
+      console.error('Error toggling like:', err);
+      setLikesCount(previousLikes);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   useEffect(() => {
     const loadPost = async () => {
@@ -94,87 +147,94 @@ export const ForumPostCard = ({ post: initialPost, postId }: ForumPostCardProps)
   const stats = post.stats || { likes: 0, comments: 0, views: 0 };
   const tags = Array.isArray(post.tag) ? post.tag : [];
 
-  return (
-    <View className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100">
-      {/* Header: Author info & Badge */}
-      <View className="flex-row items-center p-4">
-        <Image
-          source={{ uri: author.avatar || 'https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg' }}
-          className="w-10 h-10 rounded-full"
-        />
-        <View className="ml-3 flex-1">
-          <Text className="font-bold text-gray-800">{author.fullName}</Text>
-          <Text className="text-xs text-gray-400">{DateUtils.formatDateTime(post.created_at || new Date().toISOString())}</Text>
-        </View>
+// Khai báo state lưu mảng tên địa điểm
+const [placeNames, setPlaceNames] = useState<string[]>([]);
+
+
+useEffect(() => {
+  const loadPlaceNames = async () => {
+    
+    // Kiểm tra cả place_ids lẫn places (API có thể trả về places object thay vì place_ids string)
+    const placeIds = post?.place_ids;
+    const places = (post as any)?.places;
+    
+    
+    // Nếu dữ liệu đã có sẵn trong places object
+    if (places && Array.isArray(places) && places.length > 0) {
+      const directNames = places.map((p: any) => p?.name || "Không tìm thấy tên");
+      setPlaceNames(directNames);
+      return;
+    }
+    
+    // Nếu chỉ có place_ids, phải gọi API để lấy tên
+    if (!placeIds || placeIds.length === 0) {
+      setPlaceNames([]);
+      return;
+    }
+
+
+    try {
+      const namePromises = placeIds.map(async (id) => {
+        try {
+          if (!id) {
+            return "ID trống";
+          }
+
+          // apiClient đã unwrap response, nên res là Place object trực tiếp
+          const res = await PlacesService.findOne(id);
         
-      {/* Badge trạng thái - Dùng prop thay vì className */}
-      <PillBadge 
-        label={post.status === 'PUBLISHED' ? "Công khai" : "Bạn bè"} 
-        backgroundColor="#DCFCE7" // Đây là màu success-soft
-        textColor="#15803D"       // Đây là màu success-strong
-        textSize={10}
-        textWeight="700"
-        // Nếu vẫn muốn tùy chỉnh thêm vị trí, dùng containerStyle của team:
-        containerStyle={{ paddingHorizontal: 8, paddingVertical: 4 }}
+          
+          // res là Place object: { _id, name, ... }
+          const placeName = (res as any)?.name || "Không tìm thấy tên";
+          
+          return placeName;
+        } catch (err) {
+          return "Lỗi API";
+        }
+      });
+
+      const names = await Promise.all(namePromises);
+      setPlaceNames(names);
+      
+    } catch (err) {
+      setPlaceNames([]);
+    }
+  };
+
+  loadPlaceNames();
+}, [post?.place_ids?.join(','), (post as any)?.places?.length]); // Trigger nếu place_ids hoặc places thay đổi
+
+
+  return (
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.8 : 1}
+      onPress={onPress}
+      className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100"
+    >
+      <PostHeader 
+        author={author}
+        status={post.status} 
+        createdAt={post.created_at || new Date().toISOString()} 
       />
-        <TouchableOpacity className="ml-2">
-          <MoreVertical size={20} color="#9ca3af" />
-        </TouchableOpacity>
-      </View>
+      
+      <PostContent 
+        imageUri={imageUri} 
+        title={post.title} 
+        content={post.content} 
+        tags={Array.isArray(post.tag) ? post.tag : []} 
+      />
 
-      {/* Body: Image with Overlay Tags & Title */}
-      <View className="px-4">
-        <ImageBackground
-          source={{ uri: imageUri }}
-          className="w-full h-56 rounded-[24px] overflow-hidden justify-end"
-          imageStyle={{ borderRadius: 24 }}
-        >
-          {/* Overlay Gradient/Shadow để text dễ đọc */}
-          <View className="bg-black/30 p-4">
-            {/* Hashtags nằm đè lên ảnh */}
-            <View className="flex-row space-x-2 mb-2">
-              {tags.map((t, index) => (
-                <View key={index} className="bg-white/20 px-2 py-0.5 rounded-md border border-white/30">
-                  <Text className="text-white text-[10px] font-medium">#{t}</Text>
-                </View>
-              ))}
-            </View>
-            <Text className="text-white font-bold text-lg" numberOfLines={2}>
-              {post.title}
-            </Text>
-          </View>
-        </ImageBackground>
-      </View>
-
-      {/* Content & Location/Journey Pills */}
-      <View className="p-4">
-        <Text className="text-gray-600 text-sm mb-4 leading-5" numberOfLines={2}>
-          {post.content}
-        </Text>
-
-        <View className="flex-row space-x-2 mb-4">
-          <View className="flex-row items-center bg-primary-soft px-3 py-1.5 rounded-xl border border-primary-soft">
-            <MapPin size={14} color="#3b82f6" />
-            <Text className="text-[11px] text-primary-strong font-semibold ml-1">Phố cổ Hội An</Text>
-          </View>
-          <View className="flex-row items-center bg-success-soft px-3 py-1.5 rounded-xl border border-success-soft">
-            <Navigation size={14} color={AppColors.status.success} />
-            <Text className="text-[11px] text-success-strong font-semibold ml-1">Hội An thong dong</Text>
-          </View>
-        </View>
-
-        {/* Footer Stats */}
-        <View className="flex-row justify-between items-center border-t border-gray-50 pt-3">
-          <View className="flex-row space-x-5">
-            <StatItemView icon={<Heart size={18} color="#666" />} value={stats.likes} />
-            <StatItemView icon={<MessageCircle size={18} color="#666" />} value={stats.comments} />
-            <StatItemView icon={<Eye size={18} color="#666" />} value={stats.views} />
-          </View>
-          <TouchableOpacity>
-            <Text className="text-primary font-bold text-xs">Chi tiết</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <PostFooter 
+        placeNames={placeNames}
+        journeyId={post.journey_id}
+        likesCount={likesCount}
+        isLiked={isLiked}
+        likeLoading={likeLoading}
+        commentsCount={post.stats?.comments || 0}
+        viewsCount={post.stats?.views || 0}
+        onLikePress={handleToggleLike}
+        disabledLike={!currentUserId || likeLoading}
+      />
+    </TouchableOpacity>
   );
 };

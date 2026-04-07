@@ -22,6 +22,8 @@ import { NotificationScreen } from './components/NotificationScreen';
 import { FriendsManageScreen } from './components/FriendsManageScreen';
 import { OtherUserProfileScreen } from './components/OtherUserProfileScreen';
 import ForumScreen from './components/Forum/ForumScreen';
+import { ForumPostDetailScreen } from './components/Forum/ForumPostDetailScreen';
+import { CreatePostScreen } from './components/Forum/CreatePostScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
@@ -51,6 +53,8 @@ type AppState =
   | 'mapScreen'
   | 'notifications'
   | 'forum'
+  | 'forumCreate'
+  | 'forumDetail'
   | 'friendsManage'
   | 'otherUserProfile'
   | 'chatDetail'
@@ -76,6 +80,8 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
+  const [forumRefreshKey, setForumRefreshKey] = useState(0);
+  const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
 
   useEffect(() => {
     const ensureNotificationSocket = async () => {
@@ -412,7 +418,34 @@ export default function App() {
         );
 
       case 'forum':
-        return <ForumScreen onBack={() => setAppState('main')} />;
+        return (
+          <ForumScreen
+            refreshKey={forumRefreshKey}
+            onBack={() => setAppState('main')}
+            onOpenPost={(postId: string) => {
+              setSelectedForumPostId(postId);
+              setAppState('forumDetail');
+            }}
+            onCreatePost={() => setAppState('forumCreate')}
+          />
+        );
+
+      case 'forumCreate':
+        return (
+          <CreatePostScreen
+            onBack={() => setAppState('forum')}
+            mode="create"
+            onSubmitSuccess={() => setForumRefreshKey((prev) => prev + 1)}
+          />
+        );
+
+      case 'forumDetail':
+        return (
+          <ForumPostDetailScreen
+            postId={selectedForumPostId}
+            onBack={() => setAppState('forum')}
+          />
+        );
 
       case 'reviewPlace':
         return (

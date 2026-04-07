@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Bell, Plus, MessageSquare, ArrowLeft } from 'lucide-react-native';
 import { ForumPostCard } from '../Forum/ForumPostCard'; // Đường dẫn component Card
@@ -6,8 +6,8 @@ import { ForumTopTabs } from '../Forum/ForumTopTabs'; // Đường dẫn compone
 import { ForumPost, ForumCategory, PostStatus, PostSortBy } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
-import { AppColors } from 'utils/theme';  
-import { DateUtils } from 'utils/dateUtils';
+import { AppColors } from '../../utils/theme';  
+import { DateUtils } from '../../utils/dateUtils';
 
 // 1. Thêm các thư viện xử lý ảnh
 import * as ImagePicker from 'expo-image-picker';
@@ -18,7 +18,7 @@ import { Modal } from 'react-native'; // Để hiện màn hình chờ
 import { processImage, upImageToCloudinary } from '../../utils/uploadImage';
 import { Button, SearchInput } from '../shared';
 
-const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
+const ForumScreen = ({ onBack, onOpenPost, onCreatePost, refreshKey }: { onBack?: () => void; onOpenPost?: (postId: string) => void; onCreatePost?: () => void; refreshKey?: number }) => {
   const [currentCategory, setCurrentCategory] = useState<ForumCategory>(ForumCategory.REVIEW);
   const [userName, setUserName] = useState<string>('');
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -27,15 +27,13 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-
-
   useEffect(() => {
     fetchUserName();
   }, []);
 
   useEffect(() => {
     fetchPosts();
-  }, [currentCategory]);
+  }, [currentCategory, refreshKey]);
 
   const fetchUserName = async () => {
     try {
@@ -133,7 +131,6 @@ const ForumScreen = ({ onBack }: { onBack?: () => void }) => {
     })
     : posts;
 
-
     // console.log('--- ĐIỀU TRA FORUM SCREEN ---');
     // console.log('ForumTopTabs:', !!ForumTopTabs);
     // console.log('SearchInput:', !!SearchInput);
@@ -182,7 +179,12 @@ return (
           <FlatList
             data={displayedPosts}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => <ForumPostCard post={item} />}
+            renderItem={({ item }) => (
+              <ForumPostCard
+                post={item}
+                onPress={() => onOpenPost?.(item._id)}
+              />
+            )}
             contentContainerStyle={{ paddingBottom: 100 }}
             showsVerticalScrollIndicator={false}
             ListFooterComponent={
@@ -199,8 +201,11 @@ return (
       <Button
         className="absolute bottom-10 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-xl shadow-primary/40"
         onPress={() => {
-          // TODO: mở form tạo bài viết
-          alert('Tính năng tạo bài viết đang phát triển');
+          if (onCreatePost) {
+            onCreatePost();
+          } else {
+            alert('Tính năng tạo bài viết đang phát triển');
+          }
         }}
       >
         <Plus size={30} color="white" />

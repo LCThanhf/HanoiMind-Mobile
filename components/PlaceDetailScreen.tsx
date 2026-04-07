@@ -20,6 +20,8 @@ import { Place } from '../services/placeService/place.type';
 import { FavoriteService } from '../services/favoriteService/favorite.service';
 import { FavoriteType } from '../services/favoriteService/favorite.type';
 import { ReviewService } from '../services/reviewService/review.service';
+import ChatService from '../services/chatService/chat.service';
+import { UsersService } from '../services/userService/user.service';
 import { BackChevronIcon, Button, CharacteristicBadge, ListActionRow } from './shared';
 
 const COST_RATES = {
@@ -90,16 +92,18 @@ type PlaceDetailScreenProps = {
     onBack: () => void;
     onReview?: () => void;
     onOpenMap?: (place: Place) => void;
+    onStartChat?: (roomId: string, chatName: string) => void;
     placeId: string;
     refreshKey?: number;
 };
 
-export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refreshKey = 0 }: PlaceDetailScreenProps) => {
+export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, onStartChat, placeId, refreshKey = 0 }: PlaceDetailScreenProps) => {
     const insets = useSafeAreaInsets();
     const [place, setPlace] = useState<Place | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
     const [showAllHours, setShowAllHours] = useState(false);
+    const [ownerName, setOwnerName] = useState<string>('');
 
     const fetchPlaceDetail = useCallback(async (showLoading = true) => {
         try {
@@ -125,6 +129,18 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
 
             setPlace({ ...data, rating: avgRating, reviewCount: totalReviews });
             setIsFavorite(myFavs.some((fav: any) => fav.target_id === placeId || fav._id === placeId));
+
+            // Fetch owner name
+            const ownerId = data?.ownerId || (data as any)?.owner_id;
+            if (ownerId) {
+                try {
+                    const ownerProfile = await UsersService.getPublicProfile(ownerId);
+                    setOwnerName(ownerProfile?.fullName || '');
+                } catch (error) {
+                    console.error('Error fetching owner profile:', error);
+                    setOwnerName('');
+                }
+            }
         } catch {
             Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
         } finally {
@@ -228,6 +244,31 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
     const safeLat = rawLat != null ? Number(rawLat) : 0;
     const safeLng = rawLng != null ? Number(rawLng) : 0;
     const hasCoordinates = Number.isFinite(safeLat) && Number.isFinite(safeLng) && !(safeLat === 0 && safeLng === 0);
+
+    const handleContactOwner = async () => {
+        const ownerId = place?.ownerId || (place as any)?.owner_id;
+        
+        if (!ownerId) {
+            Alert.alert('Thông báo', 'Địa điểm này chưa có thông tin chủ sở hữu để liên hệ.');
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            // Gọi service tạo/lấy phòng chat 1-1
+            const conversation = await ChatService.createDirectChat(ownerId);
+            
+            if (onStartChat && conversation) {
+                // Điều hướng sang màn hình chat với tên chủ sở hữu
+                onStartChat(conversation._id, ownerName || 'Chủ sở hữu');
+            }
+        } catch (error) {
+            Alert.alert('Lỗi', 'Không thể kết nối với chủ sở hữu lúc này.');
+            console.error('Create chat error:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleOpenMap = () => {
         if (onOpenMap) {
@@ -447,9 +488,9 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, placeId, refres
                             {(place.ownerId || (place as any).owner_id) && (
                                 <ListActionRow
                                     icon={<MessageCircleIcon />}
-                                    title="Chat với chủ cơ sở"
+                                    title={`Chat với ${ownerName || 'chủ cơ sở'}`}
                                     rightElement={<Text className="text-primary-strong text-xs font-bold uppercase">Nhắn tin</Text>}
-                                    onPress={() => Alert.alert('Nhắn tin', 'Tính năng chat với chủ cơ sở đang được phát triển!')}
+                                    onPress={handleContactOwner}
                                     iconContainerBackgroundColor="#EFF6FF"
                                 />
                             )}

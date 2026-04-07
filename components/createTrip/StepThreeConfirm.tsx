@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
 import { SectionHeader } from '../shared';
+import { PlanningMode } from './types';
 
 interface SelectedPlaceDetail {
   id: string;
@@ -19,6 +20,7 @@ interface StepThreeConfirmProps {
   selectedMoodTitle?: string;
   budget: string;
   selectedPlaces: SelectedPlaceDetail[];
+  planningMode: PlanningMode;
 }
 
 export const StepThreeConfirm = ({
@@ -28,9 +30,16 @@ export const StepThreeConfirm = ({
   selectedMoodTitle,
   budget,
   selectedPlaces,
+  planningMode,
 }: StepThreeConfirmProps) => (
   <View className="px-5 pb-10">
-    <SectionHeader title="Xác nhận và chạy AI" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
+    <SectionHeader
+      title={planningMode === 'manual' ? 'Xác nhận lịch trình thủ công' : 'Xác nhận và chạy AI'}
+      paddingHorizontal={0}
+      paddingTop={0}
+      paddingBottom={0}
+      marginBottom={16}
+    />
 
     <View style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, padding: 14, marginBottom: 14 }}>
       <Text style={{ fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 6 }}>{tripName || 'Chua dat ten'}</Text>

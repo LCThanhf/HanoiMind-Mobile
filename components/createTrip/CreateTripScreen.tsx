@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Modal,
-  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -23,10 +24,12 @@ import { moodAiMap, moodOptions, moodTagMap } from './constants';
 import { SparkleIcon } from './icons';
 import { StepOneInfo } from './StepOneInfo';
 import { StepTwoPlaces } from './StepTwoPlaces';
+import { StepTwoManualStops } from './StepTwoManualStops';
 import { StepThreeConfirm } from './StepThreeConfirm';
-import { MoodId } from './types';
+import { ManualStopDraft, MoodId, PlanningMode } from './types';
+import { PlaceCard } from '../cards/PlaceCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from '../shared';
+import { Button, CardContainer, SelectableCard } from '../shared';
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear();
@@ -34,6 +37,42 @@ const formatDateInput = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+const formatDateToHHmm = (date: Date) => {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const toMinutesFromHHmm = (value: string) => {
+  const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
+  const now = new Date();
+  const fromHHmm = typeof value === 'string' ? value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/) : null;
+
+  if (fromHHmm) {
+    now.setHours(Number(fromHHmm[1]), Number(fromHHmm[2]), 0, 0);
+    return now;
+  }
+
+  if (value) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  const hours = Math.floor(fallbackMinutes / 60);
+  const minutes = fallbackMinutes % 60;
+  now.setHours(hours, minutes, 0, 0);
+  return now;
+};
+
+const addMinutes = (source: Date, minutes: number) => new Date(source.getTime() + minutes * 60 * 1000);
 
 export const CreateTripScreen = ({
   onClose,
@@ -60,7 +99,21 @@ export const CreateTripScreen = ({
   const [budget, setBudget] = useState('');
   const [selectedMood, setSelectedMood] = useState<MoodId>('reset');
   const [isSoloMode, setIsSoloMode] = useState(true);
+  const [planningMode, setPlanningMode] = useState<PlanningMode>('ai');
   const [ownerId, setOwnerId] = useState<string | null>(null);
+
+  const [manualStops, setManualStops] = useState<ManualStopDraft[]>([]);
+  const [showManualStopModal, setShowManualStopModal] = useState(false);
+  const [manualPlaceKeyword, setManualPlaceKeyword] = useState('');
+  const [manualPlaceResults, setManualPlaceResults] = useState<Place[]>([]);
+  const [manualPlaceLoading, setManualPlaceLoading] = useState(false);
+  const [selectedManualPlace, setSelectedManualPlace] = useState<Place | null>(null);
+  const [manualStopDayIndex, setManualStopDayIndex] = useState(0);
+  const [manualStopDate, setManualStopDate] = useState(() => formatDateInput(today));
+  const [manualStopStartTime, setManualStopStartTime] = useState(() => parseTimeToDate('08:00', 8 * 60));
+  const [manualStopEndTime, setManualStopEndTime] = useState(() => parseTimeToDate('10:00', 10 * 60));
+  const [manualPickerMode, setManualPickerMode] = useState<'start-time' | 'end-time' | null>(null);
+  const [showPlanningModeModal, setShowPlanningModeModal] = useState(false);
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [placesLoading, setPlacesLoading] = useState(false);
@@ -76,7 +129,7 @@ export const CreateTripScreen = ({
   const [seededStops, setSeededStops] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const parseDateInput = (value: string): Date | null => {
+  const parseDateInput = useCallback((value: string): Date | null => {
     const normalized = value.trim();
     const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) return null;
@@ -96,7 +149,7 @@ export const CreateTripScreen = ({
     }
 
     return parsed;
-  };
+  }, []);
 
   const buildIsoDateRange = (startValue: string, endValue: string) => {
     const parsedStart = parseDateInput(startValue);
@@ -134,6 +187,62 @@ export const CreateTripScreen = ({
       daysCount,
     };
   };
+
+  const getDayIndexFromDate = (dateValue: string, startValue: string) => {
+    const parsedDate = parseDateInput(dateValue);
+    const parsedStart = parseDateInput(startValue);
+    if (!parsedDate || !parsedStart) return null;
+
+    const dateUtc = Date.UTC(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+    const startUtc = Date.UTC(parsedStart.getFullYear(), parsedStart.getMonth(), parsedStart.getDate());
+    const diff = Math.floor((dateUtc - startUtc) / (24 * 60 * 60 * 1000));
+    return diff >= 0 ? diff : null;
+  };
+
+  const formatDateDisplay = useCallback((value: string) => {
+    const parsed = parseDateInput(value);
+    if (!parsed) return value;
+    const dd = String(parsed.getDate()).padStart(2, '0');
+    const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+    const yyyy = parsed.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }, [parseDateInput]);
+
+  const manualStopDayOptions = useMemo(() => {
+    const parsedStart = parseDateInput(startDate);
+    const parsedEnd = parseDateInput(endDate);
+    if (!parsedStart || !parsedEnd || parsedEnd < parsedStart) return [];
+
+    const options: { dayIndex: number; date: string; label: string }[] = [];
+    const cursor = new Date(parsedStart);
+    let index = 0;
+
+    while (cursor <= parsedEnd) {
+      const iso = formatDateInput(cursor);
+      options.push({
+        dayIndex: index,
+        date: iso,
+        label: `${formatDateDisplay(iso)}`,
+      });
+      cursor.setDate(cursor.getDate() + 1);
+      index += 1;
+      if (index > 90) break;
+    }
+
+    return options;
+  }, [startDate, endDate, formatDateDisplay, parseDateInput]);
+
+  useEffect(() => {
+    if (!manualStopDayOptions.length) return;
+    const safeIndex = Math.min(manualStopDayIndex, manualStopDayOptions.length - 1);
+    if (safeIndex !== manualStopDayIndex) {
+      setManualStopDayIndex(safeIndex);
+    }
+    const chosenDate = manualStopDayOptions[safeIndex].date;
+    if (chosenDate !== manualStopDate) {
+      setManualStopDate(chosenDate);
+    }
+  }, [manualStopDayOptions, manualStopDayIndex, manualStopDate]);
 
   const parseBudgetValue = (raw: string): number | undefined => {
     const digitsOnly = raw.replace(/\D/g, '');
@@ -296,6 +405,112 @@ export const CreateTripScreen = ({
     setShowDatePicker(false);
   };
 
+  useEffect(() => {
+    if (!showManualStopModal) return;
+
+    const timer = setTimeout(async () => {
+      const keyword = manualPlaceKeyword.trim();
+      if (!keyword) {
+        setManualPlaceResults([]);
+        return;
+      }
+
+      try {
+        setManualPlaceLoading(true);
+        const res = await PlacesService.findAll({ page: 1, limit: 8, name: keyword });
+        const incoming = Array.isArray(res?.data) ? res.data : [];
+        setManualPlaceResults(incoming);
+      } catch {
+        setManualPlaceResults([]);
+      } finally {
+        setManualPlaceLoading(false);
+      }
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [manualPlaceKeyword, showManualStopModal]);
+
+  const openManualStopModal = () => {
+    setSelectedManualPlace(null);
+    setManualPlaceKeyword('');
+    setManualPlaceResults([]);
+    setManualStopDayIndex(0);
+    setManualStopDate(startDate);
+    setManualStopStartTime(parseTimeToDate('08:00', 8 * 60));
+    setManualStopEndTime(parseTimeToDate('10:00', 10 * 60));
+    setManualPickerMode(null);
+    setShowManualStopModal(true);
+  };
+
+  const closeManualStopModal = () => {
+    setShowManualStopModal(false);
+    setManualPickerMode(null);
+  };
+
+  const addManualStop = () => {
+    if (!selectedManualPlace) {
+      Alert.alert('Thiếu địa điểm', 'Hãy chọn một địa điểm cho stop thủ công.');
+      return;
+    }
+
+    const dayIndex = getDayIndexFromDate(manualStopDate, startDate);
+    const { daysCount } = buildIsoDateRange(startDate, endDate);
+    if (dayIndex === null || dayIndex >= daysCount) {
+      Alert.alert('Ngày chưa hợp lệ', 'Ngày của stop phải nằm trong khoảng ngày đi của chuyến.');
+      return;
+    }
+
+    const startTime = formatDateToHHmm(manualStopStartTime);
+    const endTime = formatDateToHHmm(manualStopEndTime);
+    const startMinutes = toMinutesFromHHmm(startTime);
+    const endMinutes = toMinutesFromHHmm(endTime);
+
+    if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+      Alert.alert('Giờ chưa hợp lệ', 'Giờ kết thúc phải sau giờ bắt đầu.');
+      return;
+    }
+
+    const next: ManualStopDraft = {
+      id: `${selectedManualPlace._id}-${Date.now()}`,
+      placeId: selectedManualPlace._id,
+      placeName: selectedManualPlace.name,
+      thumbnail: selectedManualPlace.images?.[0],
+      dayIndex,
+      dayLabel: formatDateDisplay(manualStopDate),
+      date: manualStopDate,
+      startTime,
+      endTime,
+      estimatedCost: selectedManualPlace.estimated_cost_vnd,
+    };
+
+    setManualStops((prev) => [...prev, next]);
+    closeManualStopModal();
+  };
+
+  const handleManualPickerChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (event.type === 'dismissed') {
+      setManualPickerMode(null);
+      return;
+    }
+
+    if (!selected || !manualPickerMode) {
+      setManualPickerMode(null);
+      return;
+    }
+
+    if (manualPickerMode === 'start-time') {
+      setManualStopStartTime(selected);
+      if (selected.getTime() >= manualStopEndTime.getTime()) {
+        setManualStopEndTime(addMinutes(selected, 120));
+      }
+      setManualPickerMode(null);
+      return;
+    }
+
+    setManualStopEndTime(selected);
+    setManualPickerMode(null);
+  };
+
   const handleAiSelectPlaces = async () => {
     if (isAiSelectingPlaces || isProcessing || placesLoading) return;
 
@@ -440,14 +655,14 @@ export const CreateTripScreen = ({
   }, [placesSearch]);
 
   useEffect(() => {
-    if (currentStep !== 2) return;
+    if (currentStep !== 2 || planningMode !== 'ai') return;
 
     const timer = setTimeout(() => {
       fetchPlaces({ nextPage: 1, reset: true });
     }, placesSearch.trim() ? 320 : 0);
 
     return () => clearTimeout(timer);
-  }, [currentStep, placesSearch, fetchPlaces]);
+  }, [currentStep, placesSearch, fetchPlaces, planningMode]);
 
   useEffect(() => {
     if (!selectedPlaceIds.length || !places.length) return;
@@ -497,14 +712,29 @@ export const CreateTripScreen = ({
     });
   }, [places, selectedPlaceIds, selectedPlaceNameMap]);
 
+  const manualStopDetails = useMemo(() => {
+    if (!manualStops.length) return [];
+
+    return manualStops.map((stop) => ({
+      id: stop.id,
+      name: stop.placeName,
+      address: `${stop.date} | ${stop.startTime} - ${stop.endTime}`,
+      category: 'MANUAL_STOP',
+      estimatedCostVnd: stop.estimatedCost,
+    }));
+  }, [manualStops]);
+
+  const formatCurrencyVnd = (value?: number) => {
+    if (!value || value <= 0) return 'Chưa rõ chi phí';
+    return `${value.toLocaleString('vi-VN')} đ`;
+  };
+
   const validateStepOne = () => {
     const cleanName = tripName.trim();
     if (!cleanName) {
       Alert.alert('Thiếu thông tin', 'Bạn cần nhập tên chuyến đi trước khi sang bước tiếp theo.');
       return false;
     }
-
-    const budgetLimit = parseBudgetValue(budget);
 
     const { start_date, end_date } = buildIsoDateRange(startDate, endDate);
     if (!start_date || !end_date) {
@@ -537,15 +767,21 @@ export const CreateTripScreen = ({
 
     if (currentStep === 1) {
       if (!validateStepOne()) return;
-      setCurrentStep(2);
+      setShowPlanningModeModal(true);
       return;
     }
 
     if (currentStep === 2) {
-      if (!selectedPlaceIds.length) {
+      if (planningMode === 'ai' && !selectedPlaceIds.length) {
         Alert.alert('Thiếu địa điểm', 'Bạn cần chọn ít nhất 1 địa điểm ở bước 2.');
         return;
       }
+
+      if (planningMode === 'manual' && !manualStops.length) {
+        Alert.alert('Thiếu stop', 'Bạn cần thêm ít nhất 1 stop thủ công ở bước 2.');
+        return;
+      }
+
       setCurrentStep(3);
       return;
     }
@@ -596,7 +832,27 @@ export const CreateTripScreen = ({
         return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
       };
 
-      if (!seededStops && selectedPlaceIds.length) {
+      if (planningMode === 'manual' && manualStops.length) {
+        const sortedManualStops = [...manualStops].sort((a, b) => {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          return a.startTime.localeCompare(b.startTime);
+        });
+
+        for (const stop of sortedManualStops) {
+          const dayIndex = getDayIndexFromDate(stop.date, startDate);
+          if (dayIndex === null || dayIndex >= normalizedJourneyDays) continue;
+
+          await JourneyService.addStop(journeyId, {
+            day_index: dayIndex,
+            place_id: stop.placeId,
+            start_time: stop.startTime,
+            end_time: stop.endTime,
+            estimated_cost: stop.estimatedCost || 0,
+          });
+        }
+      }
+
+      if (planningMode === 'ai' && !seededStops && selectedPlaceIds.length) {
         const dayStopCounts = new Map<number, number>();
 
         for (let i = 0; i < selectedPlaceIds.length; i += 1) {
@@ -618,6 +874,15 @@ export const CreateTripScreen = ({
           dayStopCounts.set(dayIndex, placedStopsForDay + 1);
         }
         setSeededStops(true);
+      }
+
+      if (planningMode === 'manual') {
+        onJourneyCreated?.(journeyId);
+        if (!onJourneyCreated) {
+          Alert.alert('Thành công', 'Đã tạo hành trình với stop thủ công.');
+          onClose?.();
+        }
+        return;
       }
 
       const safeTotalBudget = budgetLimit ?? 0;
@@ -669,12 +934,19 @@ export const CreateTripScreen = ({
 
   const actionLabel =
     currentStep === 1
-      ? 'Tiếp theo: Chọn địa điểm'
+      ? 'Tiếp theo'
       : currentStep === 2
-        ? 'Tiếp theo: Tối ưu AI'
-        : 'Bắt đầu tối ưu AI';
+        ? 'Tiếp theo'
+        : planningMode === 'manual'
+          ? 'Tạo hành trình thủ công'
+          : 'Bắt đầu tối ưu AI';
 
   const dateRangeSummary = `${startDate} -> ${endDate}`;
+  const stepConfig = [
+    { key: 1, label: 'THÔNG TIN', value: 1 },
+    { key: 2, label: 'LẬP LỊCH', value: 2 },
+    { key: 3, label: 'XÁC NHẬN', value: 3 },
+  ];
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -695,36 +967,36 @@ export const CreateTripScreen = ({
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <Pressable>
           <View className="flex-row items-center justify-center px-10 py-6">
-            {[1, 2, 3].map((step, index) => (
-              <React.Fragment key={step}>
+            {stepConfig.map((step, index) => (
+              <React.Fragment key={step.key}>
                 <View className="items-center">
                   <View
                     style={{
                       width: 32,
                       height: 32,
                       borderRadius: 16,
-                      backgroundColor: currentStep >= step ? '#2B8EF0' : 'transparent',
-                      borderWidth: currentStep >= step ? 0 : 1.5,
+                      backgroundColor: currentStep >= step.value ? '#2B8EF0' : 'transparent',
+                      borderWidth: currentStep >= step.value ? 0 : 1.5,
                       borderColor: '#D1D5DB',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
-                    <Text className="text-[13px]" style={{ color: currentStep >= step ? 'white' : '#9CA3AF', fontWeight: '600' }}>
-                      {step}
+                    <Text className="text-[13px]" style={{ color: currentStep >= step.value ? 'white' : '#9CA3AF', fontWeight: '600' }}>
+                      {step.key}
                     </Text>
                   </View>
-                  <Text className="text-[10px] mt-1.5" style={{ color: currentStep >= step ? '#2B8EF0' : '#9CA3AF', fontWeight: '500' }}>
-                    {step === 1 ? 'THÔNG TIN' : step === 2 ? 'ĐỊA ĐIỂM' : 'AI TẠO'}
+                  <Text className="text-[10px] mt-1.5" style={{ color: currentStep >= step.value ? '#2B8EF0' : '#9CA3AF', fontWeight: '500' }}>
+                    {step.label}
                   </Text>
                 </View>
 
-                {index < 2 ? (
+                {index < stepConfig.length - 1 ? (
                   <View
                     style={{
                       flex: 1,
                       height: 1.5,
-                      backgroundColor: currentStep >= step + 1 ? '#2B8EF0' : '#E5E7EB',
+                      backgroundColor: currentStep >= stepConfig[index + 1].value ? '#2B8EF0' : '#E5E7EB',
                       marginHorizontal: 8,
                       marginBottom: 18,
                     }}
@@ -750,7 +1022,7 @@ export const CreateTripScreen = ({
             />
           ) : null}
 
-          {currentStep === 2 ? (
+          {currentStep === 2 && planningMode === 'ai' ? (
             <StepTwoPlaces
               selectedPlaceIds={selectedPlaceIds}
               selectedPlaceSummaries={selectedPlaceSummaries}
@@ -769,6 +1041,14 @@ export const CreateTripScreen = ({
             />
           ) : null}
 
+          {currentStep === 2 && planningMode === 'manual' ? (
+            <StepTwoManualStops
+              manualStops={manualStops}
+              onAddManualStop={openManualStopModal}
+              onRemoveManualStop={(stopId) => setManualStops((prev) => prev.filter((stop) => stop.id !== stopId))}
+            />
+          ) : null}
+
           {currentStep === 3 ? (
             <StepThreeConfirm
               tripName={tripName}
@@ -776,7 +1056,8 @@ export const CreateTripScreen = ({
               isSoloMode={isSoloMode}
               selectedMoodTitle={moodOptions.find((m) => m.id === selectedMood)?.title}
               budget={budget}
-              selectedPlaces={selectedPlaceDetails}
+              selectedPlaces={planningMode === 'manual' ? manualStopDetails : selectedPlaceDetails}
+              planningMode={planningMode}
             />
           ) : null}
 
@@ -790,7 +1071,9 @@ export const CreateTripScreen = ({
       >
         {currentStep > 1 ? (
           <Button
-            onPress={() => setCurrentStep((prev) => (prev === 3 ? 2 : 1))}
+            onPress={() => {
+              setCurrentStep((prev) => (prev === 3 ? 2 : 1));
+            }}
             activeOpacity={0.8}
             style={{ alignItems: 'center', marginBottom: 8 }}
           >
@@ -821,6 +1104,263 @@ export const CreateTripScreen = ({
           mode="date"
           display="default"
           onChange={handleDatePickerChange}
+        />
+      ) : null}
+
+      <Modal
+        visible={showPlanningModeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPlanningModeModal(false)}
+      >
+        <View className="flex-1 items-center justify-center" style={{ backgroundColor: 'rgba(17, 24, 39, 0.35)' }}>
+          <View
+            className="mx-5 rounded-2xl p-5"
+            style={{ width: '92%', maxWidth: 420, backgroundColor: 'white' }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Chọn cách tạo lịch trình</Text>
+            <Text style={{ marginTop: 6, fontSize: 13, color: '#6B7280' }}>
+              Bạn muốn dùng AI tối ưu chuyến đi hay tự thêm stop thủ công?
+            </Text>
+
+            <View style={{ marginTop: 16, flexDirection: 'row', gap: 10 }}>
+              <Button
+                onPress={() => {
+                  setPlanningMode('ai');
+                  setShowPlanningModeModal(false);
+                  setCurrentStep(2);
+                }}
+                style={{
+                  flex: 1,
+                  aspectRatio: 1,
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderColor: planningMode === 'ai' ? '#2B8EF0' : '#BFDBFE',
+                  backgroundColor: '#EFF6FF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 10,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    backgroundColor: '#2B8EF0',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <SparkleIcon />
+                </View>
+                <Text style={{ color: '#1D4ED8', fontWeight: '800', fontSize: 14, textAlign: 'center' }}>
+                  Chuyến đi dùng AI
+                </Text>
+                <Text style={{ color: '#1D4ED8', fontSize: 11, textAlign: 'center', marginTop: 4 }}>
+                  AI tối ưu tự động
+                </Text>
+              </Button>
+
+              <Button
+                onPress={() => {
+                  setPlanningMode('manual');
+                  setShowPlanningModeModal(false);
+                  setCurrentStep(2);
+                }}
+                style={{
+                  flex: 1,
+                  aspectRatio: 1,
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderColor: planningMode === 'manual' ? '#16A34A' : '#BBF7D0',
+                  backgroundColor: '#F0FDF4',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 10,
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    backgroundColor: '#22C55E',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                    <Path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z" stroke="white" strokeWidth="1.8" />
+                    <Path d="M8 8h8M8 12h8M8 16h5" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+                  </Svg>
+                </View>
+                <Text style={{ color: '#15803D', fontWeight: '800', fontSize: 14, textAlign: 'center' }}>
+                  Tự thêm stop
+                </Text>
+                <Text style={{ color: '#15803D', fontSize: 11, textAlign: 'center', marginTop: 4 }}>
+                  Tùy chỉnh thủ công
+                </Text>
+              </Button>
+            </View>
+
+            <Button
+              onPress={() => setShowPlanningModeModal(false)}
+              className="items-center mt-3 py-2"
+            >
+              <Text style={{ color: '#6B7280', fontWeight: '600' }}>Để sau</Text>
+            </Button>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showManualStopModal}
+        transparent
+        animationType="slide"
+        onRequestClose={closeManualStopModal}
+      >
+        <View className="flex-1" style={{ backgroundColor: 'rgba(17, 24, 39, 0.35)', justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              maxHeight: '85%',
+              paddingBottom: Math.max(insets.bottom, 16),
+            }}
+          >
+            <View className="px-5 pt-4 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Thêm stop thủ công</Text>
+              <Text style={{ marginTop: 4, fontSize: 12, color: '#6B7280' }}>Chọn địa điểm rồi đặt ngày giờ cụ thể cho stop.</Text>
+            </View>
+
+            <ScrollView className="px-5 pt-4" keyboardShouldPersistTaps="handled">
+              <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6, fontWeight: '600' }}>Tìm địa điểm</Text>
+              <View
+                className="rounded-xl px-4"
+                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 48, justifyContent: 'center' }}
+              >
+                <TextInput
+                  value={manualPlaceKeyword}
+                  onChangeText={setManualPlaceKeyword}
+                  placeholder="Nhập tên địa điểm"
+                  placeholderTextColor="#9CA3AF"
+                  style={{ color: '#111827', fontSize: 14, fontWeight: '500' }}
+                />
+              </View>
+
+              {manualPlaceLoading ? (
+                <View className="py-4 items-center">
+                  <ActivityIndicator size="small" color="#2B8EF0" />
+                </View>
+              ) : null}
+
+              {manualPlaceResults.map((place) => {
+                const isSelected = selectedManualPlace?._id === place._id;
+                return (
+                  <View key={place._id} style={{ marginTop: 10 }}>
+                    <PlaceCard
+                      place={place}
+                      layout="horizontal"
+                      onPress={() => setSelectedManualPlace(place)}
+                      style={{
+                        borderRadius: 14,
+                        borderWidth: 1.4,
+                        borderColor: isSelected ? '#2B8EF0' : '#E5E7EB',
+                        backgroundColor: isSelected ? '#EFF6FF' : 'white',
+                      }}
+                    />
+
+                    <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <CardContainer style={{ borderRadius: 999, borderColor: '#BBF7D0', backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ color: '#166534', fontSize: 11, fontWeight: '700' }} numberOfLines={1}>
+                          {formatCurrencyVnd(place.estimated_cost_vnd)}
+                        </Text>
+                      </CardContainer>
+
+                      {isSelected ? (
+                        <Text style={{ color: '#1D4ED8', fontSize: 12, fontWeight: '700' }}>Đã chọn địa điểm này</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              })}
+
+              <View className="mt-4" style={{ gap: 8 }}>
+                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Ngày và giờ</Text>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8, paddingVertical: 2, paddingRight: 8 }}
+                >
+                  {manualStopDayOptions.map((option) => (
+                    <SelectableCard
+                      key={option.dayIndex}
+                      title={`Ngày ${option.dayIndex + 1}`}
+                      subtitle={formatDateDisplay(option.date)}
+                      selected={manualStopDayIndex === option.dayIndex}
+                      onPress={() => {
+                        setManualStopDayIndex(option.dayIndex);
+                        setManualStopDate(option.date);
+                      }}
+                      backgroundColor={manualStopDayIndex === option.dayIndex ? '#EFF6FF' : 'white'}
+                      containerStyle={{ width: 156, paddingVertical: 10, borderRadius: 12 }}
+                    />
+                  ))}
+                </ScrollView>
+
+                <View className="flex-row" style={{ gap: 8 }}>
+                  <Button
+                    onPress={() => setManualPickerMode('start-time')}
+                    className="flex-1 px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' }}
+                  >
+                    <Text style={{ color: '#111827', fontWeight: '600' }}>Bắt đầu: {formatDateToHHmm(manualStopStartTime)}</Text>
+                  </Button>
+
+                  <Button
+                    onPress={() => setManualPickerMode('end-time')}
+                    className="flex-1 px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' }}
+                  >
+                    <Text style={{ color: '#111827', fontWeight: '600' }}>Kết thúc: {formatDateToHHmm(manualStopEndTime)}</Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View style={{ height: 12 }} />
+            </ScrollView>
+
+            <View className="px-5 pt-3" style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+              <Button
+                onPress={addManualStop}
+                className="items-center py-3 rounded-xl"
+                style={{ backgroundColor: '#DCFCE7' }}
+              >
+                <Text style={{ color: '#166534', fontWeight: '700' }}>Lưu stop thủ công</Text>
+              </Button>
+
+              <Button
+                onPress={closeManualStopModal}
+                className="items-center py-3"
+              >
+                <Text style={{ color: '#6B7280', fontWeight: '600' }}>Đóng</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {manualPickerMode ? (
+        <DateTimePicker
+          value={manualPickerMode === 'start-time' ? manualStopStartTime : manualStopEndTime}
+          mode="time"
+          display="default"
+          onChange={handleManualPickerChange}
         />
       ) : null}
     </SafeAreaView>

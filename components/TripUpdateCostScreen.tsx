@@ -13,7 +13,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { JourneyService } from '../services/journeyService/journey.service';
 import { CostType, JourneyMemberRole, UpdateStopPayload } from '../services/journeyService/journey.type';
 import { AvatarCircle, Button, CardContainer, ScreenHeader } from './shared';
-import { MemberProfile, StopCostItem } from './TripBudgetManageScreen';
+import { MemberProfile, StopCostItem } from './tripBudget/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

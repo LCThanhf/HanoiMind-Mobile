@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
-import { SectionHeader } from '../../shared';
+import { SectionHeader } from '../shared';
 import { PlanningMode } from './types';
 
 interface SelectedPlaceDetail {

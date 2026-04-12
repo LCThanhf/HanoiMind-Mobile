@@ -11,7 +11,7 @@ import { SignUpScreen } from './components/SignUpScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { ExploreScreen } from './components/ExploreScreen';
 import { PlacesExploreScreen } from './components/PlacesExploreScreen';
-import { CreateTripScreen } from './components/journey/CreateTripScreen';
+import { CreateTripScreen } from './components/CreateTripScreen';
 import { TripDetailScreen } from './components/journey/tripDetail/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { TripsScreen } from './components/journey/TripsScreen';

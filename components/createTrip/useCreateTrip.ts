@@ -1,56 +1,37 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
+import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-import { JourneyService } from '../../../services/journeyService/journey.service';
-import { Journey, JourneyVisibility } from '../../../services/journeyService/journey.type';
-import { PlacesService } from '../../../services/placeService/place.service';
-import { Place } from '../../../services/placeService/place.type';
-import { AiService } from '../../../services/aiService/ai.service';
-import { AiMood } from '../../../services/aiService/ai.type';
-import { UsersService } from '../../../services/userService/user.service';
-import { moodAiMap, moodOptions, moodTagMap } from './constants';
-import { SparkleIcon } from './icons';
-import { StepOneInfo } from './StepOneInfo';
-import { StepTwoPlaces } from './StepTwoPlaces';
-import { StepTwoManualStops } from './StepTwoManualStops';
-import { StepThreeConfirm } from './StepThreeConfirm';
+import { JourneyService } from '../../services/journeyService/journey.service';
+import { Journey, JourneyVisibility } from '../../services/journeyService/journey.type';
+import { PlacesService } from '../../services/placeService/place.service';
+import { Place } from '../../services/placeService/place.type';
+import { AiService } from '../../services/aiService/ai.service';
+import { AiMood } from '../../services/aiService/ai.type';
+import { UsersService } from '../../services/userService/user.service';
+import { moodAiMap, moodTagMap } from './constants';
 import { ManualStopDraft, MoodId, PlanningMode } from './types';
-import { PlaceCard } from '../../cards/PlaceCard';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, CardContainer, SelectableCard } from '../../shared';
 
-const formatDateInput = (date: Date) => {
+export const formatDateInput = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-const formatDateToHHmm = (date: Date) => {
+export const formatDateToHHmm = (date: Date) => {
   const hours = date.getHours();
   const minutes = date.getMinutes();
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
-const toMinutesFromHHmm = (value: string) => {
+export const toMinutesFromHHmm = (value: string) => {
   const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
   if (!match) return null;
   return Number(match[1]) * 60 + Number(match[2]);
 };
 
-const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
+export const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: number) => {
   const now = new Date();
   const fromHHmm = typeof value === 'string' ? value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/) : null;
 
@@ -72,16 +53,15 @@ const parseTimeToDate = (value: string | null | undefined, fallbackMinutes: numb
   return now;
 };
 
-const addMinutes = (source: Date, minutes: number) => new Date(source.getTime() + minutes * 60 * 1000);
+export const addMinutes = (source: Date, minutes: number) => new Date(source.getTime() + minutes * 60 * 1000);
 
-export const CreateTripScreen = ({
+export const useCreateTrip = ({
   onClose,
   onJourneyCreated,
 }: {
   onClose?: () => void;
   onJourneyCreated?: (journeyId: string) => void;
 }) => {
-  const insets = useSafeAreaInsets();
   const today = useMemo(() => new Date(), []);
   const tomorrow = useMemo(() => {
     const next = new Date(today);
@@ -948,421 +928,66 @@ export const CreateTripScreen = ({
     { key: 3, label: 'XÁC NHẬN', value: 3 },
   ];
 
-  return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between px-5 pt-12 pb-4">
-        <Button onPress={onClose} activeOpacity={0.7}>
-          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-            <Path d="M18 6L6 18M6 6l12 12" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
-        </Button>
-        <Text className="text-[17px] text-gray-900" style={{ fontWeight: '600' }}>
-          Tạo chuyến đi mới
-        </Text>
-        <View style={{ width: 24 }} />
-      </View>
+  return {
+    today,
+    currentStep, setCurrentStep,
+    tripName, setTripName,
+    startDate, setStartDate,
+    endDate, setEndDate,
+    showDatePicker, setShowDatePicker,
+    datePickerTarget,
+    draftDate,
+    budget, setBudget,
+    selectedMood, setSelectedMood,
+    isSoloMode, setIsSoloMode,
+    planningMode, setPlanningMode,
 
-      <View className="h-px bg-gray-200" />
+    manualStops, setManualStops,
+    showManualStopModal, setShowManualStopModal,
+    manualPlaceKeyword, setManualPlaceKeyword,
+    manualPlaceResults,
+    manualPlaceLoading,
+    selectedManualPlace, setSelectedManualPlace,
+    manualStopDayIndex, setManualStopDayIndex,
+    manualStopDate, setManualStopDate,
+    manualStopStartTime, setManualStopStartTime,
+    manualStopEndTime, setManualStopEndTime,
+    manualPickerMode, setManualPickerMode,
+    showPlanningModeModal, setShowPlanningModeModal,
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Pressable>
-          <View className="flex-row items-center justify-center px-10 py-6">
-            {stepConfig.map((step, index) => (
-              <React.Fragment key={step.key}>
-                <View className="items-center">
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: currentStep >= step.value ? '#2B8EF0' : 'transparent',
-                      borderWidth: currentStep >= step.value ? 0 : 1.5,
-                      borderColor: '#D1D5DB',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text className="text-[13px]" style={{ color: currentStep >= step.value ? 'white' : '#9CA3AF', fontWeight: '600' }}>
-                      {step.key}
-                    </Text>
-                  </View>
-                  <Text className="text-[10px] mt-1.5" style={{ color: currentStep >= step.value ? '#2B8EF0' : '#9CA3AF', fontWeight: '500' }}>
-                    {step.label}
-                  </Text>
-                </View>
+    places,
+    placesLoading,
+    loadingMorePlaces,
+    placesSearch, setPlacesSearch,
+    placesPage,
+    hasMorePlaces,
+    selectedPlaceIds, setSelectedPlaceIds,
+    isAiSelectingPlaces,
 
-                {index < stepConfig.length - 1 ? (
-                  <View
-                    style={{
-                      flex: 1,
-                      height: 1.5,
-                      backgroundColor: currentStep >= stepConfig[index + 1].value ? '#2B8EF0' : '#E5E7EB',
-                      marginHorizontal: 8,
-                      marginBottom: 18,
-                    }}
-                  />
-                ) : null}
-              </React.Fragment>
-            ))}
-          </View>
+    isProcessing,
 
-          {currentStep === 1 ? (
-            <StepOneInfo
-              tripName={tripName}
-              onChangeTripName={setTripName}
-              startDate={startDate}
-              endDate={endDate}
-              onOpenDatePicker={openDatePicker}
-              budget={budget}
-              onChangeBudget={setBudget}
-              selectedMood={selectedMood}
-              onSelectMood={setSelectedMood}
-              isSoloMode={isSoloMode}
-              onToggleMode={() => setIsSoloMode((prev) => !prev)}
-            />
-          ) : null}
+    openDatePicker,
+    handleDatePickerChange,
+    openManualStopModal,
+    closeManualStopModal,
+    addManualStop,
+    handleManualPickerChange,
+    handleAiSelectPlaces,
+    fetchPlaces,
 
-          {currentStep === 2 && planningMode === 'ai' ? (
-            <StepTwoPlaces
-              selectedPlaceIds={selectedPlaceIds}
-              selectedPlaceSummaries={selectedPlaceSummaries}
-              onRemoveSelectedPlace={removeSelectedPlace}
-              isAiSelectingPlaces={isAiSelectingPlaces}
-              isProcessing={isProcessing}
-              placesLoading={placesLoading}
-              onAiSelectPlaces={handleAiSelectPlaces}
-              placesSearch={placesSearch}
-              onChangePlacesSearch={setPlacesSearch}
-              filteredPlaces={places}
-              onTogglePlace={togglePlace}
-              hasMorePlaces={hasMorePlaces}
-              loadingMorePlaces={loadingMorePlaces}
-              onLoadMorePlaces={() => fetchPlaces({ nextPage: placesPage + 1, reset: false })}
-            />
-          ) : null}
+    selectedPlaceSummaries,
+    selectedPlaceDetails,
+    manualStopDetails,
+    formatCurrencyVnd,
+    togglePlace,
+    removeSelectedPlace,
+    handleProceed,
 
-          {currentStep === 2 && planningMode === 'manual' ? (
-            <StepTwoManualStops
-              manualStops={manualStops}
-              onAddManualStop={openManualStopModal}
-              onRemoveManualStop={(stopId) => setManualStops((prev) => prev.filter((stop) => stop.id !== stopId))}
-            />
-          ) : null}
-
-          {currentStep === 3 ? (
-            <StepThreeConfirm
-              tripName={tripName}
-              dateRangeSummary={dateRangeSummary}
-              isSoloMode={isSoloMode}
-              selectedMoodTitle={moodOptions.find((m) => m.id === selectedMood)?.title}
-              budget={budget}
-              selectedPlaces={planningMode === 'manual' ? manualStopDetails : selectedPlaceDetails}
-              planningMode={planningMode}
-            />
-          ) : null}
-
-          <View className="h-24" />
-        </Pressable>
-      </ScrollView>
-
-      <View
-        className="absolute bottom-0 left-0 right-0 px-5 pt-4 bg-white"
-        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
-      >
-        {currentStep > 1 ? (
-          <Button
-            onPress={() => {
-              setCurrentStep((prev) => (prev === 3 ? 2 : 1));
-            }}
-            activeOpacity={0.8}
-            style={{ alignItems: 'center', marginBottom: 8 }}
-          >
-            <Text style={{ color: '#6B7280', fontSize: 13, fontWeight: '600' }}>Quay lại bước trước</Text>
-          </Button>
-        ) : null}
-
-        <Button
-          label={actionLabel}
-          onPress={handleProceed}
-          loading={isProcessing}
-          rightSlot={!isProcessing ? <View style={{ marginLeft: 8 }}><SparkleIcon /></View> : null}
-          style={{
-            minHeight: 60,
-            borderRadius: 16,
-            shadowColor: '#2B8EF0',
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 5,
-          }}
-        />
-      </View>
-
-      {showDatePicker ? (
-        <DateTimePicker
-          value={draftDate}
-          mode="date"
-          display="default"
-          onChange={handleDatePickerChange}
-        />
-      ) : null}
-
-      <Modal
-        visible={showPlanningModeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowPlanningModeModal(false)}
-      >
-        <View className="flex-1 items-center justify-center" style={{ backgroundColor: 'rgba(17, 24, 39, 0.35)' }}>
-          <View
-            className="mx-5 rounded-2xl p-5"
-            style={{ width: '92%', maxWidth: 420, backgroundColor: 'white' }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Chọn cách tạo lịch trình</Text>
-            <Text style={{ marginTop: 6, fontSize: 13, color: '#6B7280' }}>
-              Bạn muốn dùng AI tối ưu chuyến đi hay tự thêm stop thủ công?
-            </Text>
-
-            <View style={{ marginTop: 16, flexDirection: 'row', gap: 10 }}>
-              <Button
-                onPress={() => {
-                  setPlanningMode('ai');
-                  setShowPlanningModeModal(false);
-                  setCurrentStep(2);
-                }}
-                style={{
-                  flex: 1,
-                  aspectRatio: 1,
-                  borderRadius: 16,
-                  borderWidth: 1.5,
-                  borderColor: planningMode === 'ai' ? '#2B8EF0' : '#BFDBFE',
-                  backgroundColor: '#EFF6FF',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 10,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    backgroundColor: '#2B8EF0',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 10,
-                  }}
-                >
-                  <SparkleIcon />
-                </View>
-                <Text style={{ color: '#1D4ED8', fontWeight: '800', fontSize: 14, textAlign: 'center' }}>
-                  Chuyến đi dùng AI
-                </Text>
-                <Text style={{ color: '#1D4ED8', fontSize: 11, textAlign: 'center', marginTop: 4 }}>
-                  AI tối ưu tự động
-                </Text>
-              </Button>
-
-              <Button
-                onPress={() => {
-                  setPlanningMode('manual');
-                  setShowPlanningModeModal(false);
-                  setCurrentStep(2);
-                }}
-                style={{
-                  flex: 1,
-                  aspectRatio: 1,
-                  borderRadius: 16,
-                  borderWidth: 1.5,
-                  borderColor: planningMode === 'manual' ? '#16A34A' : '#BBF7D0',
-                  backgroundColor: '#F0FDF4',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 10,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    backgroundColor: '#22C55E',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 10,
-                  }}
-                >
-                  <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-                    <Path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z" stroke="white" strokeWidth="1.8" />
-                    <Path d="M8 8h8M8 12h8M8 16h5" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-                  </Svg>
-                </View>
-                <Text style={{ color: '#15803D', fontWeight: '800', fontSize: 14, textAlign: 'center' }}>
-                  Tự thêm stop
-                </Text>
-                <Text style={{ color: '#15803D', fontSize: 11, textAlign: 'center', marginTop: 4 }}>
-                  Tùy chỉnh thủ công
-                </Text>
-              </Button>
-            </View>
-
-            <Button
-              onPress={() => setShowPlanningModeModal(false)}
-              className="items-center mt-3 py-2"
-            >
-              <Text style={{ color: '#6B7280', fontWeight: '600' }}>Để sau</Text>
-            </Button>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={showManualStopModal}
-        transparent
-        animationType="slide"
-        onRequestClose={closeManualStopModal}
-      >
-        <View className="flex-1" style={{ backgroundColor: 'rgba(17, 24, 39, 0.35)', justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              backgroundColor: 'white',
-              borderTopLeftRadius: 18,
-              borderTopRightRadius: 18,
-              maxHeight: '85%',
-              paddingBottom: Math.max(insets.bottom, 16),
-            }}
-          >
-            <View className="px-5 pt-4 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: '#E5E7EB' }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>Thêm stop thủ công</Text>
-              <Text style={{ marginTop: 4, fontSize: 12, color: '#6B7280' }}>Chọn địa điểm rồi đặt ngày giờ cụ thể cho stop.</Text>
-            </View>
-
-            <ScrollView className="px-5 pt-4" keyboardShouldPersistTaps="handled">
-              <Text style={{ fontSize: 12, color: '#6B7280', marginBottom: 6, fontWeight: '600' }}>Tìm địa điểm</Text>
-              <View
-                className="rounded-xl px-4"
-                style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 48, justifyContent: 'center' }}
-              >
-                <TextInput
-                  value={manualPlaceKeyword}
-                  onChangeText={setManualPlaceKeyword}
-                  placeholder="Nhập tên địa điểm"
-                  placeholderTextColor="#9CA3AF"
-                  style={{ color: '#111827', fontSize: 14, fontWeight: '500' }}
-                />
-              </View>
-
-              {manualPlaceLoading ? (
-                <View className="py-4 items-center">
-                  <ActivityIndicator size="small" color="#2B8EF0" />
-                </View>
-              ) : null}
-
-              {manualPlaceResults.map((place) => {
-                const isSelected = selectedManualPlace?._id === place._id;
-                return (
-                  <View key={place._id} style={{ marginTop: 10 }}>
-                    <PlaceCard
-                      place={place}
-                      layout="horizontal"
-                      onPress={() => setSelectedManualPlace(place)}
-                      style={{
-                        borderRadius: 14,
-                        borderWidth: 1.4,
-                        borderColor: isSelected ? '#2B8EF0' : '#E5E7EB',
-                        backgroundColor: isSelected ? '#EFF6FF' : 'white',
-                      }}
-                    />
-
-                    <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <CardContainer style={{ borderRadius: 999, borderColor: '#BBF7D0', backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3 }}>
-                        <Text style={{ color: '#166534', fontSize: 11, fontWeight: '700' }} numberOfLines={1}>
-                          {formatCurrencyVnd(place.estimated_cost_vnd)}
-                        </Text>
-                      </CardContainer>
-
-                      {isSelected ? (
-                        <Text style={{ color: '#1D4ED8', fontSize: 12, fontWeight: '700' }}>Đã chọn địa điểm này</Text>
-                      ) : null}
-                    </View>
-                  </View>
-                );
-              })}
-
-              <View className="mt-4" style={{ gap: 8 }}>
-                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Ngày và giờ</Text>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8, paddingVertical: 2, paddingRight: 8 }}
-                >
-                  {manualStopDayOptions.map((option) => (
-                    <SelectableCard
-                      key={option.dayIndex}
-                      title={`Ngày ${option.dayIndex + 1}`}
-                      subtitle={formatDateDisplay(option.date)}
-                      selected={manualStopDayIndex === option.dayIndex}
-                      onPress={() => {
-                        setManualStopDayIndex(option.dayIndex);
-                        setManualStopDate(option.date);
-                      }}
-                      backgroundColor={manualStopDayIndex === option.dayIndex ? '#EFF6FF' : 'white'}
-                      containerStyle={{ width: 156, paddingVertical: 10, borderRadius: 12 }}
-                    />
-                  ))}
-                </ScrollView>
-
-                <View className="flex-row" style={{ gap: 8 }}>
-                  <Button
-                    onPress={() => setManualPickerMode('start-time')}
-                    className="flex-1 px-4 py-3 rounded-xl"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' }}
-                  >
-                    <Text style={{ color: '#111827', fontWeight: '600' }}>Bắt đầu: {formatDateToHHmm(manualStopStartTime)}</Text>
-                  </Button>
-
-                  <Button
-                    onPress={() => setManualPickerMode('end-time')}
-                    className="flex-1 px-4 py-3 rounded-xl"
-                    style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' }}
-                  >
-                    <Text style={{ color: '#111827', fontWeight: '600' }}>Kết thúc: {formatDateToHHmm(manualStopEndTime)}</Text>
-                  </Button>
-                </View>
-              </View>
-
-              <View style={{ height: 12 }} />
-            </ScrollView>
-
-            <View className="px-5 pt-3" style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-              <Button
-                onPress={addManualStop}
-                className="items-center py-3 rounded-xl"
-                style={{ backgroundColor: '#DCFCE7' }}
-              >
-                <Text style={{ color: '#166534', fontWeight: '700' }}>Lưu stop thủ công</Text>
-              </Button>
-
-              <Button
-                onPress={closeManualStopModal}
-                className="items-center py-3"
-              >
-                <Text style={{ color: '#6B7280', fontWeight: '600' }}>Đóng</Text>
-              </Button>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {manualPickerMode ? (
-        <DateTimePicker
-          value={manualPickerMode === 'start-time' ? manualStopStartTime : manualStopEndTime}
-          mode="time"
-          display="default"
-          onChange={handleManualPickerChange}
-        />
-      ) : null}
-    </SafeAreaView>
-  );
+    actionLabel,
+    dateRangeSummary,
+    stepConfig,
+    manualStopDayOptions,
+    formatDateDisplay,
+    formatDateToHHmm,
+  };
 };

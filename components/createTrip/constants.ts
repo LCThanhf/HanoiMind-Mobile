@@ -1,6 +1,6 @@
-import { JourneyTag } from '../../../services/journeyService/journey.type';
-import { AiMood } from '../../../services/aiService/ai.type';
-import { AppColors } from '../../../utils/theme';
+import { JourneyTag } from '../../services/journeyService/journey.type';
+import { AiMood } from '../../services/aiService/ai.type';
+import { AppColors } from '../../utils/theme';
 import { MoodId, MoodOption } from './types';
 
 export const moodOptions: MoodOption[] = [

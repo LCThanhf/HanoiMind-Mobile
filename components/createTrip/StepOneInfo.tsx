@@ -4,7 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { moodOptions } from './constants';
 import { CafeIcon, CalendarIcon, FoodIcon, HealingIcon, MoneyIcon, NatureIcon } from './icons';
-import { Button, SectionHeader } from '../../shared';
+import { Button, SectionHeader } from '../shared';
 import { MoodId } from './types';
 
 interface StepOneInfoProps {

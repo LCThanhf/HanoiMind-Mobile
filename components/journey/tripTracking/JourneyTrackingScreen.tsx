@@ -27,6 +27,7 @@ import { Button, ScreenHeader } from '../../shared';
 import { QRCheckInModal } from './trackingModals/QRCheckInModal';
 import { fetchCompleteRoute, RouteCoordinate } from '../../../utils/routeUtils';
 import { JourneyService } from '../../../services/journeyService/journey.service';
+import { MemberScannerModal } from './trackingModals/MemberScanningModal';
 import { Journey, JourneyDay, JourneyStop, JourneyStatus, StopStatus } from '../../../services/journeyService/journey.type';
 import { UsersService } from '../../../services/userService/user.service';
 import { PlacesService } from '../../../services/placeService/place.service';
@@ -84,7 +85,7 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
     'driving-car'
   );
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-
+  const [showScannerModal, setShowScannerModal] = useState(false);
   // Multi-snap animation
   const pan = useRef(new Animated.Value(0)).current;
   const currentPanValue = useRef(0);
@@ -280,7 +281,6 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
 
       if (method === 'camera') {
         // Camera check-in (for host)
-        // TODO: Open camera and upload photo
         await JourneyService.checkInStop(journeyId, dayId, stopId, {
           check_in_image: 'image_url_here',
         });
@@ -307,7 +307,7 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
   };
 
   const handleMemberScanQR = () => {
-    Alert.alert("Chức năng đang phát triển", "Hệ thống đang tích hợp camera quét mã QR.");
+    setShowScannerModal(true);
   };
 
 const handleShowCheckInProgress = async () => {
@@ -517,7 +517,7 @@ const handleShowCheckInProgress = async () => {
                             <Camera size={20} color="#fff" />
                           )}
                           <Text style={styles.hostCheckInBtnText}>
-                            {isCurrentStopArrived ? 'Bạn đã Check-in' : 'Chụp ảnh Check-in'}
+                            {isCurrentStopArrived ? 'Bạn đã Check-in' : 'Trưởng nhóm Check-in'}
                           </Text>
                         </Button>
 
@@ -559,14 +559,27 @@ const handleShowCheckInProgress = async () => {
                             </Text>
                           </Button>
                       </View>
-                    ) : (
+                      ) : (
                       <Button
-                        style={styles.memberCheckInBtn}
-                        onPress={handleMemberScanQR}
+                        style={[
+                          styles.memberCheckInBtn,
+                          !isCurrentStopArrived && { backgroundColor: '#9CA3AF' }
+                        ]}
+                        onPress={() => {
+                          if (!isCurrentStopArrived) {
+                            Alert.alert(
+                              'Chưa thể Check-in', 
+                              'Vui lòng đợi Trưởng nhóm check-in tại địa điểm này trước khi bạn có thể quét mã.'
+                            );
+                            return;
+                          }
+                          handleMemberScanQR(); // Trưởng nhóm checkin rồi mới gọi hàm mở Camera
+                        }}
+                        activeOpacity={!isCurrentStopArrived ? 1 : 0.7}
                       >
                         <QrCode size={20} color="#fff" />
                         <Text style={styles.memberCheckInBtnText}>
-                          Mở Camera quét mã QR
+                          {!isCurrentStopArrived ? 'Đợi Trưởng nhóm Check-in...' : 'Quét mã QR checkin'}
                         </Text>
                       </Button>
                     )}
@@ -639,6 +652,17 @@ const handleShowCheckInProgress = async () => {
         data={checkInData}
         onClose={() => setShowProgressModal(false)}
       />
+      <MemberScannerModal
+          visible={showScannerModal}
+          currentJourneyId={journeyId}
+          currentStopId={currentStop._id}
+          onClose={() => setShowScannerModal(false)}
+          onScanSuccess={() => {
+            setShowScannerModal(false);
+            // Mã đúng và còn hạn, chính thức cho phép gọi API có sẵn của backend
+            handleCheckIn('qr'); 
+          }}
+        />
     </SafeAreaView>
   );
 };

@@ -88,14 +88,24 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
     return () => animation.reset();
   }, []);
 
-  const generateToken = async () => {
+const generateToken = async () => {
     setIsGenerating(true);
     try {
-      const newToken = await generateCheckInToken(journeyId, dayId, stopId, userId);
-      setToken(newToken.token);
-      setGeneratedTime(newToken.timestamp);
+      // Ép thông tin thành chuỗi JSON làm nội dung cho mã QR
+      const qrPayload = JSON.stringify({
+        jId: journeyId,
+        dId: dayId,
+        sId: stopId,
+        ts: Date.now() // Lưu thời gian tạo để Frontend của member check hạn sử dụng
+      });
+      
+      // Chuyển sang base64 để chuỗi gọn gàng hơn (Tùy chọn)
+      // const encodedToken = btoa(qrPayload); 
+      
+      setToken(qrPayload); // Hoặc setToken(encodedToken)
+      setGeneratedTime(Date.now());
       setRemainingTime('5m 0s');
-      onTokenGenerated?.(newToken.token);
+      onTokenGenerated?.(qrPayload);
     } catch (error) {
       console.error('[QRCheckInModal] Error generating token:', error);
     } finally {

@@ -1,9 +1,9 @@
 import React from 'react';
 import { ActivityIndicator, Image, Text, TextInput, View } from 'react-native';
 
-import { Place } from '../../services/placeService/place.type';
+import { Place } from '../../../services/placeService/place.type';
 import { SparkleIcon } from './icons';
-import { Button, CardContainer, SectionHeader } from '../shared';
+import { Button, CardContainer, SectionHeader } from '../../shared';
 import { SelectedPlaceSummary } from './types';
 
 interface StepTwoPlacesProps {

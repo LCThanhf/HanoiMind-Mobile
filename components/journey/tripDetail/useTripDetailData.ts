@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Journey, JourneyMemberRole, JourneyTag } from '../../services/journeyService/journey.type';
-import { JourneyService } from '../../services/journeyService/journey.service';
-import { PlacesService } from '../../services/placeService/place.service';
-import { UsersService } from '../../services/userService/user.service';
+import { Alert } from 'react-native';
+import { Journey, JourneyMemberRole, JourneyTag } from '../../../services/journeyService/journey.type';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { PlacesService } from '../../../services/placeService/place.service';
+import { UsersService } from '../../../services/userService/user.service';
 import { DayItinerary, TripData } from './types';
 
 export interface BudgetSummary {
@@ -51,6 +52,13 @@ interface UseTripDetailDataResult {
   budgetSummary: BudgetSummary;
   dayPlans: TripManageDay[];
   refresh: (options?: { silent?: boolean }) => Promise<void>;
+  isTrackingActionLoading: boolean;
+  handleStartJourney: () => Promise<void>;
+  handlePauseJourney: () => Promise<void>;
+  handleResumeJourney: (newStartDate: string) => Promise<void>;
+  handleCancelJourney: () => Promise<void>;
+  handleCheckInStop: (dayId: string, stopId: string, imageUrl?: string) => Promise<void>;
+  handleSkipStop: (dayId: string, stopId: string) => Promise<void>;
 }
 
 interface TripDetailCacheSnapshot {
@@ -315,6 +323,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
     cachedSnapshot?.budgetSummary || { limit: 0, planned: 0, remaining: 0 }
   );
   const [dayPlans, setDayPlans] = useState<TripManageDay[]>(cachedSnapshot?.dayPlans || []);
+  const [isTrackingActionLoading, setIsTrackingActionLoading] = useState(false);
 
   const refresh = useCallback(async (options?: { silent?: boolean }) => {
     if (!tripId) return;
@@ -672,8 +681,141 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
     refresh();
   }, [refresh]);
 
+  // ==========================================
+  // TRACKING ACTION HANDLERS
+  // ==========================================
+
+  const handleStartJourney = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      setIsTrackingActionLoading(true);
+      await JourneyService.startJourney(tripId);
+      Alert.alert('Thành công', 'Chuyến đi đã bắt đầu!');
+      await refresh({ silent: true });
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể bắt đầu chuyến đi. Vui lòng thử lại.');
+      console.error('Start journey error:', err);
+    } finally {
+      setIsTrackingActionLoading(false);
+    }
+  }, [tripId, refresh]);
+
+  const handlePauseJourney = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      setIsTrackingActionLoading(true);
+      await JourneyService.pauseJourney(tripId);
+      Alert.alert('Tạm dừng', 'Chuyến đi đã được tạm dừng.');
+      await refresh({ silent: true });
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể tạm dừng chuyến đi. Vui lòng thử lại.');
+      console.error('Pause journey error:', err);
+    } finally {
+      setIsTrackingActionLoading(false);
+    }
+  }, [tripId, refresh]);
+
+  const handleResumeJourney = useCallback(
+    async (newStartDate: string) => {
+      if (!tripId) return;
+      try {
+        setIsTrackingActionLoading(true);
+        await JourneyService.resumeJourney(tripId, { new_start_date: newStartDate });
+        Alert.alert('Thành công', 'Chuyến đi đã tiếp tục!');
+        await refresh({ silent: true });
+      } catch (err) {
+        Alert.alert('Lỗi', 'Không thể tiếp tục chuyến đi. Vui lòng thử lại.');
+        console.error('Resume journey error:', err);
+      } finally {
+        setIsTrackingActionLoading(false);
+      }
+    },
+    [tripId, refresh]
+  );
+
+  const handleCancelJourney = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      setIsTrackingActionLoading(true);
+      await JourneyService.cancelJourney(tripId);
+      Alert.alert('Đã hủy', 'Chuyến đi đã được hủy.');
+      await refresh({ silent: true });
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể hủy chuyến đi. Vui lòng thử lại.');
+      console.error('Cancel journey error:', err);
+    } finally {
+      setIsTrackingActionLoading(false);
+    }
+  }, [tripId, refresh]);
+
+  const handleCheckInStop = useCallback(
+    async (dayId: string, stopId: string, imageUrl?: string) => {
+      if (!tripId) return;
+      try {
+        setIsTrackingActionLoading(true);
+        await JourneyService.checkInStop(tripId, dayId, stopId, { check_in_image: imageUrl });
+        Alert.alert('Thành công', 'Đã check-in địa điểm!');
+        await refresh({ silent: true });
+      } catch (err) {
+        Alert.alert('Lỗi', 'Check-in thất bại. Vui lòng thử lại.');
+        console.error('Check-in stop error:', err);
+      } finally {
+        setIsTrackingActionLoading(false);
+      }
+    },
+    [tripId, refresh]
+  );
+
+  const handleSkipStop = useCallback(
+    async (dayId: string, stopId: string) => {
+      if (!tripId) return;
+      try {
+        setIsTrackingActionLoading(true);
+        await JourneyService.skipStop(tripId, dayId, stopId);
+        Alert.alert('Thành công', 'Đã bỏ qua địa điểm!');
+        await refresh({ silent: true });
+      } catch (err) {
+        Alert.alert('Lỗi', 'Bỏ qua thất bại. Vui lòng thử lại.');
+        console.error('Skip stop error:', err);
+      } finally {
+        setIsTrackingActionLoading(false);
+      }
+    },
+    [tripId, refresh]
+  );
+
   return useMemo(
-    () => ({ isLoading, error, tripData, journey, budgetSummary, dayPlans, refresh }),
-    [isLoading, error, tripData, journey, budgetSummary, dayPlans, refresh]
+    () => ({
+      isLoading,
+      error,
+      tripData,
+      journey,
+      budgetSummary,
+      dayPlans,
+      refresh,
+      isTrackingActionLoading,
+      handleStartJourney,
+      handlePauseJourney,
+      handleResumeJourney,
+      handleCancelJourney,
+      handleCheckInStop,
+      handleSkipStop,
+    }),
+    [
+      isLoading,
+      error,
+      tripData,
+      journey,
+      budgetSummary,
+      dayPlans,
+      refresh,
+      isTrackingActionLoading,
+      handleStartJourney,
+      handlePauseJourney,
+      handleResumeJourney,
+      handleCancelJourney,
+      handleCheckInStop,
+      handleSkipStop,
+    ]
   );
 };

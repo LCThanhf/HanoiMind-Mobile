@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { CostType, JourneyMemberRole, UpdateStopPayload } from '../services/journeyService/journey.type';
-import { AvatarCircle, Button, CardContainer, ScreenHeader } from './shared';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { CostType, JourneyMemberRole, UpdateStopPayload } from '../../../services/journeyService/journey.type';
+import { AvatarCircle, Button, CardContainer, ScreenHeader } from '../../shared';
 import { MemberProfile, StopCostItem } from './TripBudgetManageScreen';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

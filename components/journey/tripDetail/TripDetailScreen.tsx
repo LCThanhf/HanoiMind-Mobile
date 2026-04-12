@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Animated, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { ItineraryTab } from './tripDetail/ItineraryTab';
-import { MembersTab } from './tripDetail/MembersTab';
-import { MoodVoteTab } from './tripDetail/MoodVoteTab';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { TripStatCard } from './tripDetail/TripStatCard';
-import { useTripDetailData } from './tripDetail/useTripDetailData';
-import { Button, PillBadge } from './shared';
+import { ItineraryTab } from './ItineraryTab';
+import { MembersTab } from './MembersTab';
+import { MoodVoteTab } from './MoodVoteTab';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { JourneyStatus } from '../../../services/journeyService/journey.type';
+import { TripStatCard } from './TripStatCard';
+import { useTripDetailData } from './useTripDetailData';
+import { Button, PillBadge } from '../../shared';
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -16,16 +17,29 @@ interface TripDetailScreenProps {
     onOpenProfile?: () => void;
     onViewDetail?: () => void;
     onAddPlace?: (dayNumber: number) => void;
+    onOpenTracking?: () => void;
 }
 
-export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, onAddPlace }: TripDetailScreenProps) => {
+export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, onAddPlace, onOpenTracking }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [tabWidth, setTabWidth] = useState(0);
     const [isLeaving, setIsLeaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
-    const { isLoading, error, tripData } = useTripDetailData(tripId);
+    const {
+        isLoading,
+        error,
+        tripData,
+        journey,
+        isTrackingActionLoading,
+        handleStartJourney,
+        handlePauseJourney,
+        handleResumeJourney,
+        handleCancelJourney,
+        handleCheckInStop,
+        handleSkipStop,
+    } = useTripDetailData(tripId);
 
     useEffect(() => {
         if (error) {
@@ -94,6 +108,92 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, 
                 onPress: handleDeleteJourney,
             },
         ]);
+    };
+
+    const renderTrackingControls = () => {
+        if (!journey) return null;
+
+        // Show START button for UPCOMING status
+        if (journey.status === JourneyStatus.PLANNING || journey.status === JourneyStatus.UPCOMING|| journey.status === null) {
+            return (
+                <View className="px-5 mb-4">
+                    <Button
+                        onPress={handleStartJourney}
+                        disabled={isTrackingActionLoading}
+                        className="items-center rounded-xl py-3.5"
+                        style={{ backgroundColor: '#2B8EF0' }}
+                    >
+                        <Text className="text-white font-bold text-[16px]">Bắt đầu chuyến đi</Text>
+                    </Button>
+                </View>
+            );
+        }
+
+        if (journey.status === JourneyStatus.ON_GOING) {
+            return (
+                <View className="px-5 mb-4">
+                    <Button
+                        onPress={onOpenTracking}
+                        className="items-center rounded-xl py-3.5 mb-3"
+                        style={{ backgroundColor: '#2B8EF0' }}
+                    >
+                        <Text className="text-white font-bold text-[16px]">Xem lộ trình và điểm danh</Text>
+                    </Button>
+                    <View className="flex-row gap-3">
+                        <Button
+                            onPress={handlePauseJourney}
+                            disabled={isTrackingActionLoading}
+                            className="items-center rounded-xl py-3.5 flex-1"
+                            style={{ backgroundColor: '#F59E0B' }}
+                        >
+                            <Text className="text-white font-bold text-[16px]">Tạm dừng chuyến đi</Text>
+                        </Button>
+                        <Button
+                            onPress={() =>
+                                Alert.alert(
+                                    'Hủy chuyến đi',
+                                    'Bạn có chắc chắn muốn hủy chuyến đi này?',
+                                    [
+                                        { text: 'Không', style: 'cancel' },
+                                        {
+                                            text: 'Hủy',
+                                            style: 'destructive',
+                                            onPress: handleCancelJourney,
+                                        },
+                                    ]
+                                )
+                            }
+                            disabled={isTrackingActionLoading}
+                            className="items-center rounded-xl py-3.5 flex-1"
+                            style={{ backgroundColor: '#EF4444' }}
+                        >
+                            <Text className="text-white font-bold text-[16px]">Hủy</Text>
+                        </Button>
+                    </View>
+                </View>
+            );
+        }
+
+        if (journey.status === JourneyStatus.PAUSED) {
+            return (
+                <View className="px-5 mb-4">
+                    <Button
+                        onPress={() => {
+                            // Show date picker or simple alert to resume
+                            const today = new Date().toISOString().split('T')[0];
+                            handleResumeJourney(today);
+                        }}
+                        disabled={isTrackingActionLoading}
+                        className="items-center rounded-xl py-3.5"
+                        style={{ backgroundColor: '#10B981' }}
+                    >
+                        <Text className="text-white font-bold text-[16px]">Tiếp tục chuyến đi</Text>
+                    </Button>
+                </View>
+            );
+        }
+
+        return null;
     };
 
     return (
@@ -329,10 +429,17 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, 
                         </View>
                     </View>
 
+                    {/* Tracking Controls */}
+                    {renderTrackingControls()}
+
                     {activeSubTab === 'itinerary' && (
                         <ItineraryTab
                             itinerary={tripData.itinerary}
-                            onAddPlace={(dayNumber) => onAddPlace?.(dayNumber)}
+                            onAddPlace={(dayNumber: number) => onAddPlace?.(dayNumber)}
+                            journeyStatus={journey?.status}
+                            onCheckIn={handleCheckInStop}
+                            onSkip={handleSkipStop}
+                            isCheckingIn={isTrackingActionLoading}
                         />
                     )}
 

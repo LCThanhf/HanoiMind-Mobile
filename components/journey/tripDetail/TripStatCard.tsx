@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { CardContainer } from '../shared';
+import { CardContainer } from '../../shared';
 
 interface TripStatCardProps {
   icon: React.ReactNode;

@@ -2,9 +2,9 @@ import React, { useRef, useState } from 'react';
 import { View, Text, ScrollView, Animated, Alert, ActivityIndicator, Image } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { MoodVoteOption } from './types';
-import { Button, AvatarStack, CardContainer, PillBadge } from '../shared';
-import { JourneyService } from '../../services/journeyService/journey.service';
-import { JourneyMood } from '../../services/journeyService/journey.type';
+import { Button, AvatarStack, CardContainer, PillBadge } from '../../shared';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { JourneyMood } from '../../../services/journeyService/journey.type';
 
 const StarSparkleIcon = () => (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">

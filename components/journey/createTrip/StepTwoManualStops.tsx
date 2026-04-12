@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, SectionHeader } from '../shared';
+import { Button, SectionHeader } from '../../shared';
 import { TripStopCard } from '../tripDetail/TripStopCard';
 import { TripManageStop } from '../tripDetail/useTripDetailData';
 import { ManualStopDraft } from './types';

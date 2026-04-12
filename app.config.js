@@ -9,7 +9,17 @@ export default {
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [],
+    "plugins": [
+      // SỬA TẠI ĐÂY: Bọc tên plugin và cấu hình vào trong một mảng []
+      [
+        "expo-barcode-scanner",
+        {
+          "barcodeScannerSettings": {
+            "barcodeTypes": ["qr"]
+          }
+        }
+      ]
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,7 +34,6 @@ export default {
     "ios": {
       "supportsTablet": true,
       "config": {
-        // Sử dụng biến môi trường hợp lệ trong file .js
         "googleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
       }
     },
@@ -33,16 +42,16 @@ export default {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.myexpoapp",
+      "package": "com.anonymous.myexpoapp", // Lưu ý: Đổi tên package này khi publish
       "config": {
         "googleMaps": {
-          // Sử dụng biến môi trường hợp lệ trong file .js
           "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
         }
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA" // Nên thêm quyền CAMERA cho tính năng quét mã QR
       ]
     }
   }

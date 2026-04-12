@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { Button } from '../shared';
+import { Button } from '../../shared';
 
 interface HotelEventCardProps {
   type: 'checkin' | 'checkout';

@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { TripManageStop } from './useTripDetailData';
-import { Button } from '../shared';
+import { Button } from '../../shared';
 
 interface TripStopCardProps {
   stop: TripManageStop;

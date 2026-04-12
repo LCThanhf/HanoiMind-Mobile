@@ -8,16 +8,16 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { JourneyService } from '../services/journeyService/journey.service';
+import { JourneyService } from '../../../services/journeyService/journey.service';
 import {
   CostType,
   Journey,
   JourneyMemberRole,
   PayerDetail,
-} from '../services/journeyService/journey.type';
-import { PlacesService } from '../services/placeService/place.service';
-import { UsersService } from '../services/userService/user.service';
-import { AvatarCircle, Button, CardContainer, ScreenHeader } from './shared';
+} from '../../../services/journeyService/journey.type';
+import { PlacesService } from '../../../services/placeService/place.service';
+import { UsersService } from '../../../services/userService/user.service';
+import { AvatarCircle, Button, CardContainer, ScreenHeader } from '../../shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Alert, Share, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
-import { Button, AvatarCircle } from '../shared';
+import { Button, AvatarCircle } from '../../shared';
 
 interface MembersTabProps {
     members: TripMemberView[];

@@ -1,6 +1,6 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { AppColors } from '../../utils/theme';
+import { AppColors } from '../../../utils/theme';
 
 export const HealingIcon = ({ color = AppColors.status.success }: { color?: string }) => (
   <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">

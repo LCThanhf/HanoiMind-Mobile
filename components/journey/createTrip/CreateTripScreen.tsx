@@ -13,13 +13,13 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-import { JourneyService } from '../../services/journeyService/journey.service';
-import { Journey, JourneyVisibility } from '../../services/journeyService/journey.type';
-import { PlacesService } from '../../services/placeService/place.service';
-import { Place } from '../../services/placeService/place.type';
-import { AiService } from '../../services/aiService/ai.service';
-import { AiMood } from '../../services/aiService/ai.type';
-import { UsersService } from '../../services/userService/user.service';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { Journey, JourneyVisibility } from '../../../services/journeyService/journey.type';
+import { PlacesService } from '../../../services/placeService/place.service';
+import { Place } from '../../../services/placeService/place.type';
+import { AiService } from '../../../services/aiService/ai.service';
+import { AiMood } from '../../../services/aiService/ai.type';
+import { UsersService } from '../../../services/userService/user.service';
 import { moodAiMap, moodOptions, moodTagMap } from './constants';
 import { SparkleIcon } from './icons';
 import { StepOneInfo } from './StepOneInfo';
@@ -27,9 +27,9 @@ import { StepTwoPlaces } from './StepTwoPlaces';
 import { StepTwoManualStops } from './StepTwoManualStops';
 import { StepThreeConfirm } from './StepThreeConfirm';
 import { ManualStopDraft, MoodId, PlanningMode } from './types';
-import { PlaceCard } from '../cards/PlaceCard';
+import { PlaceCard } from '../../cards/PlaceCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, CardContainer, SelectableCard } from '../shared';
+import { Button, CardContainer, SelectableCard } from '../../shared';
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear();

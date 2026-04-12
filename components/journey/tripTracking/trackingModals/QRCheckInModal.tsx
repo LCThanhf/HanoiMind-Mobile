@@ -12,11 +12,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
-  Dimensions,
 } from 'react-native';
-import { X, Copy, RefreshCw } from 'lucide-react-native';
+import { X, Copy, RefreshCw, Clock } from 'lucide-react-native';
 import { Button } from '../../../shared';
-import { generateCheckInToken, formatRemainingTime, getTokenRemainingTime } from '../../../../utils/checkInTokenUtils';
+import { generateCheckInToken } from '../../../../utils/checkInTokenUtils';
+import QRCode from 'react-native-qrcode-svg';
 
 interface QRCheckInModalProps {
   visible: boolean;
@@ -41,7 +41,8 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
 }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [remainingTime, setRemainingTime] = useState<string>('5m 0s');
+  const [remainingTime, setRemainingTime] = useState<string>('05:00');
+  const [isExpiringSoon, setIsExpiringSoon] = useState<boolean>(false);
   const [generatedTime, setGeneratedTime] = useState<number>(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -57,11 +58,24 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
     if (!visible || !token || generatedTime === 0) return;
 
     const interval = setInterval(() => {
-      const remaining = getTokenRemainingTime(generatedTime, 300); // 5 minutes validity
-      if (remaining <= 0) {
+      const elapsedMs = Date.now() - generatedTime;
+      const remainingMs = 300000 - elapsedMs; // 5 minutes
+
+      if (remainingMs <= 0) {
         setToken(null);
+        setRemainingTime('00:00');
+        setIsExpiringSoon(true);
       } else {
-        setRemainingTime(formatRemainingTime(remaining));
+        const minutes = Math.floor(remainingMs / 60000);
+        const seconds = Math.floor((remainingMs % 60000) / 1000);
+        
+        // Cảnh báo đỏ nếu dưới 1 phút
+        setIsExpiringSoon(minutes === 0);
+        
+        // Format MM:SS
+        const formattedMins = minutes.toString().padStart(2, '0');
+        const formattedSecs = seconds.toString().padStart(2, '0');
+        setRemainingTime(`${formattedMins}:${formattedSecs}`);
       }
     }, 1000);
 
@@ -73,38 +87,37 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 1000,
+          toValue: 1.03,
+          duration: 1200,
           useNativeDriver: true,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ])
     );
-    animation.start();
+    if (token) {
+      animation.start();
+    }
     return () => animation.reset();
-  }, []);
+  }, [token]);
 
-const generateToken = async () => {
+  const generateToken = async () => {
     setIsGenerating(true);
+    setIsExpiringSoon(false);
     try {
-      // Ép thông tin thành chuỗi JSON làm nội dung cho mã QR
       const qrPayload = JSON.stringify({
         jId: journeyId,
         dId: dayId,
         sId: stopId,
-        ts: Date.now() // Lưu thời gian tạo để Frontend của member check hạn sử dụng
+        ts: Date.now() 
       });
       
-      // Chuyển sang base64 để chuỗi gọn gàng hơn (Tùy chọn)
-      // const encodedToken = btoa(qrPayload); 
-      
-      setToken(qrPayload); // Hoặc setToken(encodedToken)
+      setToken(qrPayload);
       setGeneratedTime(Date.now());
-      setRemainingTime('5m 0s');
+      setRemainingTime('05:00');
       onTokenGenerated?.(qrPayload);
     } catch (error) {
       console.error('[QRCheckInModal] Error generating token:', error);
@@ -126,9 +139,7 @@ const generateToken = async () => {
 
   const handleCopyToken = () => {
     if (token) {
-      // In a real app, you'd use react-native-clipboard or similar
       console.log('Token copied:', token);
-      // Toast message could be shown here
     }
   };
 
@@ -138,63 +149,70 @@ const generateToken = async () => {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Mã QR Check-in</Text>
+            <View>
+              <Text style={styles.title}>Mã Check-in</Text>
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {stopName}
+              </Text>
+            </View>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <X size={24} color="#111827" />
+              <X size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
           {/* Content */}
           <View style={styles.content}>
-            <Text style={styles.subtitle}>Điểm đến: {stopName}</Text>
-
             {isGenerating ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#3B82F6" />
-                <Text style={styles.loadingText}>Đang tạo mã QR...</Text>
+                <Text style={styles.loadingText}>Đang tạo mã bảo mật...</Text>
               </View>
             ) : token ? (
               <View style={styles.qrContainer}>
-                {/* QR Code Placeholder - Replace with actual QR code library if needed */}
-                <Animated.View
-                  style={[
-                    styles.qrPlaceholder,
-                    {
-                      transform: [{ scale: pulseAnim }],
-                    },
-                  ]}
-                >
-                  <View style={styles.qrGrid}>
-                    {/* Simple placeholder - In production, use a QR generate library */}
-                    <Text style={styles.qrPlaceholderText}>QR</Text>
-                    <Text style={styles.tokenText}>{token.substring(0, 20)}...</Text>
-                  </View>
-                </Animated.View>
-
-                {/* Expiry Timer */}
-                <View style={styles.timerContainer}>
-                  <Text style={styles.timerLabel}>Mã hết hạn trong</Text>
-                  <Text style={styles.timerValue}>{remainingTime}</Text>
-                </View>
-
-                {/* Instructions */}
-                <View style={styles.instructionsContainer}>
-                  <Text style={styles.instructionTitle}>Hướng dẫn:</Text>
-                  <Text style={styles.instructionText}>
-                    • Chia sẻ mã QR này với thành viên{'\n'}
-                    • Thành viên quét mã bằng ứng dụng{'\n'}
-                    • Tự động ghi nhận check-in
+                {/* Expiry Timer Badge */}
+                <View style={[
+                  styles.timerBadge, 
+                  isExpiringSoon ? styles.timerBadgeDanger : styles.timerBadgeSafe
+                ]}>
+                  <Clock size={16} color={isExpiringSoon ? '#DC2626' : '#D97706'} />
+                  <Text style={[
+                    styles.timerText, 
+                    isExpiringSoon ? styles.timerTextDanger : styles.timerTextSafe
+                  ]}>
+                    Hết hạn trong: {remainingTime}
                   </Text>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.buttonsContainer}>
+                {/* Animated QR Code */}
+                <Animated.View
+                  style={[
+                    styles.qrWrapper,
+                    { transform: [{ scale: pulseAnim }] }
+                  ]}
+                >
+                  <QRCode
+                    value={token}
+                    size={190}
+                    color="#111827"
+                    backgroundColor="#fff"
+                  />
+                </Animated.View>
+
+                {/* Minimal Instructions */}
+                <View style={styles.instructionsContainer}>
+                  <Text style={styles.instructionText}>
+                    Đưa mã này cho thành viên trong nhóm quét để xác nhận điểm danh.
+                  </Text>
+                </View>
+
+                {/* Action Buttons (Side by Side) */}
+                <View style={styles.buttonsRow}>
                   <Button
                     style={styles.copyBtn}
                     onPress={handleCopyToken}
                   >
-                    <Copy size={18} color="#3B82F6" />
-                    <Text style={styles.copyBtnText}>Sao chép mã</Text>
+                    <Copy size={18} color="#4B5563" />
+                    <Text style={styles.copyBtnText}>Sao chép</Text>
                   </Button>
 
                   <Button
@@ -202,15 +220,16 @@ const generateToken = async () => {
                     onPress={handleRegenerateToken}
                   >
                     <RefreshCw size={18} color="#fff" />
-                    <Text style={styles.regenerateBtnText}>Tạo lại mã</Text>
+                    <Text style={styles.regenerateBtnText}>Làm mới mã</Text>
                   </Button>
                 </View>
               </View>
             ) : (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Không thể tạo mã QR</Text>
-                <Button style={styles.retryBtn} onPress={generateToken}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>Thử lại</Text>
+                <Text style={styles.errorText}>Đã xảy ra lỗi hoặc mã đã hết hạn.</Text>
+                <Button style={styles.regenerateBtn} onPress={generateToken}>
+                  <RefreshCw size={18} color="#fff" />
+                  <Text style={styles.regenerateBtnText}>Tạo mã mới</Text>
                 </Button>
               </View>
             )}
@@ -224,168 +243,157 @@ const generateToken = async () => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(17, 24, 39, 0.6)', // Tối hơn một chút để focus vào Modal
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    width: '85%',
+    width: '88%',
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
-    elevation: 10,
+    elevation: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F3F4F6',
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 19,
+    fontWeight: '800',
     color: '#111827',
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6B7280',
-    marginBottom: 20,
-    textAlign: 'center',
+    fontWeight: '500',
+    maxWidth: 220,
+  },
+  closeBtn: {
+    padding: 8,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 20,
+  },
+  content: {
+    padding: 24,
   },
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 50,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
   qrContainer: {
     alignItems: 'center',
   },
-  qrPlaceholder: {
-    width: 200,
-    height: 200,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
-    justifyContent: 'center',
+  timerBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 24,
+    gap: 6,
   },
-  qrGrid: {
-    alignItems: 'center',
-  },
-  qrPlaceholderText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 8,
-  },
-  tokenText: {
-    fontSize: 10,
-    color: '#9CA3AF',
-    fontFamily: 'monospace',
-  },
-  timerContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    padding: 12,
+  timerBadgeSafe: {
     backgroundColor: '#FEF3C7',
-    borderRadius: 12,
   },
-  timerLabel: {
-    fontSize: 12,
-    color: '#92400E',
-    marginBottom: 4,
+  timerBadgeDanger: {
+    backgroundColor: '#FEE2E2',
   },
-  timerValue: {
-    fontSize: 18,
+  timerText: {
+    fontSize: 14,
     fontWeight: '700',
+  },
+  timerTextSafe: {
     color: '#D97706',
   },
-  instructionsContainer: {
-    marginBottom: 20,
-    padding: 12,
-    backgroundColor: '#F0F9FF',
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
+  timerTextDanger: {
+    color: '#DC2626',
   },
-  instructionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1E40AF',
-    marginBottom: 6,
+  qrWrapper: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    marginBottom: 24,
+  },
+  instructionsContainer: {
+    marginBottom: 24,
+    paddingHorizontal: 10,
   },
   instructionText: {
-    fontSize: 12,
-    color: '#1E40AF',
-    lineHeight: 18,
+    fontSize: 13,
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 20,
   },
-  buttonsContainer: {
-    gap: 10,
+  buttonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
   },
   copyBtn: {
+    flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#F0F9FF',
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   copyBtnText: {
-    color: '#3B82F6',
-    fontWeight: '600',
-    fontSize: 14,
+    color: '#4B5563',
+    fontWeight: '700',
+    fontSize: 15,
   },
   regenerateBtn: {
+    flex: 1.2,
     flexDirection: 'row',
     backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   regenerateBtnText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    fontWeight: '700',
+    fontSize: 15,
   },
   errorContainer: {
     alignItems: 'center',
-    paddingVertical: 30,
+    paddingVertical: 40,
   },
   errorText: {
-    fontSize: 14,
-    color: '#EF4444',
-    marginBottom: 16,
-  },
-  retryBtn: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
+    fontSize: 15,
+    color: '#DC2626',
+    marginBottom: 20,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

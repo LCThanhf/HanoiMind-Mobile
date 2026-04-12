@@ -289,14 +289,26 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
         await JourneyService.checkInStop(journeyId, dayId, stopId, {});
       }
 
+      // 1. CẬP NHẬT GIAO DIỆN NGAY LẬP TỨC (Không chờ Backend)
+      setStopsWithPlaces(prevStops => 
+        prevStops.map((stop, index) => 
+          index === currentStopIndex 
+            ? { ...stop, status: StopStatus.ARRIVED } 
+            : stop
+        )
+      );
+
       Alert.alert('Thành công', 'Check-in đã được ghi nhận');
       
-      // Reload data to reflect changes
-      await loadJourney();
+      // 2. Vẫn gọi loadJourney chạy ngầm để đồng bộ dữ liệu với server
+      loadJourney();
       
-      // Auto move to next stop if host checks in successfully
+      // 3. Nếu là Host, tự động chuyển sang điểm tiếp theo SAU 1.5 GIÂY 
+      // (Để Host kịp nhìn thấy nút vừa bấm đã chuyển sang màu xanh "Đã check-in")
       if (isHost && currentStopIndex < stopsWithPlaces.length - 1) {
-        setCurrentStopIndex(currentStopIndex + 1);
+        setTimeout(() => {
+          setCurrentStopIndex(currentStopIndex + 1);
+        }, 1500);
       }
     } catch (error) {
       console.error('[handleCheckIn] Error:', error);
@@ -652,17 +664,18 @@ const handleShowCheckInProgress = async () => {
         data={checkInData}
         onClose={() => setShowProgressModal(false)}
       />
-      <MemberScannerModal
-          visible={showScannerModal}
-          currentJourneyId={journeyId}
-          currentStopId={currentStop._id}
-          onClose={() => setShowScannerModal(false)}
-          onScanSuccess={() => {
-            setShowScannerModal(false);
-            // Mã đúng và còn hạn, chính thức cho phép gọi API có sẵn của backend
-            handleCheckIn('qr'); 
-          }}
-        />
+    {journey && currentStop && (
+        <MemberScannerModal
+            visible={showScannerModal}
+            currentJourneyId={journeyId}
+            currentStopId={currentStop._id}
+            onClose={() => setShowScannerModal(false)}
+            onScanSuccess={() => {
+              setShowScannerModal(false);
+              handleCheckIn('qr'); 
+            }}
+          />
+      )}
     </SafeAreaView>
   );
 };

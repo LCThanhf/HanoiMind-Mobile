@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { Button, CardContainer, ScreenHeader } from './shared';
-import { StopCostCard } from './tripBudget/StopCostCard';
-import { MemberProfile, StopCostItem } from './tripBudget/types';
-import { formatDateRange, useTripBudgetData } from './tripBudget/useTripBudgetData';
+import { Button, CardContainer, ScreenHeader } from '../../shared';
+import { StopCostCard } from '../../tripBudget/StopCostCard';
+import { MemberProfile, StopCostItem } from '../../tripBudget/types';
+import { formatDateRange, useTripBudgetData } from '../../tripBudget/useTripBudgetData';
 
 export type { MemberProfile, StopCostItem };
 

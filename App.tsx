@@ -28,16 +28,16 @@ import { CreatePostScreen } from './components/Forum/CreatePostScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
-import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
-import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
-import { TripRouteScreen } from './components/TripRouteScreen';
-import { TripBudgetManageScreen } from './components/TripBudgetManageScreen';
+import { TripItineraryManageScreen } from './components/journey/tripDetail/TripItineraryManageScreen';
+import { TripAddPlaceScreen } from './components/journey/TripAddPlaceScreen';
+import { TripRouteScreen } from './components/journey/tripTracking/TripRouteScreen';
+import { TripBudgetManageScreen } from './components/journey/tripBudget/TripBudgetManageScreen';
 import { MemberProfile, StopCostItem } from './components/tripBudget/types';
-import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
+import { TripUpdateCostScreen } from './components/journey/tripBudget/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
 import { NotificationService } from './services/notificationService/notification.service';
 import { FriendsTab } from './components/FriendsManageScreen';
-
+import { JourneyTrackingScreen } from './components/journey/tripTracking/JourneyTrackingScreen';
 type AppState =
   | 'starter'
   | 'auth'

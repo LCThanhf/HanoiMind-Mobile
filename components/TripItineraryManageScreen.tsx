@@ -455,9 +455,8 @@ export const TripItineraryManageScreen = ({
           toDayNum = nextDay.dayNumber;
           newIndex = 0;
         } else {
-          // Tạo sang ngày mới
-          toDayNum = currentDay.dayNumber + 1;
-          newIndex = 0;
+          // Điểm cuối cùng của hành trình thì không thể đẩy xuống thêm
+          return;
         }
       }
     }
@@ -483,6 +482,11 @@ export const TripItineraryManageScreen = ({
   const currentDayIndex = editingStop ? dayPlans.findIndex(d => d.dayNumber === editingStop.dayNumber) : -1;
   const currentStopIndex = editingStop ? dayPlans[currentDayIndex]?.stops.findIndex(s => s.id === editingStop.stop.id) : -1;
   const isFirstOfAll = currentDayIndex === 0 && currentStopIndex === 0;
+  const isLastOfAll =
+    currentDayIndex >= 0 &&
+    currentDayIndex === dayPlans.length - 1 &&
+    currentStopIndex >= 0 &&
+    currentStopIndex === (dayPlans[currentDayIndex]?.stops.length || 0) - 1;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -771,15 +775,15 @@ export const TripItineraryManageScreen = ({
                     </Button>
                     <Button
                       onPress={() => handleMoveStop('down')}
-                      disabled={!!movingDirection || !!savingStopId}
+                      disabled={isLastOfAll || !!movingDirection || !!savingStopId}
                       className="items-center justify-center rounded-lg"
-                      style={{ width: 40, height: 40, backgroundColor: '#EFF6FF' }}
+                      style={{ width: 40, height: 40, backgroundColor: isLastOfAll ? '#F8FAFC' : '#EFF6FF' }}
                     >
                       {movingDirection === 'down' ? (
                         <ActivityIndicator size="small" color="#3B82F6" />
                       ) : (
                         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                          <Path d="M6 9l6 6 6-6" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <Path d="M6 9l6 6 6-6" stroke={isLastOfAll ? '#CBD5E1' : '#3B82F6'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </Svg>
                       )}
                     </Button>

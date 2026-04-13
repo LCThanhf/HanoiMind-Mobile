@@ -15,9 +15,11 @@ interface ForumPostCardProps {
   post?: ForumPost;
   postId?: string;
   onPress?: () => void;
+  onEdit?: (post: ForumPost) => void;
+  onDelete?: () => void;
 }
 
-export const ForumPostCard = ({ post: initialPost, postId, onPress }: ForumPostCardProps) => {
+export const ForumPostCard = ({ post: initialPost, postId, onPress, onEdit, onDelete }: ForumPostCardProps) => {
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
@@ -206,19 +208,37 @@ useEffect(() => {
 
 
   const handleEdit = () => {
-    Alert.alert('Chỉnh sửa', 'Chức năng chỉnh sửa chưa được implement.');
+    const authorId = (post?.author as any)?._id || (post?.author as any)?.id;
+    if (!post?._id || !currentUserId) return;
+
+    if (authorId !== currentUserId) {
+      Alert.alert('Không có quyền', 'Bạn không có quyền chỉnh sửa bài viết này.');
+      return;
+    }
+
+    if (post && onEdit) {
+      onEdit(post);
+    }
   };
 
   const handleDelete = async () => {
-    if (!post?._id) return;
+    if (!post?._id || !currentUserId) return;
+
+    const authorId = (post?.author as any)?._id || (post?.author as any)?.id;
+    if (authorId !== currentUserId) {
+      Alert.alert('Không có quyền', 'Bạn không có quyền xóa bài viết này. Chỉ tác giả mới có thể xóa.');
+      return;
+    }
 
     try {
       await ForumService.deletePost(post._id);
       Alert.alert('Thành công', 'Bài viết đã được xóa.');
-      // Có lẽ cần refresh list, nhưng vì là card, có lẽ parent handle
+      if (onDelete) {
+        onDelete();
+      }
     } catch (err) {
       console.error('Error deleting post:', err);
-      Alert.alert('Lỗi', 'Không thể xóa bài viết.');
+      Alert.alert('Lỗi', 'Không thể xóa bài viết. Vui lòng thử lại.');
     }
   };
 
@@ -232,8 +252,8 @@ useEffect(() => {
         author={author}
         status={post.status} 
         createdAt={post.created_at || new Date().toISOString()}
-        onEdit={post.author?.id === currentUserId ? handleEdit : undefined}
-        onDelete={post.author?.id === currentUserId ? handleDelete : undefined}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
       
       <PostContent 

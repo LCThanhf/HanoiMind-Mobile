@@ -156,6 +156,14 @@ export const CreatePostScreen = ({ mode = 'create', post, onBack, onSubmitSucces
     }
   };
 
+  // Map giữa frontend ID và backend enum
+  const categoryToBackendMap: Record<string, string> = {
+    'review': 'REVIEW',
+    'tips': 'EXPERIENCE',
+    'story': 'FIND_BUDDY',
+    'question': 'QNA',
+    'local': 'OTHERS',
+  };
 
 const handleSubmit = async (overrideStatus?: 'DRAFT' | 'PUBLISHED') => {
   // Validate cơ bản
@@ -175,10 +183,15 @@ const handleSubmit = async (overrideStatus?: 'DRAFT' | 'PUBLISHED') => {
 
     const finalStatus = overrideStatus || mappedStatus;
 
+    // Convert category frontend ID -> backend enum
+    const backendCategory = selectedCategory?.id 
+      ? categoryToBackendMap[selectedCategory.id] || 'OTHERS'
+      : 'OTHERS';
+
     const payload = {
       title: title.trim(),
       content: content.trim(),
-      category: selectedCategory?.id || 'OTHERS', // Ép kiểu về ForumCategory
+      category: backendCategory,
       images: selectedImages,
       place_ids: selectedPlace ? [selectedPlace._id] : [],
       journey_id: selectedJourney?._id,

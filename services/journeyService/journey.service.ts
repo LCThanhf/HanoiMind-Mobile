@@ -6,7 +6,7 @@ import {
   AddStopPayload,
   GetPublicFeedParams,
   UpdateStopPayload,
-  JourneyMood 
+  JourneyMood
 } from './journey.type';
 
 export const JourneyService = {
@@ -82,7 +82,12 @@ export const JourneyService = {
   // ==========================================
 
   joinByInviteCode: async (invite_code: string): Promise<Journey> => {
-    return await apiClient.post('/journeys/join', { invite_code });
+    const normalizedInviteCode = typeof invite_code === 'string' ? invite_code.trim() : '';
+    if (!normalizedInviteCode) {
+      throw new Error('invite_code is required');
+    }
+
+    return await apiClient.post('/journeys/join', { invite_code: normalizedInviteCode });
   },
 
   leaveJourney: async (id: string): Promise<any> => {

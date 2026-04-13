@@ -6,6 +6,12 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatService from '../../services/chatService/chat.service';
 import { UsersService } from '../../services/userService/user.service';
+import { JourneyService } from '../../services/journeyService/journey.service';
+import {
+  buildJourneyInviteMessage,
+  getJourneyInviteMetadataFromMessage,
+  JourneyInviteSharePayload,
+} from '../../services/chatService/journeyInvite';
 import { Button, AvatarCircle } from '../shared';
 
 // 👉 Đảm bảo import đúng đường dẫn đến file utils của bạn
@@ -17,11 +23,23 @@ interface ChatDetailScreenProps {
   onBack: () => void;
   onOpenSettings?: () => void;
   isGroup?: boolean;
+  pendingJourneyInvite?: JourneyInviteSharePayload | null;
+  onJourneyInviteSent?: () => void;
+  onOpenTripFromInvite?: (tripId: string) => void;
 }
 
 const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 
-export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isGroup = true }: ChatDetailScreenProps) => {
+export const ChatDetailScreen = ({
+  roomId,
+  chatName,
+  onBack,
+  onOpenSettings,
+  isGroup = true,
+  pendingJourneyInvite,
+  onJourneyInviteSent,
+  onOpenTripFromInvite,
+}: ChatDetailScreenProps) => {
   const insets = useSafeAreaInsets();
 
   const bottomInsetRef = useRef(insets.bottom);
@@ -44,9 +62,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   const [isCreatePollVisible, setIsCreatePollVisible] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+  const [joiningInviteMessageId, setJoiningInviteMessageId] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
   const isFirstLoad = useRef(true);
+  const hasSentPendingJourneyInvite = useRef(false);
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
@@ -111,7 +131,7 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
         } else {
           // XÓA DÒNG setTimeout scrollToEnd
           // Đưa tin nhắn mới lên đầu mảng
-          return [newMsg, ...prev]; 
+          return [newMsg, ...prev];
         }
       });
     });
@@ -134,6 +154,74 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
     });
 
   }, [roomId]);
+
+  useEffect(() => {
+    hasSentPendingJourneyInvite.current = false;
+  }, [roomId, pendingJourneyInvite?.inviteCode, pendingJourneyInvite?.journeyId]);
+
+  useEffect(() => {
+    if (!pendingJourneyInvite || loading || !currentUserId || hasSentPendingJourneyInvite.current) {
+      return;
+    }
+
+    try {
+      const inviteMessage = buildJourneyInviteMessage(pendingJourneyInvite);
+      const localId = `local_invite_${Date.now()}`;
+
+      ChatService.sendMessage({
+        room_id: roomId,
+        content: inviteMessage.content,
+        type: 'SYSTEM' as any,
+        metadata: inviteMessage.metadata,
+      });
+
+      setMessages((prev) => [
+        {
+          _id: localId,
+          content: inviteMessage.content,
+          sender_id: currentUserId,
+          type: 'SYSTEM',
+          metadata: inviteMessage.metadata,
+          created_at: new Date().toISOString(),
+          reactions: [],
+          seen_by: [],
+        },
+        ...prev,
+      ]);
+
+      hasSentPendingJourneyInvite.current = true;
+      onJourneyInviteSent?.();
+    } catch {
+      Alert.alert('Khong the gui loi moi', 'Vui long thu lai sau.');
+      hasSentPendingJourneyInvite.current = true;
+      onJourneyInviteSent?.();
+    }
+  }, [pendingJourneyInvite, loading, currentUserId, roomId, onJourneyInviteSent]);
+
+  const handleJoinJourneyFromInvite = async (inviteCode: string, messageId: string) => {
+    if (!inviteCode || joiningInviteMessageId) return;
+
+    try {
+      setJoiningInviteMessageId(messageId);
+      const joinedJourney = await JourneyService.joinByInviteCode(inviteCode);
+      Alert.alert('Thanh cong', 'Ban da tham gia hanh trinh.');
+
+      if (joinedJourney?._id) {
+        onOpenTripFromInvite?.(joinedJourney._id);
+      }
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message;
+      const message = Array.isArray(serverMessage)
+        ? serverMessage.join(', ')
+        : typeof serverMessage === 'string'
+          ? serverMessage
+          : 'Vui long thu lai sau.';
+
+      Alert.alert('Khong the tham gia', message);
+    } finally {
+      setJoiningInviteMessageId(null);
+    }
+  };
 
   // --- XỬ LÝ GỬI TEXT ---
   const handleSend = () => {
@@ -264,6 +352,65 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
 
     const isImage = item.type === 'IMAGE';
     const isPoll = item.type === 'POLL';
+    const inviteMetadata = getJourneyInviteMetadataFromMessage(item);
+
+    if (inviteMetadata) {
+      const inviteMessageId = String(msgId ?? `invite_${index}`);
+      const isJoiningInvite = joiningInviteMessageId === inviteMessageId;
+
+      return (
+        <View className={`w-full ${showName ? 'mt-3' : 'mt-0.5'} ${isMe ? 'items-end' : 'items-start'}`}>
+          {showName && <Text className="text-[11px] font-medium text-gray-500 mb-1 ml-14">{senderName}</Text>}
+
+          <View className={`flex-row px-4 ${isMe ? 'justify-end' : 'justify-start'} w-full`}>
+            {!isMe && (
+              <View className="w-8 mr-2 justify-end">
+                {showAvatar ? (
+                  <View className="mb-1 rounded-full overflow-hidden" style={{ width: 32, height: 32 }}>
+                    <AvatarCircle uri={senderAvatar} name={senderName} size={32} backgroundColor="#D1D5DB" />
+                  </View>
+                ) : null}
+              </View>
+            )}
+
+            <View
+              className={`rounded-2xl px-4 py-3 ${isMe ? 'bg-[#DBEAFE]' : 'bg-[#F8FAFC]'} border border-[#BFDBFE]`}
+              style={{ maxWidth: isMe ? '75%' : '80%' }}
+            >
+              <Text className="text-[14px]" style={{ color: '#1F2937', fontWeight: '700' }}>
+                Lời mời tham gia chuyến đi
+              </Text>
+              <Text className="text-[13px] mt-1" style={{ color: '#374151' }}>
+                {inviteMetadata.journey_name || item.content || 'You received a journey invite.'}
+              </Text>
+              <Text className="text-[12px] mt-1" style={{ color: '#2563EB', fontWeight: '600' }}>
+                Mã mời: {inviteMetadata.invite_code}
+              </Text>
+
+              <Button
+                className="mt-3 items-center justify-center py-2.5 rounded-xl"
+                style={{ backgroundColor: '#2B8EF0' }}
+                activeOpacity={0.8}
+                onPress={() => handleJoinJourneyFromInvite(inviteMetadata.invite_code, inviteMessageId)}
+                disabled={isJoiningInvite}
+              >
+                {isJoiningInvite ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={{ color: 'white', fontWeight: '700', fontSize: 13 }}>Tham gia</Text>
+                )}
+              </Button>
+
+              {(!nextMsg || nextMsg.sender_id !== item.sender_id) && (
+                <Text className={`text-[10px] mt-2 ${isMe ? 'text-blue-500 text-right' : 'text-gray-400 text-left'}`}>
+                  {timeString}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+      );
+    }
 
     // 👉 RENDER POLL
     if (isPoll && item.metadata) {
@@ -400,11 +547,11 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
   };
 
   return (
-    <View 
-      style={{ 
-        flex: 1, 
-        backgroundColor: '#ffffff', 
-        paddingBottom: isKeyboardVisible ? keyboardHeight+safeBottom : safeBottom 
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: '#ffffff',
+        paddingBottom: isKeyboardVisible ? keyboardHeight + safeBottom : safeBottom
       }}
     >
       {/* Header */}
@@ -436,21 +583,21 @@ export const ChatDetailScreen = ({ roomId, chatName, onBack, onOpenSettings, isG
           className="flex-1 py-4 bg-white"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingBottom: 15 }}
-          
+
           // 👉 1. Tăng số lượng render ban đầu để không bị kẹt ở đoạn B
           initialNumToRender={100}
-          
+
           // 👉 2. Xử lý cuộn mượt mà xuống đoạn C (cuối cùng)
           onContentSizeChange={() => {
             if (isFirstLoad.current && messages.length > 0) {
               flatListRef.current?.scrollToEnd({ animated: false });
-              
+
               // Sau nửa giây (khi giao diện đã ổn định), tắt cờ này đi
               // Việc này đảm bảo lỗi "thả react bị nhảy list" không bị lặp lại
               setTimeout(() => { isFirstLoad.current = false; }, 500);
             }
           }}
-          
+
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => setSelectedMessageId(null)}
         />

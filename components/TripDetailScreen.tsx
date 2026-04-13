@@ -9,6 +9,7 @@ import { JourneyService } from '../services/journeyService/journey.service';
 import { TripStatCard } from './tripDetail/TripStatCard';
 import { useTripDetailData } from './tripDetail/useTripDetailData';
 import { Button, PillBadge } from './shared';
+import { JourneyInviteSharePayload } from '../services/chatService/journeyInvite';
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -16,9 +17,17 @@ interface TripDetailScreenProps {
     onOpenProfile?: () => void;
     onViewDetail?: () => void;
     onAddPlace?: (dayNumber: number) => void;
+    onSendJourneyInviteToChat?: (payload: JourneyInviteSharePayload) => void;
 }
 
-export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, onAddPlace }: TripDetailScreenProps) => {
+export const TripDetailScreen = ({
+    onBack,
+    tripId,
+    onOpenProfile,
+    onViewDetail,
+    onAddPlace,
+    onSendJourneyInviteToChat,
+}: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [tabWidth, setTabWidth] = useState(0);
     const [isLeaving, setIsLeaving] = useState(false);
@@ -340,7 +349,10 @@ export const TripDetailScreen = ({ onBack, tripId, onOpenProfile, onViewDetail, 
                         <MembersTab
                             members={tripData.members}
                             inviteCode={tripData.inviteCode}
+                            journeyId={tripId}
+                            journeyName={tripData.title}
                             onLeaveTrip={handleLeaveJourney}
+                            onSendInviteToChat={onSendJourneyInviteToChat}
                             isLeaving={isLeaving}
                         />
                     )}

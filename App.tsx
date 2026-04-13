@@ -36,6 +36,7 @@ import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
 import { NotificationService } from './services/notificationService/notification.service';
 import { FriendsTab } from './components/FriendsManageScreen';
+import { JourneyInviteSharePayload } from './services/chatService/journeyInvite';
 
 type AppState =
   | 'starter'
@@ -83,6 +84,7 @@ export default function App() {
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
+  const [pendingJourneyInvite, setPendingJourneyInvite] = useState<JourneyInviteSharePayload | null>(null);
 
   useEffect(() => {
     const ensureNotificationSocket = async () => {
@@ -175,6 +177,7 @@ export default function App() {
     if (activeTab === 'chat') {
       return (
         <ChatListScreen
+          shareJourneyInvite={pendingJourneyInvite}
           onChatClick={(roomId, chatName) => {
             setSelectedChatRoomId(roomId);
             setSelectedChatName(chatName);
@@ -260,6 +263,11 @@ export default function App() {
               setSelectedTripDayNumber(dayNumber);
               setTripAddPlaceReturnState('tripDetail');
               setAppState('tripAddPlace');
+            }}
+            onSendJourneyInviteToChat={(payload) => {
+              setPendingJourneyInvite(payload);
+              setActiveTab('chat');
+              setAppState('main');
             }}
           />
         );
@@ -359,6 +367,7 @@ export default function App() {
               setAppState('mapScreen');
             }}
             onStartChat={(roomId, chatName) => {
+              setPendingJourneyInvite(null);
               setSelectedChatRoomId(roomId);
               setSelectedChatName(chatName);
               setPreviousState('placeDetail');
@@ -376,7 +385,15 @@ export default function App() {
           <ChatDetailScreen
             roomId={selectedChatRoomId}
             chatName={selectedChatName}
+            pendingJourneyInvite={pendingJourneyInvite}
+            onJourneyInviteSent={() => setPendingJourneyInvite(null)}
+            onOpenTripFromInvite={(tripId) => {
+              setPendingJourneyInvite(null);
+              setSelectedTripId(tripId);
+              setAppState('tripDetail');
+            }}
             onBack={() => {
+              setPendingJourneyInvite(null);
               setActiveTab('chat');
               setAppState('main');
             }}
@@ -412,6 +429,7 @@ export default function App() {
             userId={selectedUserId}
             onBack={() => setAppState(previousState)}
             onMessage={(roomId, chatName) => {
+              setPendingJourneyInvite(null);
               setSelectedChatRoomId(roomId);
               setSelectedChatName(chatName);
               setPreviousState('otherUserProfile');

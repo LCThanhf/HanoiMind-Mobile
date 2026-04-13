@@ -8,10 +8,12 @@ import { Button, AvatarCircle } from '../shared';
 import ChatService from '../../services/chatService/chat.service';
 import { JourneyService } from '../../services/journeyService/journey.service';
 import { UsersService } from '../../services/userService/user.service';
+import { JourneyInviteSharePayload } from '../../services/chatService/journeyInvite';
 
 interface ChatListScreenProps {
   onChatClick: (roomId: string, chatName: string) => void;
   onOpenUserProfile?: (userId: string) => void;
+  shareJourneyInvite?: JourneyInviteSharePayload | null;
 }
 
 // ==========================================
@@ -213,7 +215,7 @@ const SearchUserItem = ({
 // ==========================================
 // MÀN HÌNH CHÍNH
 // ==========================================
-export const ChatListScreen = ({ onChatClick, onOpenUserProfile }: ChatListScreenProps) => {
+export const ChatListScreen = ({ onChatClick, onOpenUserProfile, shareJourneyInvite }: ChatListScreenProps) => {
   const insets = useSafeAreaInsets();
 
   const [conversations, setConversations] = useState<any[]>([]);
@@ -332,6 +334,7 @@ export const ChatListScreen = ({ onChatClick, onOpenUserProfile }: ChatListScree
   };
 
   const isSearching = searchQuery.trim().length > 0;
+  const isShareMode = Boolean(shareJourneyInvite?.inviteCode?.trim());
 
   return (
     <View className="flex-1 bg-[#F8FAFC]" style={{ paddingTop: insets.top, paddingBottom: 70 }}>
@@ -376,6 +379,12 @@ export const ChatListScreen = ({ onChatClick, onOpenUserProfile }: ChatListScree
           )}
         </View>
       </View>
+
+      {isShareMode && (
+        <View className="mx-5 mb-3 px-4 py-3 rounded-2xl" style={{ backgroundColor: '#EBF5FF', borderWidth: 1, borderColor: '#BFDBFE' }}>
+          <Text className="text-[13px]" style={{ color: '#1D4ED8', fontWeight: '700' }}>Chọn một đoạn chat để chia sẻ mã mời tham gia chuyến đi</Text>
+        </View>
+      )}
 
       {isSearching ? (
         isSearchLoading ? (

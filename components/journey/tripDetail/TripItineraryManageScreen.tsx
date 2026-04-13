@@ -55,6 +55,16 @@ const formatDateToHHmm = (date: Date) => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
+const formatDate = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 const toMinutesFromHHmm = (value: string) => {
   // Try to find HH:mm anywhere in the string (e.g., '14:00', '14:00:00', 'T14:00', ' 14:00 ')
   const match = value.match(/(?:^|\s|T)([01]?\d|2[0-3]):([0-5]\d)/);
@@ -605,10 +615,15 @@ export const TripItineraryManageScreen = ({
 
             {dayPlans.map((day) => (
               <View key={day.dayNumber} className="px-5 mb-5">
-                <View className="mb-3">
-                  <Text className="text-[26px] text-gray-900" style={{ fontWeight: '700' }}>
+                <View className="mb-3 flex-row items-baseline gap-2">
+                  <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
                     NGÀY {day.dayNumber}
                   </Text>
+                  {!!day.date && (
+                    <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
+                      ({formatDate(day.date)})
+                    </Text>
+                  )}
                 </View>
 
                 {day.stops.length ? (

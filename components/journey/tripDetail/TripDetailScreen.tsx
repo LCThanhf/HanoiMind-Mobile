@@ -2,14 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Animated, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { ItineraryTab } from './tripDetail/ItineraryTab';
-import { MembersTab } from './tripDetail/MembersTab';
-import { MoodVoteTab } from './tripDetail/MoodVoteTab';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { TripStatCard } from './tripDetail/TripStatCard';
-import { useTripDetailData } from './tripDetail/useTripDetailData';
-import { Button, PillBadge } from './shared';
-import { JourneyInviteSharePayload } from '../services/chatService/journeyInvite';
+// Import thêm các Icon cần thiết cho nút
+import { Play, MapPin, Pause, Trash2, PlayCircle } from 'lucide-react-native'; 
+
+import { ItineraryTab } from './ItineraryTab';
+import { MembersTab } from './MembersTab';
+import { MoodVoteTab } from './MoodVoteTab';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { JourneyStatus } from '../../../services/journeyService/journey.type';
+import { TripStatCard } from './TripStatCard';
+import { useTripDetailData } from './useTripDetailData';
+import { JourneyInviteSharePayload } from '../../../services/chatService/journeyInvite';
+import { Button, PillBadge } from '../../shared';
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -18,6 +22,7 @@ interface TripDetailScreenProps {
     onViewDetail?: () => void;
     onAddPlace?: (dayNumber: number) => void;
     onSendJourneyInviteToChat?: (payload: JourneyInviteSharePayload) => void;
+    onOpenTracking?: () => void;
 }
 
 export const TripDetailScreen = ({
@@ -27,6 +32,7 @@ export const TripDetailScreen = ({
     onViewDetail,
     onAddPlace,
     onSendJourneyInviteToChat,
+    onOpenTracking,
 }: TripDetailScreenProps) => {
     const [activeSubTab, setActiveSubTab] = useState<'itinerary' | 'members' | 'mood'>('itinerary');
     const [tabWidth, setTabWidth] = useState(0);
@@ -34,11 +40,23 @@ export const TripDetailScreen = ({
     const [isDeleting, setIsDeleting] = useState(false);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
-    const { isLoading, error, tripData } = useTripDetailData(tripId);
+    const {
+        isLoading,
+        error,
+        tripData,
+        journey,
+        isTrackingActionLoading,
+        handleStartJourney,
+        handlePauseJourney,
+        handleResumeJourney,
+        handleCancelJourney,
+        handleCheckInStop,
+        handleSkipStop,
+    } = useTripDetailData(tripId);
 
     useEffect(() => {
         if (error) {
-            Alert.alert('Khong the tai chuyen di', 'Vui long thu lai sau.');
+            Alert.alert('Không thể tải chuyến đi', 'Vui lòng thử lại sau.');
         }
     }, [error]);
 
@@ -105,10 +123,128 @@ export const TripDetailScreen = ({
         ]);
     };
 
+    // ĐÃ ĐƯỢC TỐI ƯU UI LẠI TOÀN BỘ
+    const renderTrackingControls = () => {
+        if (!journey) return null;
+
+        // Trạng thái chuẩn bị / sắp diễn ra
+        if (journey.status === JourneyStatus.PLANNING || journey.status === JourneyStatus.UPCOMING || journey.status === null) {
+            return (
+                <View className="px-5 mb-5 mt-2">
+                    <Button
+                        onPress={handleStartJourney}
+                        disabled={isTrackingActionLoading}
+                        className="flex-row items-center justify-center rounded-2xl py-4"
+                        style={{ 
+                            backgroundColor: '#3B82F6',
+                            shadowColor: '#3B82F6',
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                            elevation: 5
+                        }}
+                    >
+                        <Play size={20} color="#fff" fill="#fff" style={{ marginRight: 8 }} />
+                        <Text className="text-white font-bold text-[16px]">Bắt đầu chuyến đi</Text>
+                    </Button>
+                </View>
+            );
+        }
+
+        // Trạng thái Đang diễn ra
+        if (journey.status === JourneyStatus.ON_GOING) {
+            return (
+                <View className="px-5 mb-6 mt-2">
+                    {/* Nút Xem lộ trình - Đổ bóng, bo tròn mềm mại */}
+                    <Button
+                        onPress={onOpenTracking}
+                        className="flex-row items-center justify-center rounded-2xl py-4 mb-3"
+                        style={{ 
+                            backgroundColor: '#10B981', // Màu xanh lá nổi bật, an toàn
+                            shadowColor: '#10B981',
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                            elevation: 5
+                        }}
+                    >
+                        <MapPin size={20} color="#fff" style={{ marginRight: 8 }} />
+                        <Text className="text-white font-bold text-[16px]">Xem lộ trình & Điểm danh</Text>
+                    </Button>
+
+                    {/* Hàng nút phụ - Dùng nền nhạt (Soft-Tinted) thay vì nền khối cứng */}
+                    <View className="flex-row gap-3">
+                        <Button
+                            onPress={handlePauseJourney}
+                            disabled={isTrackingActionLoading}
+                            className="flex-row items-center justify-center rounded-xl py-3.5 flex-1"
+                            style={{ backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#F59E0B' }}
+                        >
+                            <Pause size={18} color="#D97706" style={{ marginRight: 6 }} fill="#D97706" />
+                            <Text style={{ color: '#D97706', fontWeight: '700', fontSize: 15 }}>Tạm dừng</Text>
+                        </Button>
+
+                        <Button
+                            onPress={() =>
+                                Alert.alert(
+                                    'Hủy chuyến đi',
+                                    'Bạn có chắc chắn muốn hủy chuyến đi này?',
+                                    [
+                                        { text: 'Không', style: 'cancel' },
+                                        {
+                                            text: 'Hủy',
+                                            style: 'destructive',
+                                            onPress: handleCancelJourney,
+                                        },
+                                    ]
+                                )
+                            }
+                            disabled={isTrackingActionLoading}
+                            className="flex-row items-center justify-center rounded-xl py-3.5 flex-1"
+                            style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#EF4444' }}
+                        >
+                            <Trash2 size={18} color="#DC2626" style={{ marginRight: 6 }} />
+                            <Text style={{ color: '#DC2626', fontWeight: '700', fontSize: 15 }}>Hủy chuyến</Text>
+                        </Button>
+                    </View>
+                </View>
+            );
+        }
+
+        // Trạng thái Tạm dừng
+        if (journey.status === JourneyStatus.PAUSED) {
+            return (
+                <View className="px-5 mb-5 mt-2">
+                    <Button
+                        onPress={() => {
+                            const today = new Date().toISOString().split('T')[0];
+                            handleResumeJourney(today);
+                        }}
+                        disabled={isTrackingActionLoading}
+                        className="flex-row items-center justify-center rounded-2xl py-4"
+                        style={{ 
+                            backgroundColor: '#3B82F6',
+                            shadowColor: '#3B82F6',
+                            shadowOffset: { width: 0, height: 6 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 8,
+                            elevation: 5
+                        }}
+                    >
+                        <PlayCircle size={22} color="#fff" style={{ marginRight: 8 }} />
+                        <Text className="text-white font-bold text-[16px]">Tiếp tục chuyến đi</Text>
+                    </Button>
+                </View>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-white">
             {/* Header */}
-            <View className="px-5 pt-12 pb-4 bg-white">
+            <View className="px-5 pt-2 pb-4 bg-white">
                 <View className="flex-row items-center justify-between relative">
                     {/* Left Side */}
                     <Button onPress={onBack} activeOpacity={0.7}>
@@ -338,10 +474,17 @@ export const TripDetailScreen = ({
                         </View>
                     </View>
 
+                    {/* Tracking Controls */}
+                    {renderTrackingControls()}
+
                     {activeSubTab === 'itinerary' && (
                         <ItineraryTab
                             itinerary={tripData.itinerary}
-                            onAddPlace={(dayNumber) => onAddPlace?.(dayNumber)}
+                            onAddPlace={(dayNumber: number) => onAddPlace?.(dayNumber)}
+                            journeyStatus={journey?.status}
+                            onCheckIn={handleCheckInStop}
+                            onSkip={handleSkipStop}
+                            isCheckingIn={isTrackingActionLoading}
                         />
                     )}
 

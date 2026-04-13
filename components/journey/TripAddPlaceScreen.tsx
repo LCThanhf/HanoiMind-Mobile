@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PlacesService } from '../services/placeService/place.service';
-import { Place, PlaceCategory } from '../services/placeService/place.type';
-import { JourneyService } from '../services/journeyService/journey.service';
+import { PlacesService } from '../../services/placeService/place.service';
+import { Place, PlaceCategory } from '../../services/placeService/place.type';
+import { JourneyService } from '../../services/journeyService/journey.service';
 import { formatCurrencyVnd, useTripDetailData } from './tripDetail/useTripDetailData';
-import { Button, ScreenHeader, SearchInput } from './shared';
+import { Button, ScreenHeader, SearchInput } from '../shared';
 
 interface TripAddPlaceScreenProps {
   tripId: string;

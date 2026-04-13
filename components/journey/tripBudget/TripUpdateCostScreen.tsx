@@ -8,15 +8,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { UpdateStopPayload } from '../services/journeyService/journey.type';
-import { Button, ScreenHeader } from './shared';
-import { MemberProfile, StopCostItem } from './tripBudget/types';
-import { PayerDropdown } from './tripUpdateCost/PayerDropdown';
-import { PaymentTypeSelector } from './tripUpdateCost/PaymentTypeSelector';
-import { ParticipantsSelector } from './tripUpdateCost/ParticipantsSelector';
-import { StopInfoCard } from './tripUpdateCost/StopInfoCard';
-
+import { UpdateStopPayload } from '../../../services/journeyService/journey.type';
+import { Button, ScreenHeader } from '../../shared';
+import { MemberProfile, StopCostItem } from '../../tripBudget/types';
+import { PayerDropdown } from '../../tripUpdateCost/PayerDropdown';
+import { PaymentTypeSelector } from '../../tripUpdateCost/PaymentTypeSelector';
+import { ParticipantsSelector } from '../../tripUpdateCost/ParticipantsSelector';
+import { StopInfoCard } from '../../tripUpdateCost/StopInfoCard';
+import { JourneyService } from '../../../services/journeyService/journey.service';
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface TripUpdateCostScreenProps {

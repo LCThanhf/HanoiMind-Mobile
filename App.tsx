@@ -1,9 +1,10 @@
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
-import './global.css';
-
+import './global.css'
+import { Buffer } from 'buffer';
 import { StarterScreen } from './components/StarterScreen';
 import { SignInScreen } from './components/SignInScreen';
 import { SignUpScreen } from './components/SignUpScreen';
@@ -11,9 +12,9 @@ import { HomeScreen } from './components/HomeScreen';
 import { ExploreScreen } from './components/ExploreScreen';
 import { PlacesExploreScreen } from './components/PlacesExploreScreen';
 import { CreateTripScreen } from './components/CreateTripScreen';
-import { TripDetailScreen } from './components/TripDetailScreen';
+import { TripDetailScreen } from './components/journey/tripDetail/TripDetailScreen';
 import { ProfileScreen } from './components/ProfileScreen';
-import { TripsScreen } from './components/TripsScreen';
+import { TripsScreen } from './components/journey/TripsScreen';
 import { MainTab, BottomTabBar } from './components/BottomTabBar';
 import { PlaceDetailScreen } from './components/PlaceDetailScreen';
 import { ReviewScreen } from './components/ReviewScreen';
@@ -27,23 +28,24 @@ import { CreatePostScreen } from './components/Forum/CreatePostScreen';
 import { ChatListScreen } from './components/chat/ChatListScreen';
 import { ChatDetailScreen } from './components/chat/ChatDetailScreen';
 import { ChatSettingsScreen } from './components/chat/ChatSettingScreen';
-import { TripItineraryManageScreen } from './components/TripItineraryManageScreen';
-import { TripAddPlaceScreen } from './components/TripAddPlaceScreen';
-import { TripRouteScreen } from './components/TripRouteScreen';
-import { TripBudgetManageScreen } from './components/TripBudgetManageScreen';
+import { TripItineraryManageScreen } from './components/journey/tripDetail/TripItineraryManageScreen';
+import { TripAddPlaceScreen } from './components/journey/TripAddPlaceScreen';
+import { TripRouteScreen } from './components/journey/tripTracking/TripRouteScreen';
+import { TripBudgetManageScreen } from './components/journey/tripBudget/TripBudgetManageScreen';
 import { MemberProfile, StopCostItem } from './components/tripBudget/types';
-import { TripUpdateCostScreen } from './components/TripUpdateCostScreen';
+import { TripUpdateCostScreen } from './components/journey/tripBudget/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
 import { NotificationService } from './services/notificationService/notification.service';
 import { FriendsTab } from './components/FriendsManageScreen';
 import { JourneyInviteSharePayload } from './services/chatService/journeyInvite';
-
+import { JourneyTrackingScreen } from './components/journey/tripTracking/JourneyTrackingScreen';
 type AppState =
   | 'starter'
   | 'auth'
   | 'main'
   | 'createTrip'
   | 'tripDetail'
+  | 'tripTracking'
   | 'tripManageDetail'
   | 'tripAddPlace'
   | 'tripRoute'
@@ -62,11 +64,13 @@ type AppState =
   | 'chatDetail'
   | 'chatSettings';
 
+  
 export default function App() {
   const [appState, setAppState] = useState<AppState>('starter');
   const [previousState, setPreviousState] = useState<AppState>('main');
 
   const [isSignIn, setIsSignIn] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [selectedTripId, setSelectedTripId] = useState<string>('');
   const [selectedTripDayNumber, setSelectedTripDayNumber] = useState<number>(1);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>('');
@@ -101,6 +105,22 @@ export default function App() {
     return () => {
       NotificationService.disconnectSocket();
     };
+  }, []);
+
+  // Load current user ID from storage when app initializes
+  useEffect(() => {
+    const loadCurrentUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('currentUserId');
+        if (userId) {
+          setCurrentUserId(userId);
+        }
+      } catch (error) {
+        console.error('Error loading current user ID:', error);
+      }
+    };
+
+    loadCurrentUserId();
   }, []);
 
   const shouldShowBottomTabBar =
@@ -269,6 +289,26 @@ export default function App() {
               setActiveTab('chat');
               setAppState('main');
             }}
+            onOpenTracking={() => setAppState('tripTracking')}
+          />
+        );
+
+      case 'tripTracking':
+        return (
+          <JourneyTrackingScreen
+            journeyId={selectedTripId}
+            userId={currentUserId}
+            onBack={() => setAppState('tripDetail')}
+            onOpenTracking={() => setAppState('tripTracking')}
+          />
+        );
+
+      case 'tripTracking':
+        return (
+          <JourneyTrackingScreen
+            journeyId={selectedTripId}
+            userId={currentUserId}
+            onBack={() => setAppState('tripDetail')}
           />
         );
 

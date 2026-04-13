@@ -10,8 +10,9 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Map as MapIcon, Clock, MapPin } from 'lucide-react-native';
-import { useTripDetailData } from './tripDetail/useTripDetailData';
-import { Button, CharacteristicBadge, ScreenHeader, TimelineConnector } from './shared';
+import { fetchCompleteRoute, RouteCoordinate } from '../../../utils/routeUtils';
+import { useTripDetailData } from '../tripDetail/useTripDetailData';
+import { Button, CharacteristicBadge, ScreenHeader, TimelineConnector } from '../../shared';
 
 interface TripRouteScreenProps {
   tripId: string;
@@ -72,6 +73,8 @@ const toGoogleMapsDirectionUrl = (stops: RouteStop[]) => {
 export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
   const mapRef = useRef<MapView>(null);
   const { isLoading, error, dayPlans, tripData } = useTripDetailData(tripId);
+  const [routeCoordinates, setRouteCoordinates] = useState<RouteCoordinate[]>([]);
+  const [isFetchingRoute, setIsFetchingRoute] = useState(false);
 
   const routeDays = useMemo<RouteDay[]>(
     () =>
@@ -161,6 +164,39 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
     const averageSpeedKmh = 28;
     return Math.round((distanceKm / averageSpeedKmh) * 60);
   }, [distanceKm]);
+
+  useEffect(() => {
+    const getRoute = async () => {
+      // Chỉ gọi API nếu có từ 2 điểm trở lên và có tọa độ hợp lệ
+      const validStops = (selectedDay?.stops || []).filter(
+        (stop) => isValidCoordinate(stop.lat) && isValidCoordinate(stop.lng)
+      );
+
+      if (validStops.length < 2) {
+        setRouteCoordinates([]);
+        return;
+      }
+
+      try {
+        setIsFetchingRoute(true);
+        const stopCoords = validStops.map(stop => ({
+          latitude: stop.lat,
+          longitude: stop.lng
+        }));
+
+        // Gọi API ORS
+        const routeData = await fetchCompleteRoute(stopCoords, 'driving-car');
+        setRouteCoordinates(routeData.allCoordinates);
+      } catch (error) {
+        console.error("Không thể lấy dữ liệu ORS:", error);
+        // Fallback: Nếu lỗi thì không vẽ gì hoặc tự handle
+      } finally {
+        setIsFetchingRoute(false);
+      }
+    };
+
+    getRoute();
+  }, [selectedDay]);
 
   useEffect(() => {
     if (!coordinates.length) return;
@@ -287,17 +323,15 @@ export const TripRouteScreen = ({ tripId, onBack }: TripRouteScreenProps) => {
                 longitudeDelta: 0.08,
               }}
             >
-              {routeSegments.map((segment, idx) => (
+              {routeCoordinates.length > 0 && (
                 <Polyline
-                  key={`${segment.start.id}-${segment.end.id}-${idx}`}
-                  coordinates={[
-                    { latitude: segment.start.lat, longitude: segment.start.lng },
-                    { latitude: segment.end.lat, longitude: segment.end.lng },
-                  ]}
+                  coordinates={routeCoordinates}
                   strokeColor="#3B82F6"
                   strokeWidth={5}
+                  lineCap="round"
+                  lineJoin="round"
                 />
-              ))}
+              )}
 
               {(selectedDay?.stops || []).map((stop, index) => {
                 if (!isValidCoordinate(stop.lat) || !isValidCoordinate(stop.lng)) return null;

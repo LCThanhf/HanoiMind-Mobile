@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, Alert, ActivityIndicator } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
-import { Button, AvatarCircle } from '../shared';
-import { JourneyInviteSharePayload } from '../../services/chatService/journeyInvite';
+import { Button, AvatarCircle } from '../../shared';
+import { JourneyInviteSharePayload } from '../../../services/chatService/journeyInvite';
 
 interface MembersTabProps {
     members: TripMemberView[];

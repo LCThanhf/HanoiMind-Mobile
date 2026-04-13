@@ -11,17 +11,17 @@ import {
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { AiService } from '../services/aiService/ai.service';
-import { AIPlanRequest, AiMood } from '../services/aiService/ai.type';
-import { JourneyTag } from '../services/journeyService/journey.type';
-import { UsersService } from '../services/userService/user.service';
-import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './tripDetail/useTripDetailData';
-import { HotelEventCard } from './tripDetail/HotelEventCard';
-import { TripStopCard } from './tripDetail/TripStopCard';
-import { MainTab } from './BottomTabBar';
-import { Button, ScreenHeader } from './shared';
-import { isSoloTrip } from './cards/TripCard';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { AiService } from '../../../services/aiService/ai.service';
+import { AIPlanRequest, AiMood } from '../../../services/aiService/ai.type';
+import { JourneyTag } from '../../../services/journeyService/journey.type';
+import { UsersService } from '../../../services/userService/user.service';
+import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './useTripDetailData';
+import { HotelEventCard } from './HotelEventCard';
+import { TripStopCard } from './TripStopCard';
+import { MainTab } from '../../BottomTabBar';
+import { Button, ScreenHeader } from '../../shared';
+import { isSoloTrip } from '../../cards/TripCard';
 
 interface TripItineraryManageScreenProps {
   tripId: string;

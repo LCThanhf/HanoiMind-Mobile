@@ -8,12 +8,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { MainTab } from './BottomTabBar';
-import { AppHeader } from './AppHeader';
-import { Button, ActionCard } from './shared';
-import { TripCard } from './cards';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { Journey } from '../services/journeyService/journey.type';
+import { MainTab } from '../BottomTabBar';
+import { AppHeader } from '../AppHeader';
+import { Button, ActionCard } from '../shared';
+import { TripCard } from '../cards';
+import { JourneyService } from '../../services/journeyService/journey.service';
+import { Journey } from '../../services/journeyService/journey.type';
 
 const normalizeJourneyList = (payload: unknown): Journey[] => {
     if (Array.isArray(payload)) return payload as Journey[];

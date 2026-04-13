@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, FlatList, Alert } from 'react-native';
 import { MapPin, Search, X, ChevronRight , Pin } from 'lucide-react-native';
 import { Button, ScreenHeader, AvatarCircle } from '../shared';
-import { MediaUploadModal, CategorySelectModal, PrivacySelectModal, PostAdditionalOptions, type Category } from './modals';
+import { MediaUploadModal, CategorySelectModal, PrivacySelectModal, PostAdditionalOptions, type Category, type PrivacyMode } from './modals';
 import { JourneyService } from '../../services/journeyService/journey.service';
 import { PlacesService } from '../../services/placeService/place.service';
 import { UsersService } from '../../services/userService/user.service';
@@ -10,16 +10,16 @@ import { Journey } from '../../services/journeyService/journey.type';
 import { Place } from '../../services/placeService/place.type';
 import { User } from '../../services/userService/user.type';
 import { ForumService } from '../../services/forumService/forum.service';
+import { ForumPost } from '../../services/forumService/forum.type';
 
 interface CreatePostScreenProps {
   mode?: 'create' | 'edit';
+  post?: ForumPost;
   onBack?: () => void;
   onSubmitSuccess?: () => void;
 }
 
-type PrivacyMode = 'public' | 'friends' | 'private';
-
-export const CreatePostScreen = ({ mode = 'create', onBack, onSubmitSuccess }: CreatePostScreenProps) => {
+export const CreatePostScreen = ({ mode = 'create', post, onBack, onSubmitSuccess }: CreatePostScreenProps) => {
   // Form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -44,7 +44,7 @@ export const CreatePostScreen = ({ mode = 'create', onBack, onSubmitSuccess }: C
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const headerTitle = mode === 'edit' ? 'Chỉnh sửa bài viết' : 'Bài viết mới';
-  const submitLabel = mode === 'edit' ? 'Cập nhật' : 'Đăng';
+  const submitLabel = privacyMode === 'draft' ? 'Lưu nháp' : 'Đăng';
 
   // Load current user & journeys
   useEffect(() => {
@@ -60,6 +60,59 @@ export const CreatePostScreen = ({ mode = 'create', onBack, onSubmitSuccess }: C
       setPlaces([]);
     }
   }, [placeSearchQuery]);
+
+  // Load edit data
+  useEffect(() => {
+    if (mode === 'edit' && post) {
+      loadEditData();
+    }
+  }, [mode, post]);
+
+  const loadEditData = async () => {
+    if (!post) return;
+
+    setTitle(post.title || '');
+    setContent(post.content || '');
+    setSelectedImages(post.images || []);
+
+    // Map status to privacy
+    if (post.status === 'PUBLISHED') setPrivacyMode('public');
+    else if (post.status === 'HIDDEN') setPrivacyMode('private');
+    else setPrivacyMode('draft');
+
+    // Map category
+    const categoryMap: Record<string, Category> = {
+      'REVIEW': { id: 'review', label: '⭐ Review' },
+      'EXPERIENCE': { id: 'tips', label: '💡 Mẹo & Kinh nghiệm' },
+      'FIND_BUDDY': { id: 'story', label: '📖 Tìm bạn đồng hành' },
+      'QNA': { id: 'question', label: '❓ Hỏi & Tìm tư vấn' },
+      'OTHERS': { id: 'local', label: '💦 Khác' },
+    };
+    const mappedCategory = categoryMap[post.category];
+    if (mappedCategory) {
+      setSelectedCategory(mappedCategory);
+    }
+
+    // Load place if single
+    if (post.place_ids && post.place_ids.length === 1) {
+      try {
+        const place = await PlacesService.findOne(post.place_ids[0]);
+        setSelectedPlace(place);
+      } catch (err) {
+        console.error('Error loading place:', err);
+      }
+    }
+
+    // Load journey if exists
+    if (post.journey_id) {
+      try {
+        const journey = await JourneyService.findOne(post.journey_id);
+        setSelectedJourney(journey);
+      } catch (err) {
+        console.error('Error loading journey:', err);
+      }
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -104,7 +157,7 @@ export const CreatePostScreen = ({ mode = 'create', onBack, onSubmitSuccess }: C
   };
 
 
-const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
+const handleSubmit = async (overrideStatus?: 'DRAFT' | 'PUBLISHED') => {
   // Validate cơ bản
   if (!title.trim() || !content.trim()) {
     Alert.alert('Thông báo', 'Vui lòng nhập tiêu đề và nội dung!');
@@ -115,6 +168,13 @@ const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
     setIsSubmitting(true);
 
     // Chuẩn bị payload theo CreatePostPayload interface
+    let mappedStatus: 'DRAFT' | 'PUBLISHED' | 'HIDDEN';
+    if (privacyMode === 'public') mappedStatus = 'PUBLISHED';
+    else if (privacyMode === 'private') mappedStatus = 'HIDDEN';
+    else mappedStatus = 'DRAFT';
+
+    const finalStatus = overrideStatus || mappedStatus;
+
     const payload = {
       title: title.trim(),
       content: content.trim(),
@@ -122,16 +182,18 @@ const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
       images: selectedImages,
       place_ids: selectedPlace ? [selectedPlace._id] : [],
       journey_id: selectedJourney?._id,
-      status: status, 
+      status: finalStatus, 
     };
 
-    const result = await ForumService.createPost(payload as any);
+    const result = mode === 'edit' && post 
+      ? await ForumService.updatePost(post._id, payload as any)
+      : await ForumService.createPost(payload as any);
 
     if (result) {
       onSubmitSuccess?.();
       Alert.alert(
         'Thành công', 
-        status === 'DRAFT' ? 'Đã lưu bản nháp!' : 'Bài viết của bạn đã được đăng!',
+        finalStatus === 'DRAFT' ? 'Đã lưu bản nháp!' : 'Bài viết của bạn đã được đăng!',
         [{ text: 'OK', onPress: () => onBack?.() }]
       );
     }
@@ -156,7 +218,7 @@ const handleSubmit = async (status: 'PUBLISHED' | 'DRAFT') => {
       <Button
         variant="link"
         label={submitLabel}
-        onPress={() => handleSubmit('PUBLISHED')} // Thay logic cũ bằng hàm này
+        onPress={() => handleSubmit()} // Thay logic cũ bằng hàm này
         disabled={isSubmitting} // Thêm disabled để tránh bấm nhiều lần
         textColor="#2B8EF0"
         textStyle={{ fontWeight: '700', fontSize: 15 }}

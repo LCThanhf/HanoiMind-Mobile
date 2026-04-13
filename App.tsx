@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { MenuProvider } from 'react-native-popup-menu';
 import './global.css';
 
 import { StarterScreen } from './components/StarterScreen';
@@ -506,12 +507,14 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
-      {renderContent()}
-      {shouldShowBottomTabBar && (
-        <BottomTabBar activeTab={activeTab} onTabPress={handleBottomTabPress} />
-      )}
-      <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
-    </SafeAreaProvider>
+    <MenuProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
+        {renderContent()}
+        {shouldShowBottomTabBar && (
+          <BottomTabBar activeTab={activeTab} onTabPress={handleBottomTabPress} />
+        )}
+        <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
+      </SafeAreaProvider>
+    </MenuProvider>
   );
 }

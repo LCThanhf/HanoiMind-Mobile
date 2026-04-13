@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
@@ -205,16 +205,35 @@ useEffect(() => {
 }, [post?.place_ids?.join(','), (post as any)?.places?.length]); // Trigger nếu place_ids hoặc places thay đổi
 
 
+  const handleEdit = () => {
+    Alert.alert('Chỉnh sửa', 'Chức năng chỉnh sửa chưa được implement.');
+  };
+
+  const handleDelete = async () => {
+    if (!post?._id) return;
+
+    try {
+      await ForumService.deletePost(post._id);
+      Alert.alert('Thành công', 'Bài viết đã được xóa.');
+      // Có lẽ cần refresh list, nhưng vì là card, có lẽ parent handle
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      Alert.alert('Lỗi', 'Không thể xóa bài viết.');
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.8 : 1}
       onPress={onPress}
-      className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100"
+      className="bg-white m-4 rounded-[32px] shadow-sm border border-gray-100"
     >
       <PostHeader 
         author={author}
         status={post.status} 
-        createdAt={post.created_at || new Date().toISOString()} 
+        createdAt={post.created_at || new Date().toISOString()}
+        onEdit={post.author?.id === currentUserId ? handleEdit : undefined}
+        onDelete={post.author?.id === currentUserId ? handleDelete : undefined}
       />
       
       <PostContent 

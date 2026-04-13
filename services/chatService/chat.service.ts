@@ -96,7 +96,14 @@ class ChatService {
   /** Khởi tạo kết nối Socket */
   async connect() {
     const token = await AsyncStorage.getItem('accessToken');
-    if (!token || this.socket) return;
+    if (!token) return;
+  
+  if (this.socket) {
+    if (!this.socket.connected) {
+      this.socket.connect(); // Cố gắng reconnect nếu rớt mạng
+    }
+    return;
+  }
 
     this.socket = io(SOCKET_URL, {
       query: { token },
@@ -139,7 +146,7 @@ class ChatService {
         this.socket?.off('room_joined_success');
         this.socket?.off('error');
         reject(new Error('Kết nối phòng chat quá hạn (Timeout)'));
-      }, 5000);
+      }, 15000);
     });
   }
 

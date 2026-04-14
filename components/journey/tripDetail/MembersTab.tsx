@@ -1,17 +1,29 @@
 import React from 'react';
-import { View, Text, Alert, Share, ActivityIndicator } from 'react-native';
-import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { View, Text, Alert, ActivityIndicator } from 'react-native';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
-import { Button, AvatarCircle } from '../shared';
+import { Button, AvatarCircle } from '../../shared';
+import { JourneyInviteSharePayload } from '../../../services/chatService/journeyInvite';
 
 interface MembersTabProps {
     members: TripMemberView[];
     inviteCode?: string;
+    journeyId?: string;
+    journeyName?: string;
     onLeaveTrip: () => void;
+    onSendInviteToChat?: (payload: JourneyInviteSharePayload) => void;
     isLeaving?: boolean;
 }
 
-export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false }: MembersTabProps) => {
+export const MembersTab = ({
+    members,
+    inviteCode,
+    journeyId,
+    journeyName,
+    onLeaveTrip,
+    onSendInviteToChat,
+    isLeaving = false,
+}: MembersTabProps) => {
     const owner = members.find((member) => member.isOwner) || members[0];
     const otherMembers = members.filter((member) => !member.isOwner);
 
@@ -19,32 +31,39 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
         ? `hanoimind.com/join/${inviteCode}`
         : 'Chưa có mã mời cho chuyến đi này';
 
-    const handleCopyInvite = () => {
+    const handleShowInviteCode = () => {
         Alert.alert('Mã mời', inviteCode ? `Mã mời: ${inviteCode}` : 'Chuyến đi này chưa có mã mời.');
     };
 
-    const handleShareInvite = async () => {
-        try {
-            await Share.share({
-                message: inviteCode
-                    ? `Tham gia chuyến đi cùng mình với mã: ${inviteCode}`
-                    : 'Chuyến đi này chưa có mã mời để chia sẻ.',
-            });
-        } catch {
-            Alert.alert('Không thể chia sẻ', 'Vui lòng thử lại sau.');
+    const handleSendInviteToChat = () => {
+        const normalizedInviteCode = inviteCode?.trim();
+        if (!normalizedInviteCode) {
+            Alert.alert('Mã mời', 'Chuyến đi này chưa có mã mời.');
+            return;
         }
+
+        if (!onSendInviteToChat) {
+            Alert.alert('Không thể mở chat', 'Vui lòng thử lại sau.');
+            return;
+        }
+
+        onSendInviteToChat({
+            inviteCode: normalizedInviteCode,
+            journeyId,
+            journeyName,
+        });
     };
 
     return (
         <View className="px-5">
             {/* Subtitle */}
             <Text className="text-[13px] text-center mb-5" style={{ color: '#6B7280', fontWeight: '400' }}>
-                Manage trip participants
+                Quản lý thành viên
             </Text>
 
             {/* Owner */}
             <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
-                Owner
+                Chủ chuyến đi
             </Text>
             {owner ? (
                 <View
@@ -64,7 +83,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                     </View>
                     <View className="px-3 py-1 rounded-full" style={{ backgroundColor: '#FEF3E2' }}>
                         <Text className="text-[12px]" style={{ color: '#D4A574', fontWeight: '600' }}>
-                            Owner
+                            Chủ chuyến đi
                         </Text>
                     </View>
                 </View>
@@ -72,7 +91,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
 
             {/* Members List */}
             <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
-                Members
+                Thành viên
             </Text>
             <View
                 className="rounded-2xl mb-5 overflow-hidden"
@@ -108,18 +127,15 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
             </View>
 
             {/* Invite Friends */}
-            <Text className="text-[14px] text-gray-900 mb-3" style={{ fontWeight: '700' }}>
-                Invite Friends
-            </Text>
             <View
                 className="px-4 py-4 rounded-2xl mb-5"
                 style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#F3F4F6' }}
             >
                 <Text className="text-[14px] text-gray-900 mb-1" style={{ fontWeight: '700' }}>
-                    Invite Friends
+                    Mời bạn bè
                 </Text>
                 <Text className="text-[12px] mb-3" style={{ color: '#9CA3AF', fontWeight: '400' }}>
-                    Share this link to invite others to join the trip
+                    Gửi lời mời trong chat để bạn bè có thể tham gia ngay trong ứng dụng
                 </Text>
                 {/* Link Box */}
                 <View
@@ -136,12 +152,11 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                     </Text>
                     <Button
                         activeOpacity={0.7}
-                        onPress={handleCopyInvite}
+                        onPress={handleSendInviteToChat}
                     >
                         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                            <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
                             <Path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
                                 stroke="#2B8EF0"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
@@ -155,7 +170,23 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                         className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
                         style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
                         activeOpacity={0.7}
-                        onPress={handleCopyInvite}
+                        onPress={handleSendInviteToChat}
+                    >
+                        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
+                            <Path
+                                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                stroke="#2B8EF0"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                            />
+                        </Svg>
+                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Gửi tới chat</Text>
+                    </Button>
+                    <Button
+                        className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
+                        style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
+                        activeOpacity={0.7}
+                        onPress={handleShowInviteCode}
                     >
                         <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
                             <Rect x="9" y="9" width="13" height="13" rx="2" stroke="#2B8EF0" strokeWidth="1.5" />
@@ -166,33 +197,14 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                                 strokeLinecap="round"
                             />
                         </Svg>
-                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Copy link</Text>
-                    </Button>
-                    <Button
-                        className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
-                        style={{ borderWidth: 1.5, borderColor: '#2B8EF0', backgroundColor: '#EBF5FF' }}
-                        activeOpacity={0.7}
-                        onPress={handleShareInvite}
-                    >
-                        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
-                            <Circle cx="18" cy="5" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
-                            <Circle cx="6" cy="12" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
-                            <Circle cx="18" cy="19" r="3" stroke="#2B8EF0" strokeWidth="1.5" />
-                            <Path
-                                d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"
-                                stroke="#2B8EF0"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                            />
-                        </Svg>
-                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Share</Text>
+                        <Text style={{ color: '#2B8EF0', fontWeight: '600', fontSize: 14 }}>Xem mã</Text>
                     </Button>
                 </View>
             </View>
 
             {/* Last Updated */}
             <Text className="text-[12px] text-center mb-5" style={{ color: '#9CA3AF', fontWeight: '400' }}>
-                Last updated by{' '}
+                Cập nhật lần cuối bởi{' '}
                 <Text style={{ color: '#374151', fontWeight: '600' }}>{owner?.name || 'Trip owner'}</Text>
             </Text>
 
@@ -212,7 +224,7 @@ export const MembersTab = ({ members, inviteCode, onLeaveTrip, isLeaving = false
                 {isLeaving ? (
                     <ActivityIndicator color="#EF4444" />
                 ) : (
-                    <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Leave Trip</Text>
+                    <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 16 }}>Rời chuyến</Text>
                 )}
             </Button>
         </View>

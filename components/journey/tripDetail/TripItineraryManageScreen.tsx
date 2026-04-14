@@ -11,17 +11,17 @@ import {
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { JourneyService } from '../services/journeyService/journey.service';
-import { AiService } from '../services/aiService/ai.service';
-import { AIPlanRequest, AiMood } from '../services/aiService/ai.type';
-import { JourneyTag } from '../services/journeyService/journey.type';
-import { UsersService } from '../services/userService/user.service';
-import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './tripDetail/useTripDetailData';
-import { HotelEventCard } from './tripDetail/HotelEventCard';
-import { TripStopCard } from './tripDetail/TripStopCard';
-import { MainTab } from './BottomTabBar';
-import { Button, ScreenHeader } from './shared';
-import { isSoloTrip } from './cards/TripCard';
+import { JourneyService } from '../../../services/journeyService/journey.service';
+import { AiService } from '../../../services/aiService/ai.service';
+import { AIPlanRequest, AiMood } from '../../../services/aiService/ai.type';
+import { JourneyTag } from '../../../services/journeyService/journey.type';
+import { UsersService } from '../../../services/userService/user.service';
+import { formatCurrencyVnd, TripManageStop, useTripDetailData } from './useTripDetailData';
+import { HotelEventCard } from './HotelEventCard';
+import { TripStopCard } from './TripStopCard';
+import { MainTab } from '../../BottomTabBar';
+import { Button, ScreenHeader } from '../../shared';
+import { isSoloTrip } from '../../cards/TripCard';
 
 interface TripItineraryManageScreenProps {
   tripId: string;
@@ -53,6 +53,16 @@ const formatDateToHHmm = (date: Date) => {
   const hours = date.getHours();
   const minutes = date.getMinutes();
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const formatDate = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 const toMinutesFromHHmm = (value: string) => {
@@ -455,9 +465,8 @@ export const TripItineraryManageScreen = ({
           toDayNum = nextDay.dayNumber;
           newIndex = 0;
         } else {
-          // Tạo sang ngày mới
-          toDayNum = currentDay.dayNumber + 1;
-          newIndex = 0;
+          // Điểm cuối cùng của hành trình thì không thể đẩy xuống thêm
+          return;
         }
       }
     }
@@ -483,6 +492,11 @@ export const TripItineraryManageScreen = ({
   const currentDayIndex = editingStop ? dayPlans.findIndex(d => d.dayNumber === editingStop.dayNumber) : -1;
   const currentStopIndex = editingStop ? dayPlans[currentDayIndex]?.stops.findIndex(s => s.id === editingStop.stop.id) : -1;
   const isFirstOfAll = currentDayIndex === 0 && currentStopIndex === 0;
+  const isLastOfAll =
+    currentDayIndex >= 0 &&
+    currentDayIndex === dayPlans.length - 1 &&
+    currentStopIndex >= 0 &&
+    currentStopIndex === (dayPlans[currentDayIndex]?.stops.length || 0) - 1;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white">
@@ -601,10 +615,15 @@ export const TripItineraryManageScreen = ({
 
             {dayPlans.map((day) => (
               <View key={day.dayNumber} className="px-5 mb-5">
-                <View className="mb-3">
-                  <Text className="text-[26px] text-gray-900" style={{ fontWeight: '700' }}>
+                <View className="mb-3 flex-row items-baseline gap-2">
+                  <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
                     NGÀY {day.dayNumber}
                   </Text>
+                  {!!day.date && (
+                    <Text className="text-[22px] text-gray-900" style={{ fontWeight: '700' }}>
+                      ({formatDate(day.date)})
+                    </Text>
+                  )}
                 </View>
 
                 {day.stops.length ? (
@@ -771,15 +790,15 @@ export const TripItineraryManageScreen = ({
                     </Button>
                     <Button
                       onPress={() => handleMoveStop('down')}
-                      disabled={!!movingDirection || !!savingStopId}
+                      disabled={isLastOfAll || !!movingDirection || !!savingStopId}
                       className="items-center justify-center rounded-lg"
-                      style={{ width: 40, height: 40, backgroundColor: '#EFF6FF' }}
+                      style={{ width: 40, height: 40, backgroundColor: isLastOfAll ? '#F8FAFC' : '#EFF6FF' }}
                     >
                       {movingDirection === 'down' ? (
                         <ActivityIndicator size="small" color="#3B82F6" />
                       ) : (
                         <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                          <Path d="M6 9l6 6 6-6" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <Path d="M6 9l6 6 6-6" stroke={isLastOfAll ? '#CBD5E1' : '#3B82F6'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </Svg>
                       )}
                     </Button>

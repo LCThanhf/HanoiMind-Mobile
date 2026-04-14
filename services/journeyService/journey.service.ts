@@ -6,7 +6,7 @@ import {
   AddStopPayload,
   GetPublicFeedParams,
   UpdateStopPayload,
-  JourneyMood 
+  JourneyMood
 } from './journey.type';
 
 export const JourneyService = {
@@ -65,10 +65,26 @@ export const JourneyService = {
     return await apiClient.patch(`/journeys/${id}/start`);
   },
 
+  pauseJourney: async (id: string): Promise<Journey> => {
+    return await apiClient.patch(`/journeys/${id}/pause`);
+  },
+
+  resumeJourney: async (id: string, payload: { new_start_date: string }): Promise<Journey> => {
+    return await apiClient.patch(`/journeys/${id}/resume`, payload);
+  },
+
+  cancelJourney: async (id: string): Promise<Journey> => {
+    return await apiClient.patch(`/journeys/${id}/cancel`);
+  },
+
   checkInStop: async (journeyId: string, dayId: string, stopId: string, data: { check_in_image?: string }): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/check-in`, data);
   },
 
+  getCheckInStatus: async (journeyId: string, dayId: string, stopId: string): Promise<any> => {
+    return await apiClient.get(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/check-in-status`);
+  },
+  
   skipStop: async (journeyId: string, dayId: string, stopId: string): Promise<Journey> => {
     return await apiClient.patch(`/journeys/${journeyId}/days/${dayId}/stops/${stopId}/skip`);
   },
@@ -82,7 +98,12 @@ export const JourneyService = {
   // ==========================================
 
   joinByInviteCode: async (invite_code: string): Promise<Journey> => {
-    return await apiClient.post('/journeys/join', { invite_code });
+    const normalizedInviteCode = typeof invite_code === 'string' ? invite_code.trim() : '';
+    if (!normalizedInviteCode) {
+      throw new Error('invite_code is required');
+    }
+
+    return await apiClient.post('/journeys/join', { invite_code: normalizedInviteCode });
   },
 
   leaveJourney: async (id: string): Promise<any> => {

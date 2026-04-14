@@ -2,8 +2,8 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, SectionHeader } from '../shared';
-import { TripStopCard } from '../tripDetail/TripStopCard';
-import { TripManageStop } from '../tripDetail/useTripDetailData';
+import { TripStopCard } from '../journey/tripDetail/TripStopCard';
+import { TripManageStop } from '../journey/tripDetail/useTripDetailData';
 import { ManualStopDraft } from './types';
 
 interface StepTwoManualStopsProps {

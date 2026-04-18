@@ -83,10 +83,10 @@ export const CreatePostScreen = ({ mode = 'create', post, onBack, onSubmitSucces
     // Map category
     const categoryMap: Record<string, Category> = {
       'REVIEW': { id: 'review', label: '⭐ Review' },
-      'EXPERIENCE': { id: 'tips', label: '💡 Mẹo & Kinh nghiệm' },
-      'FIND_BUDDY': { id: 'story', label: '📖 Tìm bạn đồng hành' },
-      'QNA': { id: 'question', label: '❓ Hỏi & Tìm tư vấn' },
-      'OTHERS': { id: 'local', label: '💦 Khác' },
+      'EXPERIENCE': { id: 'experience', label: '💡 Mẹo & Kinh nghiệm' }, // Đổi 'tips' -> 'experience'
+      'FIND_BUDDY': { id: 'find_buddy', label: '📖 Tìm bạn đồng hành' }, // Đổi 'story' -> 'find_buddy'
+      'QNA': { id: 'qna', label: '❓ Hỏi & Tìm tư vấn' },                // Đổi 'question' -> 'qna'
+      'OTHERS': { id: 'others', label: '💦 Khác' },                     // Đổi 'local' -> 'others'
     };
     const mappedCategory = categoryMap[post.category];
     if (mappedCategory) {
@@ -159,10 +159,10 @@ export const CreatePostScreen = ({ mode = 'create', post, onBack, onSubmitSucces
   // Map giữa frontend ID và backend enum
   const categoryToBackendMap: Record<string, string> = {
     'review': 'REVIEW',
-    'tips': 'EXPERIENCE',
-    'story': 'FIND_BUDDY',
-    'question': 'QNA',
-    'local': 'OTHERS',
+    'experience': 'EXPERIENCE',
+    'find_buddy': 'FIND_BUDDY',
+    'qna': 'QNA',
+    'others': 'OTHERS',
   };
 
 const handleSubmit = async (overrideStatus?: 'DRAFT' | 'PUBLISHED') => {
@@ -445,11 +445,11 @@ const handleSubmit = async (overrideStatus?: 'DRAFT' | 'PUBLISHED') => {
         onSelect={(category) => setSelectedCategory(category)}
         selectedCategory={selectedCategory ?? undefined}
         categories={[
-          { id: 'REVIEW', label: '⭐ Review' },
-          { id: 'EXPERIENCE', label: '💡 Mẹo & Kinh nghiệm' },
-          { id: 'FIND_BUDDY', label: '📖 Tìm bạn đồng hành' },
-          { id: 'QNA', label: '❓ Hỏi & Tìm tư vấn' },
-          { id: 'OTHERS', label: '💦 Khác' },
+          { id: 'review', label: '⭐ Review' },
+          { id: 'experience', label: '💡 Mẹo & Kinh nghiệm' },
+          { id: 'find_buddy', label: '📖 Tìm bạn đồng hành' },
+          { id: 'qna', label: '❓ Hỏi & Tìm tư vấn' },
+          { id: 'others', label: '💦 Khác' },
         ]}
       />
 

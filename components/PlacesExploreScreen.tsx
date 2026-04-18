@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View, Text, ScrollView, SafeAreaView,
-    Image, ActivityIndicator, Alert, StyleSheet
+    ActivityIndicator, Alert, StyleSheet
 } from 'react-native';
-import * as Location from 'expo-location';
-import { Button, CardContainer, PillBadge, ScreenHeader, SearchInput } from './shared';
+import { Button, LocationPermissionPopup, ScreenHeader, SearchInput } from './shared';
 import { PlaceCard } from './cards';
+import {
+    getLocationPromptContent,
+    openLocationSettings,
+    resolveCurrentLocation,
+    type LocationAccessStatus,
+} from '../utils/locationAccess';
 
 // Import Service và Types
 import { PlacesService } from '../services/placeService/place.service';
@@ -79,22 +84,44 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [locationVersion, setLocationVersion] = useState(0);
+    const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+    const [locationPromptStatus, setLocationPromptStatus] = useState<Exclude<LocationAccessStatus, 'granted'> | null>(null);
     const coordsRef = useRef(FALLBACK_COORDS);
-    const skipInitialLocationRefresh = useRef(true);
+
+    const locationPromptContent = locationPromptStatus
+        ? getLocationPromptContent(locationPromptStatus)
+        : null;
 
     const resolveCoordinatesInBackground = useCallback(async () => {
+        setIsResolvingLocation(true);
         try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') return;
+            const result = await resolveCurrentLocation({});
+            if (result.status === 'granted' && result.coords) {
+                coordsRef.current = {
+                    latitude: result.coords.latitude,
+                    longitude: result.coords.longitude,
+                };
+                setLocationPromptStatus(null);
+                setLocationVersion((prev) => prev + 1);
+                return;
+            }
 
-            const location = await Location.getCurrentPositionAsync({});
-            coordsRef.current = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            };
-            setLocationVersion((prev) => prev + 1);
+            coordsRef.current = FALLBACK_COORDS;
+            const nextStatus = result.status === 'granted' ? 'location-error' : result.status;
+            setLocationPromptStatus(nextStatus);
         } catch (error) {
-            console.warn('Location unavailable, using fallback.', error);
+            console.error('[PlacesExploreScreen] Failed to resolve location:', error);
+            coordsRef.current = FALLBACK_COORDS;
+            setLocationPromptStatus('location-error');
+        } finally {
+            setIsResolvingLocation(false);
+        }
+    }, []);
+
+    const handleOpenLocationSettings = useCallback(async () => {
+        const opened = await openLocationSettings();
+        if (!opened) {
+            Alert.alert('Lỗi', 'Không thể mở cài đặt ứng dụng.');
         }
     }, []);
 
@@ -106,7 +133,7 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
     useEffect(() => {
         setPage(1);
         fetchData(1, false);
-    }, [activeCategory, sortBy, maxCrowd]);
+    }, [activeCategory, sortBy, maxCrowd, locationVersion]);
 
     const fetchData = async (targetPage: number, isLoadMore: boolean) => {
         try {
@@ -225,6 +252,19 @@ export const PlacesExploreScreen = ({ onBack, activeTab, onTabChange, onPlaceCli
                     </>
                 )}
             </ScrollView>
+
+            {locationPromptContent && (
+                <LocationPermissionPopup
+                    visible={!!locationPromptStatus}
+                    title={locationPromptContent.title}
+                    message={locationPromptContent.message}
+                    primaryLabel={locationPromptContent.primaryLabel}
+                    onPrimaryPress={resolveCoordinatesInBackground}
+                    onOpenSettings={handleOpenLocationSettings}
+                    onClose={() => setLocationPromptStatus(null)}
+                    primaryLoading={isResolvingLocation}
+                />
+            )}
         </SafeAreaView>
     );
 };

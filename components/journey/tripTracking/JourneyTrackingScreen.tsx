@@ -4,7 +4,7 @@
  * Supports flexible check-in: Host (camera/photo) and Members (QR scan)
  */
 
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,13 +17,12 @@ import {
   PanResponder,
   Dimensions,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Camera, QrCode, MapPin, Clock, Navigation, X, MoreVertical, CheckCircle, Users } from 'lucide-react-native';
-import { Button, ScreenHeader } from '../../shared';
+import { Button, LocationPermissionPopup, ScreenHeader } from '../../shared';
 import { QRCheckInModal } from './trackingModals/QRCheckInModal';
 import { fetchCompleteRoute, RouteCoordinate } from '../../../utils/routeUtils';
 import { JourneyService } from '../../../services/journeyService/journey.service';
@@ -33,6 +32,12 @@ import { UsersService } from '../../../services/userService/user.service';
 import { PlacesService } from '../../../services/placeService/place.service';
 import { Place } from '../../../services/placeService/place.type';
 import { CheckInProgressModal } from './trackingModals';
+import {
+  getLocationPromptContent,
+  openLocationSettings,
+  resolveCurrentLocation,
+  type LocationAccessStatus,
+} from '../../../utils/locationAccess';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -86,6 +91,8 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
   );
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+  const [locationPromptStatus, setLocationPromptStatus] = useState<Exclude<LocationAccessStatus, 'granted'> | null>(null);
   // Multi-snap animation
   const pan = useRef(new Animated.Value(0)).current;
   const currentPanValue = useRef(0);
@@ -129,6 +136,43 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
     const dayIndex = Math.min(currentDayIndex, journey.days.length - 1);
     return journey.days[dayIndex];
   }, [journey, currentDayIndex]);
+
+  const locationPromptContent = useMemo(() => {
+    if (!locationPromptStatus) {
+      return null;
+    }
+    return getLocationPromptContent(locationPromptStatus);
+  }, [locationPromptStatus]);
+
+  const resolveUserLocation = useCallback(async () => {
+    setIsResolvingLocation(true);
+    try {
+      const result = await resolveCurrentLocation({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      if (result.status === 'granted' && result.coords) {
+        setUserLocation(result.coords);
+        setLocationPromptStatus(null);
+        return;
+      }
+
+      const nextStatus = result.status === 'granted' ? 'location-error' : result.status;
+      setLocationPromptStatus(nextStatus);
+    } catch (error) {
+      console.error('[JourneyTrackingScreen] Error getting location:', error);
+      setLocationPromptStatus('location-error');
+    } finally {
+      setIsResolvingLocation(false);
+    }
+  }, []);
+
+  const handleOpenLocationSettings = useCallback(async () => {
+    const opened = await openLocationSettings();
+    if (!opened) {
+      Alert.alert('Lỗi', 'Không thể mở cài đặt ứng dụng.');
+    }
+  }, []);
 
   // Load journey data
   const loadJourney = async () => {
@@ -196,24 +240,11 @@ export const JourneyTrackingScreen: React.FC<JourneyTrackingScreenProps> = ({
   // Request location permission and start tracking
   useEffect(() => {
     const startLocationTracking = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Lỗi', 'Cần cấp quyền truy cập vị trí');
-          return;
-        }
-
-        const loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        setUserLocation(loc.coords);
-      } catch (error) {
-        console.error('[JourneyTrackingScreen] Error getting location:', error);
-      }
+      await resolveUserLocation();
     };
 
     startLocationTracking();
-  }, []);
+  }, [resolveUserLocation]);
 
   // Fetch route from ORS when stops change
   useEffect(() => {
@@ -643,6 +674,19 @@ const handleShowCheckInProgress = async () => {
           </ScrollView>
         </Animated.View>
       </View>
+
+      {locationPromptContent && (
+        <LocationPermissionPopup
+          visible={!!locationPromptStatus}
+          title={locationPromptContent.title}
+          message={locationPromptContent.message}
+          primaryLabel={locationPromptContent.primaryLabel}
+          onPrimaryPress={resolveUserLocation}
+          onOpenSettings={handleOpenLocationSettings}
+          onClose={() => setLocationPromptStatus(null)}
+          primaryLoading={isResolvingLocation}
+        />
+      )}
 
       {/* QR Check-in Modal */}
       {journey && currentDay && currentStop && currentStop.place && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Animated, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -14,6 +14,12 @@ import { TripStatCard } from './TripStatCard';
 import { useTripDetailData } from './useTripDetailData';
 import { JourneyInviteSharePayload } from '../../../services/chatService/journeyInvite';
 import { Button, PillBadge } from '../../shared';
+
+const debugTripDetailScreen = (...args: unknown[]) => {
+    if (__DEV__) {
+        console.log('[TripDetailScreen]', ...args);
+    }
+};
 
 interface TripDetailScreenProps {
     onBack: () => void;
@@ -38,6 +44,7 @@ export const TripDetailScreen = ({
     const [tabWidth, setTabWidth] = useState(0);
     const [isLeaving, setIsLeaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const renderCountRef = useRef(0);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const colorAnim = useRef(new Animated.Value(0)).current;
     const {
@@ -45,14 +52,41 @@ export const TripDetailScreen = ({
         error,
         tripData,
         journey,
+        refresh,
         isTrackingActionLoading,
+        isMoodVoteReplanning,
         handleStartJourney,
         handlePauseJourney,
         handleResumeJourney,
         handleCancelJourney,
         handleCheckInStop,
         handleSkipStop,
+        handleReplanFromMoodVotes,
     } = useTripDetailData(tripId);
+    const previousStateRef = useRef({
+        activeSubTab,
+        isLoading,
+        tripTitle: tripData?.title ?? '',
+        moodVotesLength: tripData?.moodVotes.length ?? 0,
+        moodVoteEntriesLength: tripData?.moodVoteEntries?.length ?? 0,
+        isMoodVoteReplanning,
+        isTrackingActionLoading,
+        journeyStatus: journey?.status ?? null,
+    });
+
+    renderCountRef.current += 1;
+
+    debugTripDetailScreen('render', {
+        renderCount: renderCountRef.current,
+        activeSubTab,
+        isLoading,
+        tripTitle: tripData?.title ?? '',
+        moodVotesLength: tripData?.moodVotes.length ?? 0,
+        moodVoteEntriesLength: tripData?.moodVoteEntries?.length ?? 0,
+        isMoodVoteReplanning,
+        isTrackingActionLoading,
+        journeyStatus: journey?.status ?? null,
+    });
 
     useEffect(() => {
         if (error) {
@@ -75,7 +109,49 @@ export const TripDetailScreen = ({
         }).start();
     }, [activeSubTab, colorAnim, slideAnim]);
 
-    const handleLeaveJourney = async () => {
+    useEffect(() => {
+        const previous = previousStateRef.current;
+        const currentState = {
+            activeSubTab,
+            isLoading,
+            tripTitle: tripData?.title ?? '',
+            moodVotesLength: tripData?.moodVotes.length ?? 0,
+            moodVoteEntriesLength: tripData?.moodVoteEntries?.length ?? 0,
+            isMoodVoteReplanning,
+            isTrackingActionLoading,
+            journeyStatus: journey?.status ?? null,
+        };
+
+        const changedFields = {
+            activeSubTab: previous.activeSubTab !== currentState.activeSubTab,
+            isLoading: previous.isLoading !== currentState.isLoading,
+            tripTitle: previous.tripTitle !== currentState.tripTitle,
+            moodVotesLength: previous.moodVotesLength !== currentState.moodVotesLength,
+            moodVoteEntriesLength: previous.moodVoteEntriesLength !== currentState.moodVoteEntriesLength,
+            isMoodVoteReplanning: previous.isMoodVoteReplanning !== currentState.isMoodVoteReplanning,
+            isTrackingActionLoading: previous.isTrackingActionLoading !== currentState.isTrackingActionLoading,
+            journeyStatus: previous.journeyStatus !== currentState.journeyStatus,
+        };
+
+        debugTripDetailScreen('commit', {
+            renderCount: renderCountRef.current,
+            changedFields,
+            state: currentState,
+        });
+
+        previousStateRef.current = currentState;
+    }, [
+        activeSubTab,
+        isLoading,
+        isMoodVoteReplanning,
+        isTrackingActionLoading,
+        journey?.status,
+        tripData?.moodVoteEntries?.length,
+        tripData?.moodVotes.length,
+        tripData?.title,
+    ]);
+
+    const handleLeaveJourney = useCallback(async () => {
         try {
             setIsLeaving(true);
             await JourneyService.leaveJourney(tripId);
@@ -86,7 +162,7 @@ export const TripDetailScreen = ({
         } finally {
             setIsLeaving(false);
         }
-    };
+    }, [onBack, tripId]);
 
     const handleDeleteJourney = () => {
         if (isDeleting) return;
@@ -122,6 +198,87 @@ export const TripDetailScreen = ({
             },
         ]);
     };
+
+    const handleItineraryAddPlace = useCallback((dayNumber: number) => {
+        onAddPlace?.(dayNumber);
+    }, [onAddPlace]);
+
+    const handleMembersSendInvite = useCallback((payload: JourneyInviteSharePayload) => {
+        onSendJourneyInviteToChat?.(payload);
+    }, [onSendJourneyInviteToChat]);
+
+    const handleMoodVoteSubmitted = useCallback(() => refresh({ silent: true }), [refresh]);
+
+    const handleMoodVoteReplan = useCallback(async () => {
+        const didReplan = await handleReplanFromMoodVotes();
+        if (didReplan) {
+            setActiveSubTab('itinerary');
+        }
+    }, [handleReplanFromMoodVotes]);
+
+    const currentTabContent = useMemo(() => {
+        debugTripDetailScreen('compute currentTabContent', {
+            activeSubTab,
+            hasTripData: Boolean(tripData),
+        });
+
+        if (!tripData) return null;
+
+        if (activeSubTab === 'itinerary') {
+            return (
+                <ItineraryTab
+                    itinerary={tripData.itinerary}
+                    onAddPlace={handleItineraryAddPlace}
+                    journeyStatus={journey?.status}
+                    onCheckIn={handleCheckInStop}
+                    onSkip={handleSkipStop}
+                    isCheckingIn={isTrackingActionLoading}
+                />
+            );
+        }
+
+        if (activeSubTab === 'members') {
+            return (
+                <MembersTab
+                    members={tripData.members}
+                    inviteCode={tripData.inviteCode}
+                    journeyId={tripId}
+                    journeyName={tripData.title}
+                    onLeaveTrip={handleLeaveJourney}
+                    onSendInviteToChat={handleMembersSendInvite}
+                    isLeaving={isLeaving}
+                />
+            );
+        }
+
+        return (
+            <MoodVoteTab
+                options={tripData.moodVotes}
+                membersCount={tripData.members.length}
+                tripName={tripData.title}
+                tripId={tripId}
+                moodVoteEntries={tripData.moodVoteEntries}
+                isRegenerating={isMoodVoteReplanning}
+                onVoteSubmitted={handleMoodVoteSubmitted}
+                onRegenerateItinerary={handleMoodVoteReplan}
+            />
+        );
+    }, [
+        activeSubTab,
+        handleCheckInStop,
+        handleItineraryAddPlace,
+        handleLeaveJourney,
+        handleMembersSendInvite,
+        handleMoodVoteReplan,
+        handleMoodVoteSubmitted,
+        handleSkipStop,
+        isLeaving,
+        isMoodVoteReplanning,
+        isTrackingActionLoading,
+        journey?.status,
+        tripData,
+        tripId,
+    ]);
 
     // ĐÃ ĐƯỢC TỐI ƯU UI LẠI TOÀN BỘ
     const renderTrackingControls = () => {
@@ -477,37 +634,7 @@ export const TripDetailScreen = ({
                     {/* Tracking Controls */}
                     {renderTrackingControls()}
 
-                    {activeSubTab === 'itinerary' && (
-                        <ItineraryTab
-                            itinerary={tripData.itinerary}
-                            onAddPlace={(dayNumber: number) => onAddPlace?.(dayNumber)}
-                            journeyStatus={journey?.status}
-                            onCheckIn={handleCheckInStop}
-                            onSkip={handleSkipStop}
-                            isCheckingIn={isTrackingActionLoading}
-                        />
-                    )}
-
-                    {activeSubTab === 'members' && (
-                        <MembersTab
-                            members={tripData.members}
-                            inviteCode={tripData.inviteCode}
-                            journeyId={tripId}
-                            journeyName={tripData.title}
-                            onLeaveTrip={handleLeaveJourney}
-                            onSendInviteToChat={onSendJourneyInviteToChat}
-                            isLeaving={isLeaving}
-                        />
-                    )}
-                    {activeSubTab === 'mood' && (
-                        <MoodVoteTab
-                            options={tripData.moodVotes}
-                            membersCount={tripData.members.length}
-                            tripName={tripData.title}
-                            tripId={tripId}
-                            moodVoteEntries={tripData.moodVoteEntries || []}
-                        />
-                    )}
+                    {currentTabContent}
 
                     {/* Bottom padding */}
                     <View className="h-24" />

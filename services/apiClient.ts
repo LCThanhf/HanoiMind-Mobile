@@ -15,11 +15,11 @@ const normalizeApiBaseUrl = (value: string): string => {
     return `${withoutTrailingSlash}/api/v1/`;
 };
 
-const AI_BASE_URL_RAW = process.env.EXPO_PUBLIC_AI_API_URL || '';
+const AI_BASE_URL_RAW = process.env.EXPO_PUBLIC_AI_API_URL || BASE_URL;
 const AI_BASE_URL = normalizeApiBaseUrl(AI_BASE_URL_RAW);
 
-if (!AI_BASE_URL_RAW) {
-    console.warn('[apiClient] Missing EXPO_PUBLIC_AI_API_URL. AI requests must target a dedicated AI backend URL.');
+if (!process.env.EXPO_PUBLIC_AI_API_URL) {
+    console.warn('[apiClient] Missing EXPO_PUBLIC_AI_API_URL. Falling back to EXPO_PUBLIC_API_URL for AI requests.');
 }
 
 const TIMEOUT = Number(process.env.EXPO_PUBLIC_API_TIMEOUT) || 300000;

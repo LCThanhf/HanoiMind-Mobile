@@ -259,7 +259,7 @@ export const TripItineraryManageScreen = ({
     return markers;
   }, [dayPlans]);
 
-  const handleDeleteStop = (dayNumber: number, stopId: string) => {
+  const handleDeleteStop = (dayNumber: number, stopId: string, placeId: string) => {
     Alert.alert('Xóa địa điểm', 'Bạn có chắc muốn xóa địa điểm khỏi lịch trình?', [
       { text: 'Hủy', style: 'cancel' },
       {
@@ -268,7 +268,7 @@ export const TripItineraryManageScreen = ({
         onPress: async () => {
           try {
             setDeletingStopId(stopId);
-            await JourneyService.removeStop(tripId, dayNumber, stopId);
+            await JourneyService.removeStop(tripId, dayNumber, stopId, placeId);
             await refresh({ silent: true });
           } catch {
             Alert.alert('Không thể xóa địa điểm', 'Vui lòng thử lại sau.');
@@ -657,7 +657,7 @@ export const TripItineraryManageScreen = ({
                           moodLabel={moodBadgeLabel}
                           deleting={deletingStopId === item.id}
                           showConnector={idx < day.stops.length - 1}
-                          onDelete={() => handleDeleteStop(day.dayNumber, item.id)}
+                          onDelete={() => handleDeleteStop(day.dayNumber, item.id, item.placeId)}
                           onEditTime={() => handleOpenTimeEditor(day.dayId || String(day.dayNumber), day.dayNumber, item)}
                           onPress={() => onOpenPlaceDetail(item.placeId)}
                         />

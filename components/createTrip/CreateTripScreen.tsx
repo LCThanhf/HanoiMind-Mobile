@@ -1,14 +1,12 @@
 import React from 'react';
 import {
-  Pressable,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SparkleIcon } from './icons';
 import { StepOneInfo } from './StepOneInfo';
@@ -93,7 +91,7 @@ export const CreateTripScreen = ({
   } = useCreateTrip({ onClose, onJourneyCreated });
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <View className="flex-row items-center justify-between px-5 pt-12 pb-4">
         <Button onPress={onClose} activeOpacity={0.7}>
           <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -108,8 +106,12 @@ export const CreateTripScreen = ({
 
       <View className="h-px bg-gray-200" />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Pressable>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
           <View className="flex-row items-center justify-center px-10 py-6">
             {stepConfig.map((step, index) => (
               <React.Fragment key={step.key}>
@@ -205,13 +207,16 @@ export const CreateTripScreen = ({
             />
           ) : null}
 
-          <View className="h-24" />
-        </Pressable>
+          <View className="h-6" />
       </ScrollView>
 
       <View
-        className="absolute bottom-0 left-0 right-0 px-5 pt-4 bg-white"
-        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+        className="px-5 pt-4 bg-white"
+        style={{
+          paddingBottom: Math.max(insets.bottom, 20),
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+        }}
       >
         {currentStep > 1 ? (
           <Button

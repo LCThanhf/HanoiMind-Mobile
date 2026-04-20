@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
+import { AiService } from '../../../services/aiService/ai.service';
 import { Journey, JourneyMemberRole, JourneyTag } from '../../../services/journeyService/journey.type';
 import { JourneyService } from '../../../services/journeyService/journey.service';
 import { PlacesService } from '../../../services/placeService/place.service';
 import { UsersService } from '../../../services/userService/user.service';
+import { buildMoodVoteAiPlanPayload } from './moodVotePlanning';
 import { DayItinerary, TripData } from './types';
 
 export interface BudgetSummary {
@@ -53,12 +55,14 @@ interface UseTripDetailDataResult {
   dayPlans: TripManageDay[];
   refresh: (options?: { silent?: boolean }) => Promise<void>;
   isTrackingActionLoading: boolean;
+  isMoodVoteReplanning: boolean;
   handleStartJourney: () => Promise<void>;
   handlePauseJourney: () => Promise<void>;
   handleResumeJourney: (newStartDate: string) => Promise<void>;
   handleCancelJourney: () => Promise<void>;
   handleCheckInStop: (dayId: string, stopId: string, imageUrl?: string) => Promise<void>;
   handleSkipStop: (dayId: string, stopId: string) => Promise<void>;
+  handleReplanFromMoodVotes: () => Promise<boolean>;
 }
 
 interface TripDetailCacheSnapshot {
@@ -74,34 +78,6 @@ const roleLabelMap: Record<string, string> = {
   [JourneyMemberRole.HOST]: 'Host',
   [JourneyMemberRole.MEMBER]: 'Member',
   [JourneyMemberRole.VIEWER]: 'Viewer',
-};
-
-const moodLabelMap: Partial<Record<JourneyTag, { id: string; title: string; desc: string }>> = {
-  [JourneyTag.RELAX]: {
-    id: 'relax',
-    title: 'Reset & Healing',
-    desc: 'Tập trung vào sự tĩnh lặng, thiền định và hồi phục năng lượng.',
-  },
-  [JourneyTag.FOODIE]: {
-    id: 'foodie',
-    title: 'Food Adventure',
-    desc: 'Khám phá ẩm thực địa phương và những quán ăn nức tiếng.',
-  },
-  [JourneyTag.NATURE]: {
-    id: 'nature',
-    title: 'Nature & Relax',
-    desc: 'Hòa mình vào thiên nhiên hoang sơ và tận hưởng không khí trong lành.',
-  },
-  [JourneyTag.CULTURE]: {
-    id: 'culture',
-    title: 'Culture & History',
-    desc: 'Tìm hiểu về di sản, bảo tàng và những câu chuyện lịch sử.',
-  },
-  [JourneyTag.CHILL]: {
-    id: 'chill',
-    title: 'Fun & Entertainment',
-    desc: 'Những hoạt động sôi nổi, vui chơi giải trí và tiệc tùng.',
-  },
 };
 
 const formatCompactCurrency = (value?: number) => {
@@ -324,12 +300,14 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
   );
   const [dayPlans, setDayPlans] = useState<TripManageDay[]>(cachedSnapshot?.dayPlans || []);
   const [isTrackingActionLoading, setIsTrackingActionLoading] = useState(false);
+  const [isMoodVoteReplanning, setIsMoodVoteReplanning] = useState(false);
+  const [requesterUserId, setRequesterUserId] = useState('');
 
   const refresh = useCallback(async (options?: { silent?: boolean }) => {
     if (!tripId) return;
 
     try {
-      const shouldShowBlockingLoader = !options?.silent && !tripData;
+      const shouldShowBlockingLoader = !options?.silent && !tripDetailCache.get(tripId)?.tripData;
       if (shouldShowBlockingLoader) {
         setIsLoading(true);
       }
@@ -482,6 +460,7 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
 
       const itinerary: DayItinerary[] = (loadedJourney.days || []).map((day) => ({
         day: day.day_number,
+        dayId: day.id,
         title: `Lịch trình ngày ${day.day_number}`,
         date: day.date,
         activities: (day.stops || []).map((stop, index) => {
@@ -784,6 +763,86 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
     [tripId, refresh]
   );
 
+  const extractUserId = useCallback((user: unknown): string | null => {
+    if (!user || typeof user !== 'object') return null;
+
+    const candidate = user as Record<string, unknown>;
+    const resolved = candidate.id || candidate._id || candidate.user_id;
+
+    if (typeof resolved !== 'string') return null;
+
+    const normalized = resolved.trim();
+    return normalized ? normalized : null;
+  }, []);
+
+  const resolveRequesterUserId = useCallback(async (): Promise<string> => {
+    if (requesterUserId) return requesterUserId;
+
+    const me = await UsersService.getMe();
+    const resolved = extractUserId(me);
+
+    if (!resolved) {
+      throw new Error('Không lấy được requester_user_id từ hồ sơ người dùng.');
+    }
+
+    setRequesterUserId(resolved);
+    return resolved;
+  }, [extractUserId, requesterUserId]);
+
+  const handleReplanFromMoodVotes = useCallback(async (): Promise<boolean> => {
+    if (!tripId || !journey) return false;
+
+    const moodVoteEntries = tripData?.moodVoteEntries || [];
+    if (!moodVoteEntries.length) {
+      Alert.alert('Chưa có bình chọn', 'Cần có ít nhất một lượt mood vote để sắp xếp lại lịch trình.');
+      return false;
+    }
+
+    const payload = buildMoodVoteAiPlanPayload({
+      journey,
+      dayPlans,
+      budgetSummary,
+      moodVoteEntries,
+    });
+
+    if (!payload) {
+      Alert.alert('Thiếu dữ liệu', 'Chưa đủ dữ liệu để AI sắp xếp lại lịch trình theo mood vote.');
+      return false;
+    }
+
+    if (payload.mode === 'group') {
+      payload.requester_user_id = await resolveRequesterUserId();
+    }
+
+    try {
+      setIsMoodVoteReplanning(true);
+      const aiResult = await AiService.runAiPlan(tripId, payload);
+      await refresh({ silent: true });
+
+      const generatedStops = (aiResult.days || []).reduce((total, day) => total + (day.stops?.length || 0), 0);
+      Alert.alert(
+        'Đã cập nhật lịch trình',
+        generatedStops > 0
+          ? `AI đã sắp xếp lại ${generatedStops} điểm dừng theo lượt mood vote.`
+          : 'AI đã xử lý lại lịch trình theo lượt mood vote.'
+      );
+      return true;
+    } catch (e: any) {
+      const apiMessage =
+        e?.response?.data?.message ||
+        e?.response?.data?.detail?.[0]?.msg ||
+        e?.response?.data?.error ||
+        (typeof e?.response?.data === 'string' ? e.response.data : null) ||
+        (e?.response?.data ? JSON.stringify(e.response.data) : null) ||
+        e?.message;
+
+      Alert.alert('Không thể sắp xếp lại lịch trình', apiMessage || 'Vui lòng thử lại sau.');
+      return false;
+    } finally {
+      setIsMoodVoteReplanning(false);
+    }
+  }, [tripId, journey, tripData?.moodVoteEntries, dayPlans, budgetSummary, refresh, resolveRequesterUserId]);
+
   return useMemo(
     () => ({
       isLoading,
@@ -794,12 +853,14 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
       dayPlans,
       refresh,
       isTrackingActionLoading,
+      isMoodVoteReplanning,
       handleStartJourney,
       handlePauseJourney,
       handleResumeJourney,
       handleCancelJourney,
       handleCheckInStop,
       handleSkipStop,
+      handleReplanFromMoodVotes,
     }),
     [
       isLoading,
@@ -810,12 +871,14 @@ export const useTripDetailData = (tripId: string): UseTripDetailDataResult => {
       dayPlans,
       refresh,
       isTrackingActionLoading,
+      isMoodVoteReplanning,
       handleStartJourney,
       handlePauseJourney,
       handleResumeJourney,
       handleCancelJourney,
       handleCheckInStop,
       handleSkipStop,
+      handleReplanFromMoodVotes,
     ]
   );
 };

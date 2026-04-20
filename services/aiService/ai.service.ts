@@ -1,6 +1,6 @@
 // aiService/ai.service.ts
 
-import { aiApiClient } from '../apiClient';
+import apiClient, { aiApiClient } from '../apiClient';
 import {
   AiDayPlan,
   AIPlanRequest,
@@ -12,6 +12,15 @@ import {
   RequestAiPlanPayload,
   SuggestNextParams
 } from './ai.type';
+
+type ApiClientLike = {
+  defaults?: {
+    baseURL?: string;
+  };
+  post: (url: string, data?: unknown) => Promise<any>;
+  get: (url: string) => Promise<any>;
+  patch: (url: string, data?: unknown) => Promise<any>;
+};
 
 const HOTEL_CATEGORIES = new Set(['HOTEL', 'ACCOMMODATION', 'HOSTEL', 'HOMESTAY', 'RESORT', 'GUEST_HOUSE']);
 const HOTEL_NAME_HINTS = ['hotel', 'resort', 'hostel', 'homestay', 'guest house', 'khach san'];
@@ -33,7 +42,7 @@ const normalizeAiDays = (days?: AiDayPlan[] | null): AiDayPlan[] | null | undefi
     stops: (day.stops || []).map((stop) => ({ ...stop })),
   }));
 
-  const hotelStopsByPlaceId = new Map<string, Array<{ dayIndex: number; stopIndex: number; stop: AiStop }>>();
+  const hotelStopsByPlaceId = new Map<string, { dayIndex: number; stopIndex: number; stop: AiStop }[]>();
 
   normalizedDays.forEach((day, fallbackDayIndex) => {
     const dayIndex = typeof day.day_number === 'number' ? Math.max(0, day.day_number - 1) : fallbackDayIndex;
@@ -92,11 +101,141 @@ const normalizeProposal = (proposal: AiProposal): AiProposal => ({
   days: normalizeAiDays(proposal.days) || proposal.days,
 });
 
-const ensureAiBackendConfigured = () => {
-  const baseUrl = aiApiClient.defaults.baseURL;
-  if (!baseUrl || !String(baseUrl).trim()) {
-    throw new Error('Thiếu cấu hình EXPO_PUBLIC_AI_API_URL để kết nối AI backend.');
+const toLegacyMood = (payload: AIPlanRequest): string => {
+  if (payload.mood) return payload.mood;
+
+  const entries = Object.entries(payload.mood_distribution || {}).sort((left, right) => {
+    const leftWeight = typeof left[1] === 'number' ? left[1] : 0;
+    const rightWeight = typeof right[1] === 'number' ? right[1] : 0;
+    return rightWeight - leftWeight;
+  });
+
+  return (entries[0]?.[0] as string) || 'NATURE_EXPLORE';
+};
+
+const toLegacyPlanPayload = (payload: AIPlanRequest): RequestAiPlanPayload => ({
+  total_days: payload.total_days,
+  mode: payload.mode || 'solo',
+  mood: toLegacyMood(payload),
+  mood_distribution: payload.mood_distribution ? { ...payload.mood_distribution } : undefined,
+  total_budget_vnd: payload.total_budget_vnd,
+  daily_budget_vnd: payload.daily_budget_vnd,
+  hours_per_day: payload.hours_per_day,
+  travel_style: payload.travel_style || 'balanced',
+  max_places_per_day: payload.max_places_per_day,
+  must_include_categories: payload.must_include_categories,
+  exclude_categories: payload.exclude_categories,
+});
+
+const proposalToAiPlanResponse = (journeyId: string, proposal: AiProposal): AIPlanResponse => {
+  const normalizedDays = normalizeAiDays(proposal.days) || proposal.days || [];
+
+  return {
+    journey_id: proposal.journey_id || journeyId,
+    journey_name: proposal.journey_id || journeyId,
+    total_days: normalizedDays.length,
+    mode: 'solo',
+    mood_used: (proposal.mood_used as any) || null,
+    mood_distribution_used: null,
+    total_budget_vnd: proposal.total_budget_vnd || 0,
+    daily_budget_vnd:
+      normalizedDays.length > 0 ? Math.floor((proposal.total_budget_vnd || 0) / normalizedDays.length) : proposal.total_budget_vnd || 0,
+    generated_at: proposal.createdAt || new Date().toISOString(),
+    candidate_pool_size: Array.isArray(proposal.candidate_pool) ? proposal.candidate_pool.length : 0,
+    generation_time_ms: 0,
+    days: normalizedDays,
+    candidate_pool: proposal.candidate_pool || [],
+    planning_notes: proposal.planning_notes || [],
+  };
+};
+
+const shouldFallbackToLegacyPlanEndpoint = (error: any): boolean => {
+  const status = error?.response?.status;
+  const message = String(
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    ''
+  ).toLowerCase();
+
+  if (status === 404 || status === 405 || status === 501) {
+    return true;
   }
+
+  return (
+    message.includes('cannot post') ||
+    message.includes('not found') ||
+    message.includes('method not allowed')
+  );
+};
+
+const shouldFallbackToMainJourneyBackend = (error: any): boolean => {
+  const status = error?.response?.status;
+  const message = String(
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    ''
+  ).toLowerCase();
+
+  if (status === 404 || status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+
+  return (
+    message.includes('cannot post') ||
+    message.includes('internal server error') ||
+    message.includes('journey not found') ||
+    message.includes('not found')
+  );
+};
+
+const normalizeBaseUrl = (value: string | undefined): string => String(value || '').trim().replace(/\/+$/, '');
+
+const usesSeparateAiBackend = () => normalizeBaseUrl(aiApiClient.defaults?.baseURL) !== normalizeBaseUrl(apiClient.defaults?.baseURL);
+
+const ensureBackendConfigured = (client: ApiClientLike) => {
+  const baseUrl = client.defaults?.baseURL;
+  if (!baseUrl || !String(baseUrl).trim()) {
+    throw new Error('Thiếu cấu hình URL backend để kết nối AI service.');
+  }
+};
+
+const runAiPlanWithClient = async (
+  client: ApiClientLike,
+  journeyId: string,
+  payload: AIPlanRequest
+): Promise<AIPlanResponse> => {
+  const response = await client.post(`/journeys/${journeyId}/ai-plan`, payload);
+  return normalizeAiPlanResponse(response);
+};
+
+const createPlanWithClient = async (
+  client: ApiClientLike,
+  journeyId: string,
+  payload: RequestAiPlanPayload
+): Promise<AiProposal> => {
+  const response = await client.post(`/ai/planning/plan/${journeyId}`, payload);
+  return normalizeProposal(response);
+};
+
+const acceptProposalWithClient = async (client: ApiClientLike, proposalId: string): Promise<{ success: boolean }> =>
+  client.post(`/ai/planning/accept/${proposalId}`);
+
+const runLegacyProposalFlow = async (
+  client: ApiClientLike,
+  journeyId: string,
+  payload: AIPlanRequest
+): Promise<AIPlanResponse> => {
+  const legacyProposal = await createPlanWithClient(client, journeyId, toLegacyPlanPayload(payload));
+  await acceptProposalWithClient(client, legacyProposal._id);
+  return proposalToAiPlanResponse(journeyId, legacyProposal);
+};
+
+const castResponseData = <T>(value: unknown): T => value as T;
+
+const ensureAiBackendConfigured = () => {
+  ensureBackendConfigured(aiApiClient);
 };
 
 export const AiService = {
@@ -109,7 +248,7 @@ export const AiService = {
     try {
       ensureAiBackendConfigured();
       const response = await aiApiClient.post('/journeys/auto-create-related', payload);
-      return normalizeCreateJourneyFromRelatedResponse(response);
+      return normalizeCreateJourneyFromRelatedResponse(castResponseData<CreateJourneyFromRelatedResponse>(response));
     } catch (error) {
       throw error;
     }
@@ -119,23 +258,49 @@ export const AiService = {
    * Chạy tối ưu AI theo endpoint mới /ai-plan.
    */
   runAiPlan: async (journeyId: string, payload: AIPlanRequest): Promise<AIPlanResponse> => {
+    ensureAiBackendConfigured();
+
+    const hasMainBackendFallback = usesSeparateAiBackend();
+
     try {
-      ensureAiBackendConfigured();
-      const response = await aiApiClient.post(`/journeys/${journeyId}/ai-plan`, payload);
-      return normalizeAiPlanResponse(response);
-    } catch (error) {
-      throw error;
+      return await runAiPlanWithClient(aiApiClient, journeyId, payload);
+    } catch (aiEndpointError) {
+      if (shouldFallbackToLegacyPlanEndpoint(aiEndpointError)) {
+        try {
+          return await runLegacyProposalFlow(aiApiClient, journeyId, payload);
+        } catch (legacyAiError) {
+          if (!hasMainBackendFallback || !shouldFallbackToMainJourneyBackend(legacyAiError)) {
+            throw legacyAiError;
+          }
+        }
+      } else if (!hasMainBackendFallback || !shouldFallbackToMainJourneyBackend(aiEndpointError)) {
+        throw aiEndpointError;
+      }
+    }
+
+    ensureBackendConfigured(apiClient);
+
+    try {
+      return await runAiPlanWithClient(apiClient, journeyId, payload);
+    } catch (mainEndpointError) {
+      if (!shouldFallbackToLegacyPlanEndpoint(mainEndpointError)) {
+        throw mainEndpointError;
+      }
+
+      return runLegacyProposalFlow(apiClient, journeyId, payload);
     }
   },
 
   /**
-   * 1. Yêu cầu AI lập kế hoạch cho một hành trình
+   * Chạy tối ưu AI theo endpoint cũ /ai/planning/plan/{journeyId}.
    */
   createPlan: async (journeyId: string, payload: RequestAiPlanPayload): Promise<AiProposal> => {
     try {
       const response = await aiApiClient.post(`/ai/planning/plan/${journeyId}`, payload);
-      return normalizeProposal(response);
-    } catch (error) { throw error; }
+      return normalizeProposal(castResponseData<AiProposal>(response));
+    } catch (error) {
+      throw error;
+    }
   },
 
   /**
@@ -144,7 +309,7 @@ export const AiService = {
   getProposals: async (journeyId: string): Promise<AiProposal[]> => {
     try {
       const response = await aiApiClient.get(`/ai/planning/proposals/journey/${journeyId}`);
-      return (response || []).map(normalizeProposal);
+      return castResponseData<AiProposal[]>(response || []).map(normalizeProposal);
     } catch (error) { throw error; }
   },
 
@@ -154,7 +319,7 @@ export const AiService = {
   getProposalDetail: async (proposalId: string): Promise<AiProposal> => {
     try {
       const response = await aiApiClient.get(`/ai/planning/proposal/${proposalId}`);
-      return normalizeProposal(response);
+      return normalizeProposal(castResponseData<AiProposal>(response));
     } catch (error) { throw error; }
   },
 
@@ -164,7 +329,7 @@ export const AiService = {
   swapPlace: async (proposalId: string, data: { dayNumber: number; oldPlaceId: string; newPlaceId: string }): Promise<AiProposal> => {
     try {
       const response = await aiApiClient.patch(`/ai/planning/proposal/${proposalId}/swap`, data);
-      return normalizeProposal(response);
+      return normalizeProposal(castResponseData<AiProposal>(response));
     } catch (error) { throw error; }
   },
 

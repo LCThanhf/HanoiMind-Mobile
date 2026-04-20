@@ -36,6 +36,17 @@ const getMoodIcon = (iconType: string, color: string) => {
   }
 };
 
+const TripNameIcon = () => (
+  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z"
+      stroke="#2B8EF0"
+      strokeWidth="1.8"
+    />
+    <Path d="M8 9h8M8 12h6" stroke="#2B8EF0" strokeWidth="1.8" strokeLinecap="round" />
+  </Svg>
+);
+
 export const StepOneInfo = ({
   tripName,
   onChangeTripName,
@@ -53,19 +64,30 @@ export const StepOneInfo = ({
     <View className="px-5">
       <SectionHeader title="Các thông tin cơ bản" paddingHorizontal={0} paddingTop={0} paddingBottom={0} marginBottom={16} />
 
-      <View className="mb-3">
-        <Text className="text-[13px] text-gray-600 mb-2" style={{ fontWeight: '500' }}>
-          Tên chuyến đi
+      <View
+        className="mb-4 rounded-2xl p-4"
+        style={{ backgroundColor: '#F8FBFF', borderWidth: 1, borderColor: '#DCEBFF' }}
+      >
+        <View className="flex-row items-center mb-2">
+          <TripNameIcon />
+          <Text className="text-[14px] text-gray-800 ml-2" style={{ fontWeight: '700' }}>
+            Đặt tên cho chuyến đi
+          </Text>
+        </View>
+        <Text className="text-[12px] text-gray-500 mb-3" style={{ fontWeight: '400' }}>
+          Tên này sẽ hiển thị ở danh sách chuyến đi và màn chi tiết hành trình.
         </Text>
-        <View className="flex-row items-center px-4 rounded-xl" style={{ backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB', height: 52 }}>
+        <View className="flex-row items-center px-4 rounded-xl" style={{ backgroundColor: 'white', borderWidth: 1.5, borderColor: '#BFDBFE', height: 56 }}>
           <TextInput
             className="flex-1 text-[15px]"
             style={{ fontWeight: '500', color: '#111827' }}
-            placeholder="VD: Đi chill với ny cũ"
+            placeholder="VD: Cuối tuần ở Ba Vì"
             placeholderTextColor="#9CA3AF"
             value={tripName}
             onChangeText={onChangeTripName}
             maxLength={80}
+            autoFocus
+            returnKeyType="next"
           />
         </View>
       </View>
@@ -187,4 +209,3 @@ export const StepOneInfo = ({
     </View>
   </>
 );
-

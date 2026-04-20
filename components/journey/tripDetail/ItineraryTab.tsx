@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import React, { memo, useState } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { DayItinerary } from './types';
 import { CardContainer, SectionHeader, Button } from '../../shared';
 import { StopStatus, JourneyStatus } from '../../../services/journeyService/journey.type';
@@ -41,7 +41,7 @@ interface ItineraryTabProps {
     isCheckingIn?: boolean;
 }
 
-export const ItineraryTab = ({
+export const ItineraryTab = memo(({
     itinerary,
     onAddPlace,
     journeyStatus,
@@ -139,7 +139,7 @@ export const ItineraryTab = ({
                                                 onPress={async () => {
                                                     setCheckingInId(activity.id);
                                                     try {
-                                                        await onCheckIn(dayData.date || String(dayData.day), activity.stopId || '', ''); // Pass empty string for imageUrl for now
+                                                        await onCheckIn(dayData.dayId || String(dayData.day), activity.stopId || '', '');
                                                     } finally {
                                                         setCheckingInId(null);
                                                     }
@@ -158,7 +158,7 @@ export const ItineraryTab = ({
                                                 onPress={async () => {
                                                     setCheckingInId(activity.id);
                                                     try {
-                                                        await onSkip(dayData.date || String(dayData.day), activity.stopId || '');
+                                                        await onSkip(dayData.dayId || String(dayData.day), activity.stopId || '');
                                                     } finally {
                                                         setCheckingInId(null);
                                                     }
@@ -195,5 +195,4 @@ export const ItineraryTab = ({
             ))}
         </>
     );
-};
-
+});

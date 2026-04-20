@@ -10,6 +10,7 @@ import { AiService } from '../../services/aiService/ai.service';
 import { AiMood } from '../../services/aiService/ai.type';
 import { UsersService } from '../../services/userService/user.service';
 import { moodAiMap, moodTagMap } from './constants';
+import { buildIsoDateRange, parseDateInputValue } from './dateRange';
 import { ManualStopDraft, MoodId, PlanningMode } from './types';
 
 export const formatDateInput = (date: Date) => {
@@ -109,64 +110,7 @@ export const useCreateTrip = ({
   const [seededStops, setSeededStops] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const parseDateInput = useCallback((value: string): Date | null => {
-    const normalized = value.trim();
-    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return null;
-
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    const parsed = new Date(year, month - 1, day);
-
-    if (
-      Number.isNaN(parsed.getTime()) ||
-      parsed.getFullYear() !== year ||
-      parsed.getMonth() !== month - 1 ||
-      parsed.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return parsed;
-  }, []);
-
-  const buildIsoDateRange = (startValue: string, endValue: string) => {
-    const parsedStart = parseDateInput(startValue);
-    const parsedEnd = parseDateInput(endValue);
-
-    if (!parsedStart || !parsedEnd) {
-      return {
-        start_date: null,
-        end_date: null,
-        daysCount: 0,
-      };
-    }
-
-    const start = new Date(
-      Date.UTC(parsedStart.getFullYear(), parsedStart.getMonth(), parsedStart.getDate(), 0, 0, 0, 0)
-    );
-    const end = new Date(
-      Date.UTC(parsedEnd.getFullYear(), parsedEnd.getMonth(), parsedEnd.getDate(), 23, 59, 59, 999)
-    );
-
-    if (end < start) {
-      return {
-        start_date: null,
-        end_date: null,
-        daysCount: 0,
-      };
-    }
-
-    const diffMs = end.getTime() - start.getTime();
-    const daysCount = Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1;
-
-    return {
-      start_date: start.toISOString(),
-      end_date: end.toISOString(),
-      daysCount,
-    };
-  };
+  const parseDateInput = useCallback((value: string): Date | null => parseDateInputValue(value), []);
 
   const getDayIndexFromDate = (dateValue: string, startValue: string) => {
     const parsedDate = parseDateInput(dateValue);
@@ -245,7 +189,7 @@ export const useCreateTrip = ({
       const startUtcMidnight = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
       const endUtcMidnight = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
       const diffDays = Math.floor((endUtcMidnight - startUtcMidnight) / (24 * 60 * 60 * 1000));
-      if (diffDays > 0) return diffDays;
+      if (diffDays >= 0) return diffDays + 1;
     }
 
     return Math.max(1, fallbackDays);
@@ -886,7 +830,7 @@ export const useCreateTrip = ({
         daily_budget_vnd: safeDailyBudget,
         hours_per_day: 8,
         travel_style: selectedMood === 'reset' ? 'relaxing' : selectedMood === 'explore' ? 'sightseeing' : 'balanced',
-        max_places_per_day: Math.max(3, Math.ceil(selectedPlaceIds.length / normalizedJourneyDays)),
+        max_places_per_day: Math.min(5, Math.max(1, Math.ceil(selectedPlaceIds.length / normalizedJourneyDays))),
         place_ids: selectedPlaceIds,
       };
 

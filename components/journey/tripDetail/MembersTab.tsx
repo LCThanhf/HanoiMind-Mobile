@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, Alert, ActivityIndicator } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { TripMemberView } from './types';
@@ -15,7 +15,7 @@ interface MembersTabProps {
     isLeaving?: boolean;
 }
 
-export const MembersTab = ({
+export const MembersTab = memo(({
     members,
     inviteCode,
     journeyId,
@@ -229,5 +229,4 @@ export const MembersTab = ({
             </Button>
         </View>
     );
-};
-
+});

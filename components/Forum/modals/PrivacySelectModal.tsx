@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Modal, Pressable, TouchableOpacity, ScrollView } from 'react-native';
-import { X, Check, Globe, Users, Lock } from 'lucide-react-native';
+import { X, Check, Globe, Users, Lock, FileText } from 'lucide-react-native';
 
-export type PrivacyMode = 'public' | 'friends' | 'private';
+export type PrivacyMode = 'public' | 'private' | 'draft';
 
 interface PrivacyOption {
   mode: PrivacyMode;
@@ -26,16 +26,16 @@ const PRIVACY_OPTIONS: PrivacyOption[] = [
     icon: <Globe size={20} color="#3B82F6" />,
   },
   {
-    mode: 'friends',
-    label: 'Bạn bè',
-    description: 'Chỉ bạn bè có thể xem',
-    icon: <Users size={20} color="#3B82F6" />,
-  },
-  {
     mode: 'private',
     label: 'Riêng tư',
     description: 'Chỉ bạn có thể xem',
     icon: <Lock size={20} color="#3B82F6" />,
+  },
+  {
+    mode: 'draft',
+    label: 'Nháp',
+    description: 'Lưu dưới dạng nháp',
+    icon: <FileText size={20} color="#3B82F6" />,
   },
 ];
 

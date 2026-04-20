@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
-import './global.css'
+import { MenuProvider } from 'react-native-popup-menu';
+import './global.css';
 import { Buffer } from 'buffer';
 import { StarterScreen } from './components/StarterScreen';
 import { SignInScreen } from './components/SignInScreen';
@@ -35,6 +36,7 @@ import { TripBudgetManageScreen } from './components/journey/tripBudget/TripBudg
 import { MemberProfile, StopCostItem } from './components/tripBudget/types';
 import { TripUpdateCostScreen } from './components/journey/tripBudget/TripUpdateCostScreen';
 import { Place } from './services/placeService/place.type';
+import { ForumPost } from './services/forumService/forum.type';
 import { NotificationService } from './services/notificationService/notification.service';
 import { FriendsTab } from './components/FriendsManageScreen';
 import { JourneyInviteSharePayload } from './services/chatService/journeyInvite';
@@ -58,6 +60,7 @@ type AppState =
   | 'notifications'
   | 'forum'
   | 'forumCreate'
+  | 'forumEdit'
   | 'forumDetail'
   | 'friendsManage'
   | 'otherUserProfile'
@@ -88,6 +91,7 @@ export default function App() {
   const [placeDetailRefreshKey, setPlaceDetailRefreshKey] = useState(0);
   const [forumRefreshKey, setForumRefreshKey] = useState(0);
   const [selectedForumPostId, setSelectedForumPostId] = useState<string>('');
+  const [selectedForumPost, setSelectedForumPost] = useState<ForumPost | null>(null);
   const [pendingJourneyInvite, setPendingJourneyInvite] = useState<JourneyInviteSharePayload | null>(null);
 
   useEffect(() => {
@@ -299,16 +303,6 @@ export default function App() {
             journeyId={selectedTripId}
             userId={currentUserId}
             onBack={() => setAppState('tripDetail')}
-            onOpenTracking={() => setAppState('tripTracking')}
-          />
-        );
-
-      case 'tripTracking':
-        return (
-          <JourneyTrackingScreen
-            journeyId={selectedTripId}
-            userId={currentUserId}
-            onBack={() => setAppState('tripDetail')}
           />
         );
 
@@ -488,6 +482,13 @@ export default function App() {
               setAppState('forumDetail');
             }}
             onCreatePost={() => setAppState('forumCreate')}
+            onEditPost={(post: ForumPost) => {
+              setSelectedForumPost(post);
+              setAppState('forumEdit');
+            }}
+            onDeletePost={() => {
+              setForumRefreshKey((prev) => prev + 1);
+            }}
           />
         );
 
@@ -497,6 +498,19 @@ export default function App() {
             onBack={() => setAppState('forum')}
             mode="create"
             onSubmitSuccess={() => setForumRefreshKey((prev) => prev + 1)}
+          />
+        );
+
+      case 'forumEdit':
+        return (
+          <CreatePostScreen
+            onBack={() => setAppState('forum')}
+            mode="edit"
+            post={selectedForumPost || undefined}
+            onSubmitSuccess={() => {
+              setSelectedForumPost(null);
+              setForumRefreshKey((prev) => prev + 1);
+            }}
           />
         );
 
@@ -565,12 +579,14 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
-      {renderContent()}
-      {shouldShowBottomTabBar && (
-        <BottomTabBar activeTab={activeTab} onTabPress={handleBottomTabPress} />
-      )}
-      <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
-    </SafeAreaProvider>
+    <MenuProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
+        {renderContent()}
+        {shouldShowBottomTabBar && (
+          <BottomTabBar activeTab={activeTab} onTabPress={handleBottomTabPress} />
+        )}
+        <StatusBar style={appState === 'starter' ? 'light' : 'dark'} />
+      </SafeAreaProvider>
+    </MenuProvider>
   );
 }

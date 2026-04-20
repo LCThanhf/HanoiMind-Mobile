@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ImageBackground, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, MessageCircle, Eye, Heart, Navigation, MoreVertical } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
@@ -15,9 +15,11 @@ interface ForumPostCardProps {
   post?: ForumPost;
   postId?: string;
   onPress?: () => void;
+  onEdit?: (post: ForumPost) => void;
+  onDelete?: () => void;
 }
 
-export const ForumPostCard = ({ post: initialPost, postId, onPress }: ForumPostCardProps) => {
+export const ForumPostCard = ({ post: initialPost, postId, onPress, onEdit, onDelete }: ForumPostCardProps) => {
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
@@ -205,16 +207,53 @@ useEffect(() => {
 }, [post?.place_ids?.join(','), (post as any)?.places?.length]); // Trigger nếu place_ids hoặc places thay đổi
 
 
+  const handleEdit = () => {
+    const authorId = (post?.author as any)?._id || (post?.author as any)?.id;
+    if (!post?._id || !currentUserId) return;
+
+    if (authorId !== currentUserId) {
+      Alert.alert('Không có quyền', 'Bạn không có quyền chỉnh sửa bài viết này.');
+      return;
+    }
+
+    if (post && onEdit) {
+      onEdit(post);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!post?._id || !currentUserId) return;
+
+    const authorId = (post?.author as any)?._id || (post?.author as any)?.id;
+    if (authorId !== currentUserId) {
+      Alert.alert('Không có quyền', 'Bạn không có quyền xóa bài viết này. Chỉ tác giả mới có thể xóa.');
+      return;
+    }
+
+    try {
+      await ForumService.deletePost(post._id);
+      Alert.alert('Thành công', 'Bài viết đã được xóa.');
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      Alert.alert('Lỗi', 'Không thể xóa bài viết. Vui lòng thử lại.');
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.8 : 1}
       onPress={onPress}
-      className="bg-white m-4 rounded-[32px] shadow-sm overflow-hidden border border-gray-100"
+      className="bg-white m-4 rounded-[32px] shadow-sm border border-gray-100"
     >
       <PostHeader 
         author={author}
         status={post.status} 
-        createdAt={post.created_at || new Date().toISOString()} 
+        createdAt={post.created_at || new Date().toISOString()}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
       
       <PostContent 

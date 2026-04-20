@@ -17,10 +17,10 @@ interface CategorySelectModalProps {
 
 const DEFAULT_CATEGORIES: Category[] = [
           { id: 'review', label: '⭐ Review ' },
-          { id: 'tips', label: '💡 Mẹo & Kinh nghiệm' },
-          { id: 'story', label: '📖 Tìm bạn đồng hành' },
-          { id: 'question', label: '❓ Hỏi & Tìm tư vấn' },
-          { id: 'local', label: '💦 Khác' },
+          { id: 'experience', label: '💡 Mẹo & Kinh nghiệm' },
+          { id: 'find_buddy', label: '📖 Tìm bạn đồng hành' },
+          { id: 'qna', label: '❓ Hỏi & Tìm tư vấn' },
+          { id: 'others', label: '💦 Khác' },
 ];
 
 export const CategorySelectModal = ({

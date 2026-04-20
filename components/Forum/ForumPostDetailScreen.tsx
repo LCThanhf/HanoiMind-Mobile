@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { ForumPost } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
@@ -13,9 +13,10 @@ import { AppColors } from '../../utils/theme';
 interface ForumPostDetailScreenProps {
   postId: string;
   onBack: () => void;
+  onEdit?: () => void;
 }
 
-export const ForumPostDetailScreen = ({ postId, onBack }: ForumPostDetailScreenProps) => {
+export const ForumPostDetailScreen = ({ postId, onBack, onEdit }: ForumPostDetailScreenProps) => {
   const [post, setPost] = useState<ForumPost | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -116,6 +117,23 @@ export const ForumPostDetailScreen = ({ postId, onBack }: ForumPostDetailScreenP
     }
   };
 
+  const handleEdit = () => {
+    onEdit?.();
+  };
+
+  const handleDelete = async () => {
+    if (!post?._id) return;
+
+    try {
+      await ForumService.deletePost(post._id);
+      Alert.alert('Thành công', 'Bài viết đã được xóa.');
+      onBack();
+    } catch (err) {
+      console.error('Error deleting post:', err);
+      Alert.alert('Lỗi', 'Không thể xóa bài viết.');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -169,11 +187,13 @@ export const ForumPostDetailScreen = ({ postId, onBack }: ForumPostDetailScreenP
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-        <View className="m-4 rounded-[32px] overflow-hidden border border-gray-100 bg-white shadow-sm">
+        <View className="m-4 rounded-[32px] border border-gray-100 bg-white shadow-sm">
           <PostHeader
             author={post.author || { fullName: 'Người dùng' }}
             status={post.status}
             createdAt={post.created_at || new Date().toISOString()}
+            onEdit={post.author?.id === currentUserId ? handleEdit : undefined}
+            onDelete={post.author?.id === currentUserId ? handleDelete : undefined}
           />
 
           <PostDetailContent

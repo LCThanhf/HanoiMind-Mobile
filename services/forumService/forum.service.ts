@@ -102,7 +102,14 @@ export const ForumService = {
     try {
       return await apiClient.delete(`/forum/posts/${id}`);
     } catch (error) { throw error; }
-  }
+  },
 
-  
+  /**
+   * 8. Chỉnh sửa bài viết
+   */
+  updatePost: async (id: string, payload: Partial<CreatePostPayload>): Promise<ForumPost> => {
+    try {
+      return await apiClient.patch(`/forum/posts/${id}`, payload);
+    } catch (error) { throw error; }
+  }
 };

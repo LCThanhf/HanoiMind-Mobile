@@ -141,7 +141,8 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, onStartChat, pl
                     setOwnerName('');
                 }
             }
-        } catch {
+        } catch (error) {
+            console.error('PlaceDetailScreen: Error loading place detail for placeId:', placeId, error);
             Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
         } finally {
             if (showLoading) setIsLoading(false);

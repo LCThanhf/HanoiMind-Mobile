@@ -17,9 +17,10 @@ interface ForumPostCardProps {
   onPress?: () => void;
   onEdit?: (post: ForumPost) => void;
   onDelete?: () => void;
+  onPlacePress?: (placeId: string) => void;
 }
 
-export const ForumPostCard = ({ post: initialPost, postId, onPress, onEdit, onDelete }: ForumPostCardProps) => {
+export const ForumPostCard = ({ post: initialPost, postId, onPress, onEdit, onDelete, onPlacePress }: ForumPostCardProps) => {
   const [post, setPost] = useState<ForumPost | null>(initialPost || null);
   const [loading, setLoading] = useState<boolean>(!initialPost && !!postId);
   const [error, setError] = useState<string>('');
@@ -152,6 +153,20 @@ export const ForumPostCard = ({ post: initialPost, postId, onPress, onEdit, onDe
 // Khai báo state lưu mảng tên địa điểm
 const [placeNames, setPlaceNames] = useState<string[]>([]);
 
+// Tạo detailPlaces từ placeNames và place_ids, hoặc từ places object nếu có
+let detailPlaces: {id: string, name: string}[] = [];
+if ((post as any)?.places && Array.isArray((post as any).places) && (post as any).places.length > 0) {
+  detailPlaces = (post as any).places.map((p: any) => ({
+    id: p.id || p._id || '',
+    name: p.name || 'Không tìm thấy tên'
+  }));
+} else {
+  detailPlaces = placeNames.map((name, index) => ({
+    id: post.place_ids?.[index] || '',
+    name: name
+  }));
+}
+
 
 useEffect(() => {
   const loadPlaceNames = async () => {
@@ -264,7 +279,8 @@ useEffect(() => {
       />
 
       <PostFooter 
-        placeNames={placeNames}
+        place={detailPlaces}
+        onPlacePress={onPlacePress}
         journeyId={post.journey_id}
         likesCount={likesCount}
         isLiked={isLiked}

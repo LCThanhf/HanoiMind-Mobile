@@ -489,6 +489,11 @@ export default function App() {
             onDeletePost={() => {
               setForumRefreshKey((prev) => prev + 1);
             }}
+            onPlacePress={(placeId: string) => {
+              setSelectedPlaceId(placeId);
+              setPreviousState('forum');
+              setAppState('placeDetail');
+            }}
           />
         );
 
@@ -519,6 +524,11 @@ export default function App() {
           <ForumPostDetailScreen
             postId={selectedForumPostId}
             onBack={() => setAppState('forum')}
+            onOpenPlaceDetail={(placeId: string) => {
+              setSelectedPlaceId(placeId);
+              setPreviousState('forumDetail');
+              setAppState('placeDetail');
+            }}
           />
         );
 

@@ -14,16 +14,17 @@ interface ForumPostDetailScreenProps {
   postId: string;
   onBack: () => void;
   onEdit?: () => void;
+  onOpenPlaceDetail?: (placeId: string) => void;
 }
 
-export const ForumPostDetailScreen = ({ postId, onBack, onEdit }: ForumPostDetailScreenProps) => {
+export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetail }: ForumPostDetailScreenProps) => {
   const [post, setPost] = useState<ForumPost | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [likesCount, setLikesCount] = useState<number>(0);
   const [likeLoading, setLikeLoading] = useState<boolean>(false);
-  const [placeNames, setPlaceNames] = useState<string[]>([]);
+  const [detailPlaces, setDetailPlaces] = useState<{id: string, name: string}[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,42 +59,38 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit }: ForumPostDetai
     loadPost();
   }, [postId]);
 
+  // tag địa điểm 
   useEffect(() => {
-    const loadPlaceNames = async () => {
-      if (!post) return;
+  const loadPlaceDetails = async () => {
+    if (!post || !post.place_ids || post.place_ids.length === 0) {
+      setDetailPlaces([]);
+      return;
+    }
 
-      const placeIds = post.place_ids;
-      const places = (post as any)?.places;
-
-      if (places && Array.isArray(places) && places.length > 0) {
-        setPlaceNames(places.map((p: any) => p?.name || 'Không tìm thấy tên'));
-        return;
-      }
-
-      if (!placeIds || placeIds.length === 0) {
-        setPlaceNames([]);
-        return;
-      }
-
-      try {
-        const namePromises = placeIds.map(async (id) => {
+    try {
+      const details = await Promise.all(
+        post.place_ids.map(async (id) => {
           try {
             const res = await PlacesService.findOne(id);
-            return (res as any)?.name || 'Không tìm thấy tên';
+            return {
+              id: id,
+              name: (res as any)?.name || 'Địa điểm không tên'
+            };
           } catch (err) {
-            return 'Lỗi API';
+            return { id: id, name: 'Lỗi tải địa điểm' };
           }
-        });
+        })
+      );
+      setDetailPlaces(details);
+      console.log('ForumPostDetailScreen: Loaded detailPlaces for post', post?._id, details);
+    } catch (err) {
+      console.error('Error loading places:', err);
+      setDetailPlaces([]);
+    }
+  };
 
-        const names = await Promise.all(namePromises);
-        setPlaceNames(names);
-      } catch (err) {
-        setPlaceNames([]);
-      }
-    };
-
-    loadPlaceNames();
-  }, [post]);
+  loadPlaceDetails();
+}, [post]); // Chạy lại mỗi khi bài viết (post) thay đổi
 
   const isLiked = Boolean(currentUserId && post?.liked_by?.includes(currentUserId));
 
@@ -132,6 +129,20 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit }: ForumPostDetai
       console.error('Error deleting post:', err);
       Alert.alert('Lỗi', 'Không thể xóa bài viết.');
     }
+  };
+
+  const handlePlacePress = (placeId: string) => {
+    console.log('ForumPostDetailScreen: Navigating to place:', placeId);
+    if (!placeId || placeId.trim() === '') {
+      console.warn('ForumPostDetailScreen: Invalid placeId, skipping navigation');
+      return;
+    }
+    if (onOpenPlaceDetail) {
+      onOpenPlaceDetail(placeId);
+      return;
+    }
+
+    console.warn('Không có callback onOpenPlaceDetail để điều hướng đến chi tiết địa điểm.', placeId);
   };
 
   if (loading) {
@@ -204,7 +215,8 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit }: ForumPostDetai
           />
 
           <PostFooter
-            placeNames={placeNames}
+            place={detailPlaces} // Truyền mảng object đã xử lý ở trên
+            onPlacePress={handlePlacePress} // Truyền hàm điều hướng
             journeyId={post.journey_id}
             likesCount={likesCount}
             isLiked={isLiked}

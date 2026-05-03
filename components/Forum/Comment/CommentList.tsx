@@ -8,10 +8,11 @@ interface Props {
   onReply: (comment: ForumComment) => void;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpenAuthor?: (userId: string) => void;
   currentUserId: string;
 }
 
-export const CommentList: React.FC<Props> = ({ comments, onReply, onLike, onDelete, currentUserId }) => {
+export const CommentList: React.FC<Props> = ({ comments, onReply, onLike, onDelete, onOpenAuthor, currentUserId }) => {
   return (
     <View className="mt-6 px-4 pb-20">
       <Text className="text-lg font-bold mb-4 text-gray-900">
@@ -27,6 +28,7 @@ export const CommentList: React.FC<Props> = ({ comments, onReply, onLike, onDele
             onLike={onLike} 
             currentUserId={currentUserId} 
             onDelete={onDelete}
+            onOpenAuthor={onOpenAuthor}
           />
         ))
       ) : (

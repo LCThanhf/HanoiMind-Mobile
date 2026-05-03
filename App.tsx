@@ -529,6 +529,11 @@ export default function App() {
               setPreviousState('forumDetail');
               setAppState('placeDetail');
             }}
+            onOpenUserProfile={(userId: string) => {
+              setSelectedUserId(userId);
+              setPreviousState('forumDetail');
+              setAppState('otherUserProfile');
+            }}
           />
         );
 

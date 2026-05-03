@@ -226,7 +226,7 @@ export const NotificationScreen = ({ activeTab, onBack, onTabChange, onOpenFrien
                     </Svg>
                 </Button>
 
-                <Text style={{ fontSize: 24, fontWeight: '700', color: '#F472B6' }}>Thông báo</Text>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: '#62beb2' }}>Thông báo</Text>
                 <View style={{ width: 32 }} />
             </View>
 

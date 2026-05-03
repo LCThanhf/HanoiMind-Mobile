@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { ForumComment } from '../../../services/forumService/forum.type';
 import { CommentActions } from './CommentActions';
 
@@ -10,6 +10,7 @@ interface Props {
   onReply: (comment: ForumComment) => void;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpenAuthor?: (userId: string) => void;
 }
 
 export const CommentItem: React.FC<Props> = ({ 
@@ -18,7 +19,8 @@ export const CommentItem: React.FC<Props> = ({
   currentUserId,
   onReply, 
   onLike,
-  onDelete 
+  onDelete,
+  onOpenAuthor
 }) => {
   const isOwner = comment.author.id === currentUserId;
   const isLiked = comment.liked_by.includes(currentUserId);
@@ -27,20 +29,24 @@ export const CommentItem: React.FC<Props> = ({
     <View style={{ marginLeft: level > 0 ? 20 : 0 }} className="mb-4">
       {/* Nội dung bình luận */}
       <View className="flex-row items-start">
-        <View className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 items-center justify-center">
-          {comment.author.avatar ? (
-            <Image
-              source={{ uri: comment.author.avatar }}
-              className="w-full h-full"
-            />
-          ) : (
-            <Text className="text-sm font-bold text-gray-700">
-              {comment.author.fullName?.split(' ').slice(-1)[0]?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          )}
-        </View>
+        <TouchableOpacity onPress={() => comment.author.id && onOpenAuthor?.(comment.author.id)} activeOpacity={0.7}>
+          <View className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 items-center justify-center">
+            {comment.author.avatar ? (
+              <Image
+                source={{ uri: comment.author.avatar }}
+                className="w-full h-full"
+              />
+            ) : (
+              <Text className="text-sm font-bold text-gray-700">
+                {comment.author.fullName?.split(' ').slice(-1)[0]?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
         <View className="flex-1 ml-2 bg-gray-100 p-3 rounded-2xl rounded-tl-none">
-          <Text className="font-bold text-gray-900 text-sm">{comment.author.fullName}</Text>
+          <TouchableOpacity onPress={() => comment.author.id && onOpenAuthor?.(comment.author.id)} activeOpacity={0.7}>
+            <Text className="font-bold text-gray-900 text-sm">{comment.author.fullName}</Text>
+          </TouchableOpacity>
           <Text className="text-gray-800 text-sm mt-1">{comment.content}</Text>
         </View>
       </View>
@@ -67,6 +73,7 @@ export const CommentItem: React.FC<Props> = ({
               onReply={onReply}
               onLike={onLike}
               onDelete={onDelete}
+              onOpenAuthor={onOpenAuthor}
             />
           ))}
         </View>

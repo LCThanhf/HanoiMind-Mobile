@@ -20,9 +20,10 @@ interface ForumPostDetailScreenProps {
   onBack: () => void;
   onEdit?: () => void;
   onOpenPlaceDetail?: (placeId: string) => void;
+  onOpenUserProfile?: (userId: string) => void;
 }
 
-export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetail }: ForumPostDetailScreenProps) => {
+export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetail, onOpenUserProfile }: ForumPostDetailScreenProps) => {
   const [post, setPost] = useState<ForumPostDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -48,45 +49,23 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const loadPost = async () => {
-      setLoading(true);
-      setError('');
-
-      try {
-        const fetched = await ForumService.getPostDetail(postId);
-        setPost(fetched);
-        setLikesCount(fetched.stats?.likes ?? 0);
-      } catch (err) {
-        console.error('Error loading forum post detail:', err);
-        setError('Không tải được chi tiết bài viết.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPost();
-  }, [postId]);
-
-  // tag địa điểm 
-  useEffect(() => {
-  const loadPlaceDetails = async () => {
-    if (!post || !post.place_ids || post.place_ids.length === 0) {
+  const loadPlaceDetails = async (placeIds?: string[]) => {
+    if (!placeIds || placeIds.length === 0) {
       setDetailPlaces([]);
       return;
     }
 
     try {
       const details = await Promise.all(
-        post.place_ids.map(async (id) => {
+        placeIds.map(async (id) => {
           try {
             const res = await PlacesService.findOne(id);
             return {
-              id: id,
+              id,
               name: (res as any)?.name || 'Địa điểm không tên'
             };
           } catch (err) {
-            return { id: id, name: 'Lỗi tải địa điểm' };
+            return { id, name: 'Lỗi tải địa điểm' };
           }
         })
       );
@@ -98,8 +77,30 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
     }
   };
 
-  loadPlaceDetails();
-}, [post]); // Chạy lại mỗi khi bài viết (post) thay đổi
+  useEffect(() => {
+    const loadPost = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const fetched = await ForumService.getPostDetail(postId);
+        setPost(fetched);
+        setLikesCount(fetched.stats?.likes ?? 0);
+        await loadPlaceDetails(fetched.place_ids);
+      } catch (err) {
+        console.error('Error loading forum post detail:', err);
+        setError('Không tải được chi tiết bài viết.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPost();
+  }, [postId]);
+
+  useEffect(() => {
+    loadPlaceDetails(post?.place_ids);
+  }, [post?.place_ids]);
 
   const isLiked = Boolean(currentUserId && post?.liked_by?.includes(currentUserId));
 
@@ -229,7 +230,7 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
     >
       <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 py-3 border-b border-gray-100 bg-white">
+        <View className="flex-row items-center px-4 py-4 border-b border-gray-100 bg-white">
           <TouchableOpacity
             onPress={onBack}
             style={{ padding: 14, minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' }}
@@ -240,7 +241,7 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
           <Text className="flex-1 text-center font-bold text-lg text-primary mr-10">Chi tiết bài viết</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 220 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 220 }} keyboardShouldPersistTaps="handled">
         <View className="m-4 rounded-[32px] border border-gray-100 bg-white shadow-sm">
           <PostHeader
             author={post.author || { fullName: 'Người dùng' }}
@@ -248,6 +249,7 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
             createdAt={post.created_at || new Date().toISOString()}
             onEdit={post.author?.id === currentUserId ? handleEdit : undefined}
             onDelete={post.author?.id === currentUserId ? handleDelete : undefined}
+            onOpenAuthor={onOpenUserProfile}
           />
 
           <PostDetailContent
@@ -276,6 +278,7 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
           onReply={handleReply}
           onLike={onLikeComment}
           onDelete={onDeleteComment}
+          onOpenAuthor={onOpenUserProfile}
           currentUserId={currentUserId}
         />
       </ScrollView>

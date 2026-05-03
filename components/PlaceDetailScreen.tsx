@@ -130,31 +130,38 @@ export const PlaceDetailScreen = ({ onBack, onReview, onOpenMap, onStartChat, pl
             setPlace({ ...data, rating: avgRating, reviewCount: totalReviews });
             setIsFavorite(myFavs.some((fav: any) => fav.target_id === placeId || fav._id === placeId));
 
-            // Fetch owner name
             const ownerId = data?.ownerId || (data as any)?.owner_id;
             if (ownerId) {
-                try {
-                    const ownerProfile = await UsersService.getPublicProfile(ownerId);
-                    setOwnerName(ownerProfile?.fullName || '');
-                } catch (error) {
-                    console.error('Error fetching owner profile:', error);
-                    setOwnerName('');
-                }
+                UsersService.getPublicProfile(ownerId)
+                    .then(profile => setOwnerName(profile?.fullName || ''))
+                    .catch(e => console.log('Owner profile fetch failed', e));
             }
-        } catch {
+
+        } catch (error) {
+            console.error("Fetch detail error:", error);
             Alert.alert('Lỗi', 'Không thể tải thông tin địa điểm.');
         } finally {
-            if (showLoading) setIsLoading(false);
+            setIsLoading(false);
         }
     }, [placeId]);
 
     useEffect(() => {
-        if (refreshKey === 0) {
-            fetchPlaceDetail(true);
-        } else {
-            fetchPlaceDetail(false);
-        }
-    }, [fetchPlaceDetail, refreshKey]);
+        let isMounted = true;
+
+        const loadData = async () => {
+            const shouldShowLoading = !place || refreshKey > 0;
+
+            if (isMounted) {
+                await fetchPlaceDetail(shouldShowLoading);
+            }
+        };
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [placeId, refreshKey]);
 
     const handleToggleFavorite = async () => {
         const previousState = isFavorite;

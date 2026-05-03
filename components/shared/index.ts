@@ -14,6 +14,7 @@ export * from './ScreenHeader';
 export * from './SearchInput';
 export * from './FormInputRow';
 export * from './Button';
+export * from './LocationPermissionPopup';
 export * from './SelectableCard';
 export * from './TimelineConnector';
 export * from './CharacteristicBadge';

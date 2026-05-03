@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
     View, Text, ActivityIndicator, Alert,
     Platform, Linking, LayoutAnimation, StyleSheet, ScrollView,
@@ -12,7 +12,13 @@ import {
     ArrowUp, ArrowDown, ArrowUpLeft, ArrowUpRight, ArrowLeft as LeftIcon, ArrowRight as RightIcon,
     CornerUpLeft, CornerUpRight, CircleDot
 } from 'lucide-react-native';
-import { Button, ScreenHeader } from './shared';
+import { Button, LocationPermissionPopup, ScreenHeader } from './shared';
+import {
+    getLocationPromptContent,
+    openLocationSettings,
+    resolveCurrentLocation,
+    type LocationAccessStatus,
+} from '../utils/locationAccess';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -74,6 +80,8 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
     const [routeState, setRouteState] = useState<'IDLE' | 'LOADING' | 'READY' | 'NAVIGATING'>('IDLE');
     const [routeData, setRouteData] = useState<any>(null);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+    const [locationPromptStatus, setLocationPromptStatus] = useState<Exclude<LocationAccessStatus, 'granted'> | null>(null);
 
     // --- LOGIC ANIMATION ĐA ĐIỂM DỪNG (MULTI-SNAP) ---
     const pan = useRef(new Animated.Value(0)).current;
@@ -122,27 +130,58 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
         return { latitude: parseFloat(coords[1].toString()), longitude: parseFloat(coords[0].toString()) };
     }, [place]);
 
+    const locationPromptContent = useMemo(() => {
+        if (!locationPromptStatus) {
+            return null;
+        }
+        return getLocationPromptContent(locationPromptStatus);
+    }, [locationPromptStatus]);
+
+    const requestUserLocation = useCallback(async () => {
+        setIsResolvingLocation(true);
+        try {
+            const result = await resolveCurrentLocation({ accuracy: Location.Accuracy.Balanced });
+            if (result.status === 'granted' && result.coords) {
+                setUserLocation(result.coords);
+                setLocationPromptStatus(null);
+                return result.coords;
+            }
+
+            const nextStatus = result.status === 'granted' ? 'location-error' : result.status;
+            setLocationPromptStatus(nextStatus);
+            return null;
+        } finally {
+            setIsResolvingLocation(false);
+        }
+    }, []);
+
+    const handleOpenLocationSettings = useCallback(async () => {
+        const opened = await openLocationSettings();
+        if (!opened) {
+            Alert.alert('Lỗi', 'Không thể mở cài đặt ứng dụng.');
+        }
+    }, []);
+
     useEffect(() => {
         (async () => {
             try {
-                let { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') return;
-                const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-                setUserLocation(loc.coords);
-                if (destLocation.latitude !== 0) {
+                const coords = await requestUserLocation();
+                if (coords && destLocation.latitude !== 0) {
                     mapRef.current?.animateToRegion({ ...destLocation, latitudeDelta: 0.005, longitudeDelta: 0.005 }, 1000);
                 }
             } finally { setIsLocating(false); }
         })();
         return () => locationSubscription.current?.remove();
-    }, [destLocation]);
+    }, [destLocation, requestUserLocation]);
 
     const fetchRoute = async (mode = travelMode) => {
-        if (!userLocation) return;
+        const currentLocation = userLocation || await requestUserLocation();
+        if (!currentLocation) return;
+
         setRouteState('LOADING');
         setRouteData(null);
         try {
-            const url = `${ORS_BASE_URL}/${mode}?api_key=${ORS_API_KEY}&start=${userLocation.longitude},${userLocation.latitude}&end=${destLocation.longitude},${destLocation.latitude}`;
+            const url = `${ORS_BASE_URL}/${mode}?api_key=${ORS_API_KEY}&start=${currentLocation.longitude},${currentLocation.latitude}&end=${destLocation.longitude},${destLocation.latitude}`;
             const response = await fetch(url);
             const data = await response.json();
 
@@ -169,19 +208,31 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
     };
 
     const startNavigation = async () => {
+        const currentLocation = userLocation || await requestUserLocation();
+        if (!currentLocation) {
+            return;
+        }
+
+        setUserLocation(currentLocation);
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setRouteState('NAVIGATING');
 
         // Thu gọn bảng về 15% khi bắt đầu chạy xe
         Animated.spring(pan, { toValue: TRANSLATE_Y_SNAPS[0], useNativeDriver: false, friction: 8 }).start();
 
-        locationSubscription.current = await Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.High, distanceInterval: 5 },
-            (newLoc) => {
-                setUserLocation(newLoc.coords);
-                mapRef.current?.animateCamera({ center: { latitude: newLoc.coords.latitude, longitude: newLoc.coords.longitude }, pitch: 60, heading: newLoc.coords.heading || 0, zoom: 19 });
-            }
-        );
+        try {
+            locationSubscription.current = await Location.watchPositionAsync(
+                { accuracy: Location.Accuracy.High, distanceInterval: 5 },
+                (newLoc) => {
+                    setUserLocation(newLoc.coords);
+                    mapRef.current?.animateCamera({ center: { latitude: newLoc.coords.latitude, longitude: newLoc.coords.longitude }, pitch: 60, heading: newLoc.coords.heading || 0, zoom: 19 });
+                }
+            );
+        } catch (error) {
+            console.error('[MapScreen] Failed to start navigation tracking:', error);
+            setRouteState('READY');
+            setLocationPromptStatus('location-error');
+        }
     };
 
     const steps = useMemo(() => routeData?.steps || [], [routeData]);
@@ -297,6 +348,19 @@ export const MapScreen = ({ place, onBack }: { place: any, onBack: () => void })
                         <Text style={styles.googleBtnText}>MỞ TRONG GOOGLE MAPS</Text>
                     </Button>
                 </View>
+            )}
+
+            {locationPromptContent && (
+                <LocationPermissionPopup
+                    visible={!!locationPromptStatus}
+                    title={locationPromptContent.title}
+                    message={locationPromptContent.message}
+                    primaryLabel={locationPromptContent.primaryLabel}
+                    onPrimaryPress={requestUserLocation}
+                    onOpenSettings={handleOpenLocationSettings}
+                    onClose={() => setLocationPromptStatus(null)}
+                    primaryLoading={isResolvingLocation}
+                />
             )}
         </View>
     );

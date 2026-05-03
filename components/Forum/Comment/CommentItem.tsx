@@ -27,10 +27,18 @@ export const CommentItem: React.FC<Props> = ({
     <View style={{ marginLeft: level > 0 ? 20 : 0 }} className="mb-4">
       {/* Nội dung bình luận */}
       <View className="flex-row items-start">
-        <Image 
-          source={{ uri: comment.author.avatar || 'https://via.placeholder.com/40' }} 
-          className="w-10 h-10 rounded-full"
-        />
+        <View className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 items-center justify-center">
+          {comment.author.avatar ? (
+            <Image
+              source={{ uri: comment.author.avatar }}
+              className="w-full h-full"
+            />
+          ) : (
+            <Text className="text-sm font-bold text-gray-700">
+              {comment.author.fullName?.split(' ').slice(-1)[0]?.charAt(0).toUpperCase() || '?'}
+            </Text>
+          )}
+        </View>
         <View className="flex-1 ml-2 bg-gray-100 p-3 rounded-2xl rounded-tl-none">
           <Text className="font-bold text-gray-900 text-sm">{comment.author.fullName}</Text>
           <Text className="text-gray-800 text-sm mt-1">{comment.content}</Text>

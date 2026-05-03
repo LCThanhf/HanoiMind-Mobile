@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { ForumPost, ForumComment, AuthorMinified } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
@@ -112,9 +112,18 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
     setLikeLoading(true);
 
     try {
-      const updatedPost = await ForumService.toggleLike(post._id);
-      setPost(updatedPost);
-      setLikesCount(updatedPost.stats?.likes ?? (newLikeState ? previousLikes + 1 : Math.max(0, previousLikes - 1)));
+      const updatedPost = await ForumService.toggleLike(post._id) as Partial<ForumPostDetail>;
+      const mergedPost: ForumPostDetail = {
+        ...post,
+        ...updatedPost,
+        author: updatedPost.author ?? post.author,
+        place_ids: updatedPost.place_ids ?? post.place_ids,
+        comments: updatedPost.comments ?? post.comments,
+        journey_summary: updatedPost.journey_summary ?? post.journey_summary,
+      };
+
+      setPost(mergedPost);
+      setLikesCount(mergedPost.stats?.likes ?? (newLikeState ? previousLikes + 1 : Math.max(0, previousLikes - 1)));
     } catch (err) {
       console.error('Error toggling like:', err);
       setLikesCount(previousLikes);
@@ -214,15 +223,24 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-100 bg-white">
-        <TouchableOpacity onPress={onBack} className="p-2">
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center font-bold text-lg text-primary mr-10">Chi tiết bài viết</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
+    >
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-row items-center px-4 py-3 border-b border-gray-100 bg-white">
+          <TouchableOpacity
+            onPress={onBack}
+            style={{ padding: 14, minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' }}
+            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          >
+            <ArrowLeft size={24} color="#374151" />
+          </TouchableOpacity>
+          <Text className="flex-1 text-center font-bold text-lg text-primary mr-10">Chi tiết bài viết</Text>
+        </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 220 }}>
         <View className="m-4 rounded-[32px] border border-gray-100 bg-white shadow-sm">
           <PostHeader
             author={post.author || { fullName: 'Người dùng' }}
@@ -268,5 +286,6 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
         onSubmit={handleSubmitComment}
       />
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };

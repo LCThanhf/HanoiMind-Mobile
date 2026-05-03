@@ -19,7 +19,7 @@ export const CommentInput: React.FC<Props> = ({ replyingTo, onCancelReply, onSub
   };
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3">
+    <View className="absolute bottom-8 left-0 right-0 bg-white border-t border-gray-200 p-3">
       {replyingTo && (
         <View className="flex-row justify-between items-center mb-2 bg-gray-100 px-3 py-1 rounded-lg">
           <Text className="text-xs text-gray-600">Đang trả lời {replyingTo.fullName}</Text>

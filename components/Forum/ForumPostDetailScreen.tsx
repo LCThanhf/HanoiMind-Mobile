@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { ForumPost, ForumComment } from '../../services/forumService/forum.type';
+import { ForumPost, ForumComment, AuthorMinified } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
 import { PlacesService } from '../../services/placeService/place.service';
@@ -30,16 +30,10 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
   const [likesCount, setLikesCount] = useState<number>(0);
   const [likeLoading, setLikeLoading] = useState<boolean>(false);
   const [detailPlaces, setDetailPlaces] = useState<{id: string, name: string}[]>([]);
-  const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [replyingTo, setReplyingTo] = useState<AuthorMinified | null>(null);
+  const [replyParentId, setReplyParentId] = useState<string | null>(null);
 
-  const { comments, onAddComment, onLikeComment, onDeleteComment } = useComments(postId, currentUserId, post?.comments || []);
-
-  useEffect(() => {
-    // Khi post load xong, cập nhật comments
-    if (post?.comments) {
-      // Có lẽ cần reset comments trong hook, nhưng tạm thời để vậy
-    }
-  }, [post?.comments]);
+  const { comments, onAddComment, onLikeComment, onDeleteComment } = useComments(postId, currentUserId, post?.comments);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -160,17 +154,20 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
     console.warn('Không có callback onOpenPlaceDetail để điều hướng đến chi tiết địa điểm.', placeId);
   };
 
-  const handleReply = (comment: any) => {
+  const handleReply = (comment: ForumComment) => {
     setReplyingTo(comment.author);
+    setReplyParentId(comment._id);
   };
 
   const handleCancelReply = () => {
     setReplyingTo(null);
+    setReplyParentId(null);
   };
 
   const handleSubmitComment = (content: string) => {
-    onAddComment(content, replyingTo ? replyingTo._id : undefined);
+    onAddComment(content, replyParentId ?? undefined);
     setReplyingTo(null);
+    setReplyParentId(null);
   };
 
   if (loading) {

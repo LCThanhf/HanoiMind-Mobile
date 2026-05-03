@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ForumService } from '../../../services/forumService/forum.service';
 import { ForumComment } from '../../../services/forumService/forum.type';
 
-export const useComments = (postId: string, currentUserId: string, initialComments: ForumComment[] = []) => {
-  const [comments, setComments] = useState<ForumComment[]>(initialComments);
+export const useComments = (postId: string, currentUserId: string, initialComments?: ForumComment[]) => {
+  const [comments, setComments] = useState<ForumComment[]>(initialComments ?? []);
+
+  useEffect(() => {
+    if (initialComments) {
+      setComments(initialComments);
+    }
+  }, [initialComments]);
 
   // Xử lý Thêm bình luận/Reply
   const onAddComment = async (content: string, parentId?: string) => {

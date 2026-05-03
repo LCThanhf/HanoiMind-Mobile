@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { ForumPost } from '../../services/forumService/forum.type';
+import { ForumPost, ForumComment } from '../../services/forumService/forum.type';
 import { ForumService } from '../../services/forumService/forum.service';
 import { UsersService } from '../../services/userService/user.service';
 import { PlacesService } from '../../services/placeService/place.service';
 import { PostHeader } from './PostHeader';
 import { PostDetailContent } from './PostDetailContent';
 import { PostFooter } from './PostFooter';
+import { CommentList } from './Comment/CommentList';
+import { CommentInput } from './Comment/CommentInput';
+import { useComments } from './Comment/useComment';
 import { AppColors } from '../../utils/theme';
+
+type ForumPostDetail = ForumPost & { comments?: ForumComment[]; journey_summary?: any };
 
 interface ForumPostDetailScreenProps {
   postId: string;
@@ -18,13 +23,23 @@ interface ForumPostDetailScreenProps {
 }
 
 export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetail }: ForumPostDetailScreenProps) => {
-  const [post, setPost] = useState<ForumPost | null>(null);
+  const [post, setPost] = useState<ForumPostDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [likesCount, setLikesCount] = useState<number>(0);
   const [likeLoading, setLikeLoading] = useState<boolean>(false);
   const [detailPlaces, setDetailPlaces] = useState<{id: string, name: string}[]>([]);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+
+  const { comments, onAddComment, onLikeComment, onDeleteComment } = useComments(postId, currentUserId, post?.comments || []);
+
+  useEffect(() => {
+    // Khi post load xong, cập nhật comments
+    if (post?.comments) {
+      // Có lẽ cần reset comments trong hook, nhưng tạm thời để vậy
+    }
+  }, [post?.comments]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -145,6 +160,19 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
     console.warn('Không có callback onOpenPlaceDetail để điều hướng đến chi tiết địa điểm.', placeId);
   };
 
+  const handleReply = (comment: any) => {
+    setReplyingTo(comment.author);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  const handleSubmitComment = (content: string) => {
+    onAddComment(content, replyingTo ? replyingTo._id : undefined);
+    setReplyingTo(null);
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -227,7 +255,21 @@ export const ForumPostDetailScreen = ({ postId, onBack, onEdit, onOpenPlaceDetai
             disabledLike={!currentUserId || likeLoading}
           />
         </View>
+
+        <CommentList
+          comments={comments}
+          onReply={handleReply}
+          onLike={onLikeComment}
+          onDelete={onDeleteComment}
+          currentUserId={currentUserId}
+        />
       </ScrollView>
+
+      <CommentInput
+        replyingTo={replyingTo}
+        onCancelReply={handleCancelReply}
+        onSubmit={handleSubmitComment}
+      />
     </SafeAreaView>
   );
 };

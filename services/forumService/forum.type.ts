@@ -1,15 +1,18 @@
-export enum ForumCategory {   //loại bài viết trong diễn đàn
+/**
+ * ENUMS
+ */
+export enum ForumCategory {
   REVIEW = 'REVIEW',
-  EXPERIENCE = 'EXPERIENCE', // Kinh nghiệm phượt
-  FIND_BUDDY = 'FIND_BUDDY', // Tìm bạn đồng hành
-  QNA = 'QNA',               // Hỏi đáp
+  EXPERIENCE = 'EXPERIENCE',
+  FIND_BUDDY = 'FIND_BUDDY',
+  QNA = 'QNA',
   OTHERS = 'OTHERS'
 }
 
-export enum PostStatus {  //trạng thái bài viết 
-  DRAFT = 'DRAFT', //nháp 
-  PUBLISHED = 'PUBLISHED',//công khai 
-  HIDDEN = 'HIDDEN' 
+export enum PostStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  HIDDEN = 'HIDDEN'
 }
 
 export enum PostSortBy {
@@ -19,15 +22,18 @@ export enum PostSortBy {
 }
 
 export enum ReportReason {
-  SPAM = 'SPAM', 
-  OFFENSIVE = 'OFFENSIVE', // xúc phạm 
-  MISINFORMATION = 'MISINFORMATION', //thông tin sai lệch 
-  HARASSMENT = 'HARASSMENT', //quấy rối 
-  INAPPROPRIATE = 'INAPPROPRIATE', //ko phù hợp 
-  SCAM = 'SCAM', //lừa đảo 
+  SPAM = 'SPAM',
+  OFFENSIVE = 'OFFENSIVE',
+  MISINFORMATION = 'MISINFORMATION',
+  HARASSMENT = 'HARASSMENT',
+  INAPPROPRIATE = 'INAPPROPRIATE',
+  SCAM = 'SCAM',
   OTHERS = 'OTHERS'
 }
 
+/**
+ * INTERFACES
+ */
 export interface AuthorMinified {
   id: string;
   fullName: string;
@@ -60,13 +66,16 @@ export interface ForumComment {
   _id: string;
   post_id: string;
   content: string;
-  author: AuthorMinified;
-  parent_id?: string;
+  parent_id: string | null;
   liked_by: string[];
   created_at: string;
+  author: AuthorMinified;
+  replies: ForumComment[]; // Cấu trúc đệ quy cho bình luận phân cấp
 }
 
-// Payloads
+/**
+ * PAYLOADS & REQUESTS
+ */
 export interface CreatePostPayload {
   title: string;
   content: string;
@@ -85,4 +94,9 @@ export interface PostSearchFilter {
   sortBy?: PostSortBy;
   page?: number;
   limit?: number;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  parent_id?: string | null;
 }

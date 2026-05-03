@@ -4,7 +4,8 @@ import {
   ForumComment, 
   CreatePostPayload, 
   PostSearchFilter,
-  ReportReason
+  ReportReason,
+  CreateCommentRequest
 } from './forum.type';
 
 const normalizeForumListResponse = (payload: unknown): { data: ForumPost[]; meta: any } => {
@@ -111,5 +112,32 @@ export const ForumService = {
     try {
       return await apiClient.patch(`/forum/posts/${id}`, payload);
     } catch (error) { throw error; }
-  }
+  },
+/** 9. Chỉnh sửa bình luận */
+  updateComment: async (commentId: string, content: string): Promise<ForumComment> => {
+    try {
+      // Sử dụng patch theo swagger của bạn
+      return await apiClient.patch(`/forum/comments/${commentId}`, { content });
+    } catch (error) { 
+      throw error; 
+    }
+  },
+
+  /** 10. Xóa bình luận */
+  deleteComment: async (commentId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/forum/comments/${commentId}`);
+    } catch (error) { 
+      throw error; 
+    }
+  },
+
+  /** 11. Thích/Bỏ thích bình luận */
+  toggleLikeComment: async (commentId: string): Promise<void> => {
+    try {
+      await apiClient.patch(`/forum/comments/${commentId}/like`);
+    } catch (error) { 
+      throw error; 
+    }
+  },
 };
